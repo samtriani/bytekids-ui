@@ -1,0 +1,59 @@
+<app-shell role="admin" [userName]="userName" [userAvatar]="userAvatar"
+  [navItems]="navItems" pageTitle="Todos los Estudiantes"></app-shell>
+<div class="page-wrap">
+  <div class="ph">
+    <div class="ph-left"><h1>Todos los Estudiantes</h1><p>Visión institucional de los {{ all.length }} alumnos activos</p></div>
+    <a routerLink="/admin/ai-reports" class="btn btn-primary">🤖 Analizar con IA</a>
+  </div>
+  <div class="g4 mb14">
+    <div class="kpi"><div class="kpi-ico">👨‍🎓</div><div><div class="kpi-val">{{ all.length }}</div><div class="kpi-lbl">Alumnos activos</div></div></div>
+    <div class="kpi green"><div class="kpi-ico">⭐</div><div><div class="kpi-val">—</div><div class="kpi-lbl">Desempeño excelente</div></div></div>
+    <div class="kpi red"><div class="kpi-ico">⚠️</div><div><div class="kpi-val">—</div><div class="kpi-lbl">Necesitan apoyo</div></div></div>
+    <div class="kpi gold"><div class="kpi-ico">🔥</div><div><div class="kpi-val">—</div><div class="kpi-lbl">Racha máxima</div></div></div>
+  </div>
+  <div class="toolbar mb14">
+    <input class="input" [(ngModel)]="search" placeholder="🔍 Buscar alumno..." style="max-width:220px">
+    <div style="display:flex;align-items:center;gap:6px;flex-wrap:wrap">
+      <span style="font-size:.72rem;font-weight:700;color:var(--tx3);white-space:nowrap">🏫 Salón:</span>
+      <div class="chips">
+        @for (c of clsList; track c) { <button class="chip" [class.on]="clsFilt===c" (click)="clsFilt=c">{{ c }}</button> }
+      </div>
+    </div>
+    <div style="display:flex;align-items:center;gap:6px;flex-wrap:wrap">
+      <span style="font-size:.72rem;font-weight:700;color:var(--tx3);white-space:nowrap">⭐ Estado:</span>
+      <div class="chips">
+        @for (f of ['Todos','Excelente','Activo','Necesita apoyo']; track f) {
+          <button class="chip" [class.on]="filt===f" (click)="filt=f">{{ f }}</button>
+        }
+      </div>
+    </div>
+  </div>
+  <div class="card" style="overflow:hidden">
+    <table class="tbl">
+      <thead><tr><th>Alumno</th><th>Salón</th><th>Progreso</th><th>XP</th><th>Racha</th><th>Estado</th></tr></thead>
+      <tbody>
+        @for (s of rows; track s.n) {
+          <tr>
+            <td><div style="display:flex;align-items:center;gap:8px"><div class="av" style="width:30px;height:30px;font-size:.68rem">{{ s.av }}</div>{{ s.n }}</div></td>
+            <td>
+              @if (s.classrooms.length) {
+                <div style="display:flex;flex-wrap:wrap;gap:4px">
+                  @for (c of s.classrooms; track c) {
+                    <span class="tag tag-gray" style="font-size:.68rem">{{ c }}</span>
+                  }
+                </div>
+              } @else {
+                <span style="color:var(--tx3);font-size:.78rem">—</span>
+              }
+            </td>
+            <td><div style="display:flex;align-items:center;gap:7px"><div class="prog" style="height:5px;width:70px"><div class="prog-bar" [style.width]="s.prog+'%'" [style.background]="pc(s.prog)"></div></div><span style="font-weight:800;font-size:.79rem" [style.color]="pc(s.prog)">{{ s.prog }}%</span></div></td>
+            <td style="font-weight:700;color:var(--guinda)">{{ s.xp }}</td>
+            <td>🔥 {{ s.streak }}d</td>
+            <td><span class="tag" [class]="sc(s.status)">{{ s.status }}</span></td>
+          </tr>
+        }
+        @empty { <tr><td colspan="6" style="text-align:center;padding:22px;color:var(--tx3)">Sin resultados</td></tr> }
+      </tbody>
+    </table>
+  </div>
+</div>

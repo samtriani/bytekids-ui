@@ -1,0 +1,69 @@
+<app-shell role="parent" userName="Sam Partida" userAvatar="SP"
+  [navItems]="navItems" pageTitle="Mis Hijos"></app-shell>
+<div class="page-wrap">
+  <div class="ph"><div class="ph-left"><h1>Mis Hijos</h1><p>Perfil completo y seguimiento de cada hijo en ByteKids</p></div></div>
+
+  <!-- Selector de hijo -->
+  <div class="child-tabs mb14">
+    @for (c of children; track c.name) {
+      <div class="child-tab card card-p" [class.active]="c.name===sel.name" (click)="sel=c">
+        <div class="ct-av" [style.background]="c.initColor+'18'" [style.color]="c.initColor">{{ c.av }}</div>
+        <div style="flex:1">
+          <div class="ct-name">{{ c.name }}</div>
+          <div class="ct-grade">{{ c.grade }} · Nivel {{ c.level }}</div>
+        </div>
+        <div>
+          <div style="font-weight:900;font-size:1rem" [style.color]="c.initColor">{{ c.xp }}</div>
+          <div style="font-size:.62rem;color:var(--tx3);text-align:right">XP</div>
+        </div>
+      </div>
+    }
+  </div>
+
+  <!-- KPIs -->
+  <div class="g4 mb14">
+    <div class="kpi blue"><div class="kpi-ico">⭐</div><div><div class="kpi-val">{{ sel.xp }}</div><div class="kpi-lbl">XP Total</div><div class="kpi-dl flat">Nivel {{ sel.level }}</div></div></div>
+    <div class="kpi"><div class="kpi-ico">📈</div><div><div class="kpi-val">{{ sel.prog }}%</div><div class="kpi-lbl">Progreso</div><div class="kpi-dl" [class]="sel.prog>=70?'up':'flat'">Este período</div></div></div>
+    <div class="kpi gold"><div class="kpi-ico">🔥</div><div><div class="kpi-val">{{ sel.streak }}d</div><div class="kpi-lbl">Racha actual</div><div class="kpi-dl flat">¡Sigue así!</div></div></div>
+    <div class="kpi green"><div class="kpi-ico">✅</div><div><div class="kpi-val">{{ sel.completed }}/{{ sel.missions }}</div><div class="kpi-lbl">Misiones</div><div class="kpi-dl up">Completadas</div></div></div>
+  </div>
+
+  <div class="g2">
+    <!-- Materias y próxima misión -->
+    <div class="card card-p">
+      <div class="section-title">Materias que estudia</div>
+      <div class="chips mb14">
+        @for (s of sel.subjects; track s) { <span class="chip on">{{ s }}</span> }
+      </div>
+      <div class="card-title mb8">Progreso general</div>
+      <div class="prog" style="height:10px;margin-bottom:6px">
+        <div class="prog-bar" [style.width]="sel.prog+'%'" [style.background]="pc(sel.prog)"></div>
+      </div>
+      <p style="font-size:.75rem;color:var(--tx3);margin-bottom:16px">{{ sel.prog }}% completado en este período</p>
+      <div class="card-title mb8">Próxima misión</div>
+      <div class="next-mission">
+        <div class="nm-icon">🎯</div>
+        <div style="flex:1"><div style="font-weight:700;font-size:.85rem">{{ sel.next }}</div><div style="font-size:.72rem;color:var(--tx3);margin-top:2px">Disponible ahora</div></div>
+        <a routerLink="/parent/ai-assistant" class="btn btn-outline btn-sm">Detalles</a>
+      </div>
+    </div>
+
+    <!-- Actividad reciente + info -->
+    <div class="card card-p">
+      <div class="section-title">Actividad reciente</div>
+      @for (a of sel.recent; track a) {
+        <div class="act-item"><div class="act-dot"></div><span style="font-size:.84rem;color:var(--tx2)">{{ a }}</span></div>
+      }
+      <div class="divider"></div>
+      <div style="display:flex;gap:12px;align-items:center;margin-bottom:12px">
+        <div class="av" style="width:36px;height:36px">👩‍🏫</div>
+        <div>
+          <div style="font-weight:700;font-size:.84rem">{{ sel.teacher }}</div>
+          <div style="font-size:.72rem;color:var(--tx3)">Maestra de {{ sel.name.split(' ')[0] }}</div>
+        </div>
+        <a routerLink="/parent/messages" class="btn btn-ghost btn-sm" style="margin-left:auto">💬 Mensaje</a>
+      </div>
+      <a routerLink="/parent/ai-assistant" class="btn btn-primary btn-block">🤖 Preguntar al Asistente IA</a>
+    </div>
+  </div>
+</div>

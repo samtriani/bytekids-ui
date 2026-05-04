@@ -1,0 +1,9 @@
+.mb14 { margin-bottom:14px; }
+.section-hd { font-weight:800; font-size:.9rem; color:var(--tx1); }
+.child-sw { display:flex; gap:8px; }
+.csw-btn { flex:1; display:flex; align-items:center; gap:8px; padding:11px 14px; border-radius:var(--r2); border:1px solid var(--border); background:var(--surface); cursor:pointer; font-family:inherit; font-size:.84rem; font-weight:700; color:var(--tx2); transition:all .14s; }
+.csw-btn.active { background:var(--guinda-lt); border-color:var(--guinda-border); color:var(--guinda); }
+.csw-av { width:28px; height:28px; border-radius:7px; background:var(--guinda-lt); color:var(--guinda); display:flex; align-items:center; justify-content:center; font-weight:800; font-size:.68rem; flex-shrink:0; }
+.csw-pct { margin-left:auto; font-weight:900; }
+.subj-row { display:flex; align-items:center; gap:12px; }
+.sr-ico { width:38px; height:38px; border-radius:9px; display:flex; align-items:center; justify-content:center; font-size:1.1rem; flex-shrink:0; }

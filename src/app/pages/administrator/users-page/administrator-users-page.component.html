@@ -1,0 +1,116 @@
+<app-shell
+  role="administrator"
+  [userName]="userName"
+  [userAvatar]="userAvatar"
+  [navItems]="navItems"
+  pageTitle="Modulo Administrador">
+</app-shell>
+
+<div class="page-wrap">
+  <div class="ph">
+    <div class="ph-left">
+      <h1>{{ title }}</h1>
+      <p>{{ subtitle }}</p>
+    </div>
+  </div>
+
+  @if (toast) {
+    <div class="alert alert-info mb16">{{ toast }}</div>
+  }
+
+  <div class="layout">
+    <div class="card card-p create-card">
+      <div class="section-head">
+        <h3>Alta nueva</h3>
+        <span class="tag tag-guinda">Formulario</span>
+      </div>
+      <div class="fg">
+        <label class="label">Nombre completo</label>
+        <input class="input" [(ngModel)]="createForm.displayName" [placeholder]="mode === 'teachers' ? 'Prof. Maria Torres' : 'Axel Partida'">
+      </div>
+      <div class="fg">
+        <label class="label">Usuario</label>
+        <input class="input" [(ngModel)]="createForm.username" placeholder="nombre.apellido">
+      </div>
+      <div class="fg">
+        <label class="label">Contrasena</label>
+        <input class="input" type="password" [(ngModel)]="createForm.password" placeholder="Minimo 6 caracteres">
+      </div>
+      <button class="btn btn-primary btn-block" (click)="create()" [disabled]="saving">{{ createLabel }}</button>
+    </div>
+
+    <div class="card card-p detail-card">
+      <div class="section-head">
+        <h3>Detalle y edicion</h3>
+        <span class="tag tag-blue">{{ rows.length }} registros</span>
+      </div>
+
+      <div class="fg">
+        <label class="label">Buscar</label>
+        <input class="input" [(ngModel)]="search" placeholder="Busca por nombre, usuario o iniciales">
+      </div>
+
+      <div class="detail-layout">
+        <div class="detail-menu">
+          @if (filteredRows.length) {
+            @for (row of filteredRows; track row.id) {
+              <button class="detail-menu-item" [class.selected]="selected?.id === row.id" (click)="select(row)">
+                <strong>{{ row.displayName }}</strong>
+                <small>{{ row.username }}</small>
+              </button>
+            }
+          } @else {
+            <div class="empty-box">{{ emptyMessage }}</div>
+          }
+        </div>
+
+        <div class="detail-panel">
+          @if (selected) {
+            <div class="entity-header">
+              <div class="entity-avatar">{{ selected.initials || 'US' }}</div>
+              <div>
+                <h4>{{ selected.displayName }}</h4>
+                <p>{{ selected.username }}</p>
+              </div>
+            </div>
+
+            <div class="entity-grid">
+              <div class="entity-card"><span>Rol</span><strong>{{ selected.role | role }}</strong></div>
+              <div class="entity-card"><span>Estatus</span><strong>{{ selected.isActive ? 'Activo' : 'Inactivo' }}</strong></div>
+              <div class="entity-card"><span>Iniciales</span><strong>{{ selected.initials || '--' }}</strong></div>
+              <div class="entity-card"><span>ID</span><strong>{{ selected.id }}</strong></div>
+            </div>
+
+            <div class="editor-card">
+              <div class="subcard-title">Editar {{ mode === 'teachers' ? 'profesor' : 'alumno' }}</div>
+              <div class="fg">
+                <label class="label">Nombre completo</label>
+                <input class="input" [(ngModel)]="editForm.displayName">
+              </div>
+              <div class="fg-row">
+                <div class="fg">
+                  <label class="label">Usuario</label>
+                  <input class="input" [(ngModel)]="editForm.username">
+                </div>
+                <div class="fg">
+                  <label class="label">Iniciales</label>
+                  <input class="input" [(ngModel)]="editForm.initials">
+                </div>
+              </div>
+              <div class="fg">
+                <label class="label">Nueva contrasena</label>
+                <input class="input" type="password" [(ngModel)]="editForm.password" placeholder="Opcional">
+              </div>
+              <div class="btn-stack">
+                <button class="btn btn-outline btn-block" (click)="update()" [disabled]="saving">Guardar cambios</button>
+                <button class="btn btn-ghost btn-block" (click)="deactivate()" [disabled]="saving">Desactivar usuario</button>
+              </div>
+            </div>
+          } @else {
+            <div class="empty-box">Selecciona un registro para ver su detalle.</div>
+          }
+        </div>
+      </div>
+    </div>
+  </div>
+</div>

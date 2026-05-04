@@ -1,0 +1,26 @@
+.cal-layout { display:flex; gap:16px; align-items:flex-start; }
+.cal-nav { background:var(--surface2); border:1px solid var(--border); color:var(--tx1); border-radius:var(--r2); width:30px; height:30px; cursor:pointer; font-size:1rem; transition:all .15s; display:flex;align-items:center;justify-content:center; }
+.cal-nav:hover { background:var(--guinda-lt); color:var(--guinda); }
+.cal-days-header { display:grid; grid-template-columns:repeat(7,1fr); gap:2px; margin-bottom:6px; }
+.cal-day-name { text-align:center; font-size:.67rem; font-weight:700; color:var(--tx3); text-transform:uppercase; padding:4px; }
+.cal-grid { display:grid; grid-template-columns:repeat(7,1fr); gap:3px; }
+.cal-cell { aspect-ratio:1; border-radius:var(--r1); display:flex; flex-direction:column; align-items:center; justify-content:center; cursor:pointer; transition:all .15s; position:relative; }
+.cal-cell:not(.empty):hover { background:var(--guinda-lt); }
+.cal-cell.today { background:var(--guinda-lt); border:1px solid var(--guinda-border); }
+.cal-cell.selected { background:var(--guinda) !important; }
+.cal-cell.selected .cal-num { color:#fff !important; }
+.cal-cell.empty { cursor:default; }
+.cal-num { font-weight:600; font-size:.84rem; color:var(--tx1); }
+.cal-cell.today .cal-num { color:var(--guinda); font-weight:800; }
+.event-pip { position:absolute; bottom:3px; width:5px; height:5px; background:var(--guinda); border-radius:50%; }
+.cal-cell.selected .event-pip { background:#fff; }
+.event-item { padding:10px 12px; border-radius:var(--r2); border-left:3px solid; }
+.upcoming-item { display:flex; align-items:center; gap:10px; padding:7px; border-radius:var(--r2); transition:background .15s; }
+.upcoming-item:hover { background:var(--surface2); }
+.up-day { font-weight:800; font-size:1.1rem; color:var(--guinda); min-width:22px; text-align:center; }
+.card-padded { padding:16px 18px; }
+.page-header { display:flex; align-items:center; justify-content:space-between; margin-bottom:16px; }
+.page-header h1 { font-size:1.3rem; font-weight:900; color:var(--tx1); }
+.app-shell-content { padding:20px; }
+.fade-in { animation:fadeIn .2s ease; }
+@keyframes fadeIn { from{opacity:0;transform:translateY(6px)} to{opacity:1;transform:none} }

@@ -1,0 +1,67 @@
+<div class="portal-root">
+  <header class="portal-header">
+    <div class="ph-left">
+      <img src="assets/logo-bytekids.jpeg" alt="ByteKids" class="ph-logo">
+      <div>
+        <div class="ph-name">ByteKids Academy</div>
+        <div class="ph-sub">Plataforma Educativa Digital</div>
+      </div>
+    </div>
+    <div class="ph-right">
+      <div class="user-chip">
+        <div class="uc-av">{{ user.initials }}</div>
+        <div>
+          <div class="uc-name">{{ user.displayName }}</div>
+          <div class="uc-role">{{ roleSummary }}</div>
+        </div>
+      </div>
+      <button class="logout-btn" (click)="logout()">
+        Salir <span>→</span>
+      </button>
+    </div>
+  </header>
+
+  <main class="portal-main">
+    <div class="welcome-block">
+      <div class="wb-text">
+        <h1 class="wb-title">Bienvenido, <span class="wb-name">{{ user.displayName }}</span></h1>
+        <p class="wb-sub">{{ welcomeMessage }}</p>
+      </div>
+      <div class="wb-badge">
+        <span class="wbb-icon">🏛️</span>
+        <div>
+          <div class="wbb-title">{{ accessBadgeTitle }}</div>
+          <div class="wbb-sub">{{ accessBadgeSubtitle }}</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="panels-grid" [class.two-panels]="panels.length === 2">
+      @for (p of panels; track p.id) {
+        <div class="panel-card" (click)="go(p.route)" [style.--pc]="p.color">
+          <div class="pc-top">
+            <div class="pc-icon" [style.background]="p.color + '18'" [style.color]="p.color">{{ p.icon }}</div>
+            <div class="pc-badge" [style.background]="p.color + '14'" [style.color]="p.color">{{ p.badge }}</div>
+          </div>
+          <h3 class="pc-label">{{ p.label }}</h3>
+          <p class="pc-desc">{{ p.desc }}</p>
+          <div class="pc-stats">
+            @for (s of p.stats; track s) {
+              <div class="ps-item">{{ s }}</div>
+            }
+          </div>
+          <div class="pc-cta" [style.background]="p.color">
+            Entrar al panel <span class="pca-arrow">→</span>
+          </div>
+        </div>
+      }
+    </div>
+
+    <div class="portal-info">
+      <div class="pi-item"><span>🔐</span> Sistema seguro y encriptado</div>
+      <div class="pi-item"><span>🤖</span> IA integrada en todos los paneles</div>
+      <div class="pi-item"><span>📊</span> Datos en tiempo real</div>
+      <div class="pi-item"><span>🌎</span> Plataforma Nacional 2026</div>
+    </div>
+  </main>
+</div>

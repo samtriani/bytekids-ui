@@ -1,0 +1,272 @@
+<app-shell
+  role="administrator"
+  [userName]="userName"
+  [userAvatar]="userAvatar"
+  [navItems]="navItems"
+  pageTitle="Modulo Administrador">
+</app-shell>
+
+<div class="page-wrap">
+  <div class="ph">
+    <div class="ph-left">
+      <h1>Detalle Operativo</h1>
+      <p>Consulta relaciones academicas, haz asignaciones y edita el registro seleccionado sin salir del contexto.</p>
+    </div>
+  </div>
+
+  @if (toast) {
+    <div class="alert alert-info mb16">{{ toast }}</div>
+  }
+
+  <div class="g4 mb16">
+    <button class="kpi kpi-action" [class.active]="activeDetail === 'teachers'" (click)="setActiveDetail('teachers')">
+      <div class="kpi-ico">👩‍🏫</div>
+      <div><div class="kpi-val">{{ teachers.length }}</div><div class="kpi-lbl">Profesores</div></div>
+    </button>
+    <button class="kpi blue kpi-action" [class.active]="activeDetail === 'students'" (click)="setActiveDetail('students')">
+      <div class="kpi-ico">👨‍🎓</div>
+      <div><div class="kpi-val">{{ students.length }}</div><div class="kpi-lbl">Alumnos</div></div>
+    </button>
+    <button class="kpi green kpi-action" [class.active]="activeDetail === 'classrooms'" (click)="setActiveDetail('classrooms')">
+      <div class="kpi-ico">🏫</div>
+      <div><div class="kpi-val">{{ classrooms.length }}</div><div class="kpi-lbl">Salones</div></div>
+    </button>
+    <button class="kpi gold kpi-action" [class.active]="activeDetail === 'subjects'" (click)="setActiveDetail('subjects')">
+      <div class="kpi-ico">📚</div>
+      <div><div class="kpi-val">{{ subjects.length }}</div><div class="kpi-lbl">Materias</div></div>
+    </button>
+  </div>
+
+  <div class="card card-p mb16 detail-screen">
+    <div class="section-head">
+      <h3>Explorador operativo</h3>
+      <span class="tag tag-guinda">Menu lateral + ficha editable</span>
+    </div>
+
+    <div class="detail-layout">
+      <div class="detail-menu">
+        @if (activeDetail === 'teachers') {
+          @for (teacher of teachers; track teacher.id) {
+            <button class="detail-menu-item" [class.selected]="selectedTeacher?.id === teacher.id" (click)="selectTeacher(teacher)">
+              <strong>{{ teacher.displayName }}</strong>
+              <small>{{ teacher.username }}</small>
+            </button>
+          }
+        }
+
+        @if (activeDetail === 'students') {
+          @for (student of students; track student.id) {
+            <button class="detail-menu-item" [class.selected]="selectedStudent?.id === student.id" (click)="selectStudent(student)">
+              <strong>{{ student.displayName }}</strong>
+              <small>{{ student.username }}</small>
+            </button>
+          }
+        }
+
+        @if (activeDetail === 'classrooms') {
+          @for (classroom of classrooms; track classroom.id) {
+            <button class="detail-menu-item" [class.selected]="selectedClassroom?.id === classroom.id" (click)="selectClassroom(classroom)">
+              <strong>{{ classroom.name }}</strong>
+              <small>{{ classroom.schoolYear }}</small>
+            </button>
+          }
+        }
+
+        @if (activeDetail === 'subjects') {
+          @for (subject of subjects; track subject.id) {
+            <button class="detail-menu-item" [class.selected]="selectedSubject?.id === subject.id" (click)="selectSubject(subject)">
+              <strong>{{ subject.name }}</strong>
+              <small>{{ subject.description || 'Sin descripcion' }}</small>
+            </button>
+          }
+        }
+      </div>
+
+      <div class="detail-panel">
+        @if (activeDetail === 'teachers' && selectedTeacher) {
+          <div class="entity-header">
+            <div class="entity-avatar">{{ selectedTeacher.initials || 'PR' }}</div>
+            <div>
+              <h4>{{ selectedTeacher.displayName }}</h4>
+              <p>{{ selectedTeacher.username }}</p>
+            </div>
+          </div>
+          <div class="entity-grid">
+            <div class="entity-card"><span>Rol</span><strong>{{ selectedTeacher.role | role }}</strong></div>
+            <div class="entity-card"><span>Estatus</span><strong>{{ selectedTeacher.isActive ? 'Activo' : 'Inactivo' }}</strong></div>
+            <div class="entity-card"><span>Salones asignados</span><strong>{{ selectedTeacherClassrooms.length }}</strong></div>
+            <div class="entity-card"><span>Iniciales</span><strong>{{ selectedTeacher.initials || '--' }}</strong></div>
+          </div>
+          <div class="detail-columns">
+            <div class="detail-subcard">
+              <div class="subcard-title">Salones del profesor</div>
+              @if (selectedTeacherClassrooms.length) {
+                @for (room of selectedTeacherClassrooms; track room.id) {
+                  <div class="linked-row">
+                    <div>
+                      <strong>{{ room.name }}</strong>
+                      <small>{{ room.schoolYear }}</small>
+                    </div>
+                    <button class="btn btn-outline btn-sm"
+                            (click)="removeTeacherFromClassroom(room.id)"
+                            [disabled]="saving">Quitar</button>
+                  </div>
+                }
+              } @else {
+                <div class="empty-box">Este profesor todavía no tiene salones asignados.</div>
+              }
+            </div>
+            <div class="detail-subcard">
+              <div class="subcard-title">Editar profesor</div>
+              <div class="fg"><label class="label">Nombre completo</label><input class="input" [(ngModel)]="teacherEditForm.displayName"></div>
+              <div class="fg-row">
+                <div class="fg"><label class="label">Usuario</label><input class="input" [(ngModel)]="teacherEditForm.username"></div>
+                <div class="fg"><label class="label">Iniciales</label><input class="input" [(ngModel)]="teacherEditForm.initials"></div>
+              </div>
+              <div class="fg"><label class="label">Nueva contrasena</label><input class="input" type="password" [(ngModel)]="teacherEditForm.password" placeholder="Opcional"></div>
+              <button class="btn btn-outline btn-block" (click)="updateTeacher()" [disabled]="saving">Guardar cambios</button>
+            </div>
+          </div>
+        }
+
+        @if (activeDetail === 'students' && selectedStudent) {
+          <div class="entity-header">
+            <div class="entity-avatar blue">{{ selectedStudent.initials || 'AL' }}</div>
+            <div>
+              <h4>{{ selectedStudent.displayName }}</h4>
+              <p>{{ selectedStudent.username }}</p>
+            </div>
+          </div>
+          <div class="entity-grid">
+            <div class="entity-card"><span>Rol</span><strong>{{ selectedStudent.role | role }}</strong></div>
+            <div class="entity-card"><span>Estatus</span><strong>{{ selectedStudent.isActive ? 'Activo' : 'Inactivo' }}</strong></div>
+            <div class="entity-card"><span>Salones inscritos</span><strong>{{ selectedStudentClassrooms.length }}</strong></div>
+            <div class="entity-card"><span>Iniciales</span><strong>{{ selectedStudent.initials || '--' }}</strong></div>
+          </div>
+          <div class="detail-columns">
+            <div class="detail-subcard">
+              <div class="subcard-title">Salones en los que está inscrito</div>
+              @if (selectedStudentClassrooms.length) {
+                @for (cls of selectedStudentClassrooms; track cls.id) {
+                  <div class="linked-row">
+                    <div>
+                      <strong>{{ cls.name }}</strong>
+                      <small>{{ cls.teacherName || 'Sin profesor' }} · {{ cls.schoolYear }}</small>
+                    </div>
+                    <button class="btn btn-outline btn-sm"
+                            (click)="removeStudentFromClassroom(cls.id)"
+                            [disabled]="saving">Quitar</button>
+                  </div>
+                }
+              } @else {
+                <div class="empty-box">Este alumno aún no está inscrito en ningún salón.</div>
+              }
+            </div>
+            <div class="detail-subcard">
+              <div class="subcard-title">Editar alumno</div>
+              <div class="fg"><label class="label">Nombre completo</label><input class="input" [(ngModel)]="studentEditForm.displayName"></div>
+              <div class="fg-row">
+                <div class="fg"><label class="label">Usuario</label><input class="input" [(ngModel)]="studentEditForm.username"></div>
+                <div class="fg"><label class="label">Iniciales</label><input class="input" [(ngModel)]="studentEditForm.initials"></div>
+              </div>
+              <div class="fg"><label class="label">Nueva contrasena</label><input class="input" type="password" [(ngModel)]="studentEditForm.password" placeholder="Opcional"></div>
+              <button class="btn btn-outline btn-block" (click)="updateStudent()" [disabled]="saving">Guardar cambios</button>
+            </div>
+          </div>
+        }
+
+        @if (activeDetail === 'classrooms' && selectedClassroom) {
+          <div class="entity-header">
+            <div class="entity-avatar green">🏫</div>
+            <div>
+              <h4>{{ selectedClassroom.name }}</h4>
+              <p>{{ selectedClassroom.schoolYear }} · {{ selectedClassroom.description || 'Sin descripcion' }}</p>
+            </div>
+          </div>
+          <div class="entity-grid">
+            <div class="entity-card"><span>Profesor titular</span><strong>{{ classroomTeacherName }}</strong></div>
+            <div class="entity-card"><span>Alumnos inscritos</span><strong>{{ selectedClassroomStudents.length }}</strong></div>
+            <div class="entity-card"><span>Alumnos activos</span><strong>{{ selectedClassroomStudents.length }}</strong></div>
+            <div class="entity-card"><span>Seccion</span><strong>{{ selectedClassroom.section }}</strong></div>
+          </div>
+          <div class="detail-columns">
+            <div class="detail-subcard">
+              <div class="subcard-title">Editar salon</div>
+              <div class="fg-row">
+                <div class="fg"><label class="label">Nombre</label><input class="input" [(ngModel)]="classroomEditForm.name"></div>
+                <div class="fg"><label class="label">Ciclo escolar</label><input class="input" [(ngModel)]="classroomEditForm.schoolYear"></div>
+              </div>
+              <div class="fg-row">
+                <div class="fg"><label class="label">Grado</label><input class="input" type="number" [(ngModel)]="classroomEditForm.gradeLevel"></div>
+                <div class="fg"><label class="label">Seccion</label><input class="input" [(ngModel)]="classroomEditForm.section"></div>
+              </div>
+              <div class="fg">
+                <label class="label">Profesor titular</label>
+                <select class="select" [(ngModel)]="classroomEditForm.teacherId">
+                  <option value="">Sin asignar</option>
+                  @for (teacher of teachers; track teacher.id) {
+                    <option [value]="teacher.id">{{ teacher.displayName }}</option>
+                  }
+                </select>
+              </div>
+              <div class="fg"><label class="label">Descripcion</label><textarea class="textarea" rows="3" [(ngModel)]="classroomEditForm.description"></textarea></div>
+              <button class="btn btn-outline btn-block" (click)="updateClassroom()" [disabled]="saving">Guardar cambios</button>
+              <button class="btn btn-danger btn-block mt8"
+                      (click)="deactivateClassroom(selectedClassroom.id, selectedClassroom.name)"
+                      [disabled]="saving">
+                Dar de baja salón
+              </button>
+            </div>
+
+            <div class="detail-subcard">
+              <div class="subcard-title">Relacion del salon</div>
+              @if (selectedClassroomStudents.length) {
+                @for (student of selectedClassroomStudents; track student.id) {
+                  <div class="linked-row">
+                    <strong>{{ student.displayName }}</strong>
+                    <span>{{ student.username }}</span>
+                  </div>
+                }
+              } @else {
+                <div class="empty-box">Este salon aun no tiene alumnos inscritos.</div>
+              }
+            </div>
+          </div>
+        }
+
+        @if (activeDetail === 'subjects' && selectedSubject) {
+          <div class="entity-header">
+            <div class="entity-avatar gold">{{ selectedSubject.icon || '📘' }}</div>
+            <div>
+              <h4>{{ selectedSubject.name }}</h4>
+              <p>{{ selectedSubject.description || 'Sin descripcion registrada' }}</p>
+            </div>
+          </div>
+          <div class="entity-grid">
+            <div class="entity-card"><span>Color</span><strong>{{ selectedSubject.color || 'N/A' }}</strong></div>
+            <div class="entity-card"><span>Estatus</span><strong>Activa</strong></div>
+            <div class="entity-card"><span>Estatus</span><strong>{{ selectedSubject.isActive ? 'Activa' : 'Inactiva' }}</strong></div>
+            <div class="entity-card"><span>Icono</span><strong>{{ selectedSubject.icon || '--' }}</strong></div>
+          </div>
+          <div class="detail-columns">
+            <div class="detail-subcard">
+              <div class="subcard-title">Editar materia</div>
+              <div class="fg"><label class="label">Nombre</label><input class="input" [(ngModel)]="subjectEditForm.name"></div>
+              <div class="fg-row">
+                <div class="fg"><label class="label">Icono</label><input class="input" [(ngModel)]="subjectEditForm.icon"></div>
+                <div class="fg"><label class="label">Color</label><input class="input" type="color" [(ngModel)]="subjectEditForm.color"></div>
+              </div>
+              <div class="fg"><label class="label">Descripcion</label><textarea class="textarea" rows="3" [(ngModel)]="subjectEditForm.description"></textarea></div>
+              <button class="btn btn-outline btn-block" (click)="updateSubject()" [disabled]="saving">Guardar cambios</button>
+            </div>
+            <div class="detail-subcard">
+              <div class="subcard-title">Salones donde se imparte</div>
+              <div class="empty-box">Las materias se asocian por el contenido que crea cada maestro.</div>
+            </div>
+          </div>
+        }
+      </div>
+    </div>
+  </div>
+
+</div>

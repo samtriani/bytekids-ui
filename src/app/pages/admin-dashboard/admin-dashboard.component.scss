@@ -1,0 +1,7 @@
+.mb22 { margin-bottom:22px; } .mb10 { margin-bottom:10px; }
+.blue .kpi-ico { background:var(--info-lt); }
+.cr-row { display:flex; align-items:center; gap:10px; padding:8px 0; border-bottom:1px solid var(--border2); }
+.cr-row:last-child { border-bottom:none; }
+.cr-badge { padding:5px 11px; border-radius:20px; font-weight:900; font-size:.82rem; flex-shrink:0; }
+.ia-cta { background:var(--guinda-lt); border-color:var(--guinda-border); }
+.mexico-card { background:linear-gradient(135deg,var(--guinda-lt),var(--oro-lt)); border-color:var(--guinda-border); }

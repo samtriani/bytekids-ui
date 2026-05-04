@@ -1,0 +1,117 @@
+<div class="login-root">
+
+  <!-- Left panel — branding -->
+  <div class="login-brand">
+    <div class="brand-bg"></div>
+    <div class="brand-content">
+
+      <div class="brand-logos">
+        <img src="assets/logo-bytekids.jpeg" alt="ByteKids Academy" class="bk-logo">
+        <div class="sep-line"></div>
+      </div>
+
+      <div class="brand-hero">
+        <h1 class="hero-title">ByteKids<br><span class="hero-accent">Academy</span></h1>
+        <p class="hero-sub">Plataforma Educativa Digital</p>
+        <div class="hero-line"></div>
+        <p class="hero-tagline">Transformando la educación<br>con inteligencia artificial</p>
+      </div>
+
+      <div class="brand-pills">
+        <div class="pill">🎓 4 Salones activos</div>
+        <div class="pill">👨‍🎓 85 Alumnos</div>
+        <div class="pill">🤖 IA integrada</div>
+        <div class="pill">🌎 Plataforma Nacional</div>
+      </div>
+
+      <div class="brand-foot">
+        <span>Ciclo escolar 2026–2027</span>
+        <span class="dot">·</span>
+        <span>Programa Educativo Digital</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- Right panel — form -->
+  <div class="login-form-wrap">
+    <div class="form-card" [class.shake]="shake">
+
+      <div class="form-logo">
+        <img src="assets/logo-bytekids.jpeg" alt="ByteKids" class="form-logo-img">
+      </div>
+
+      <div class="form-header">
+        <h2 class="form-title">Bienvenido</h2>
+        <p class="form-sub">Ingresa tus credenciales para acceder al sistema</p>
+      </div>
+
+      <!-- Error -->
+      @if (error) {
+        <div class="error-box">
+          <span class="err-icon">⚠</span>
+          <span>{{ error }}</span>
+        </div>
+      }
+
+      <!-- Usuario -->
+      <div class="field-group">
+        <label class="field-label">USUARIO</label>
+        <div class="field-wrap" [class.filled]="username">
+          <span class="field-icon">👤</span>
+          <input
+            class="field-input"
+            type="text"
+            [(ngModel)]="username"
+            (keydown)="onKey($event)"
+            placeholder="nombre.apellido"
+            autocomplete="username"
+            spellcheck="false">
+        </div>
+      </div>
+
+      <!-- Contraseña -->
+      <div class="field-group">
+        <label class="field-label">CONTRASEÑA</label>
+        <div class="field-wrap" [class.filled]="password">
+          <span class="field-icon">🔒</span>
+          <input
+            class="field-input"
+            [type]="showPwd ? 'text' : 'password'"
+            [(ngModel)]="password"
+            (keydown)="onKey($event)"
+            placeholder="••••••••••••"
+            autocomplete="current-password">
+          <button class="pwd-eye" (click)="showPwd=!showPwd" type="button">
+            {{ showPwd ? '🙈' : '👁️' }}
+          </button>
+        </div>
+      </div>
+
+      <!-- Submit -->
+      <button class="submit-btn" (click)="submit()" [disabled]="loading">
+        @if (loading) {
+          <span class="spinner"></span>
+          <span>Autenticando...</span>
+        } @else {
+          <span>Iniciar sesión</span>
+          <span class="btn-arrow">→</span>
+        }
+      </button>
+
+      <div class="form-divider">
+        <span>Sistema protegido</span>
+      </div>
+
+      <div class="secure-badges">
+        <div class="sb">🔐 Acceso seguro</div>
+        <div class="sb">🏛️ Uso institucional</div>
+        <div class="sb">🤖 Powered by AI</div>
+      </div>
+
+    </div>
+
+    <p class="form-copy">
+      © 2026 ByteKids Academy · Todos los derechos reservados
+    </p>
+  </div>
+</div>

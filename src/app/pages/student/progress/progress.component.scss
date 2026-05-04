@@ -1,0 +1,18 @@
+.progress-page {}
+.week-grid { display:flex; gap:10px; height:180px; padding:10px 0; }
+.day-col { display:flex; flex-direction:column; align-items:center; gap:4px; flex:1; }
+.day-col.active {}
+.day-bar-wrap { flex:1; width:100%; display:flex; align-items:flex-end; }
+.day-bar { width:100%; border-radius:6px 6px 0 0; min-height:8%; transition:height .4s ease; }
+.day-xp { font-size:.65rem; font-weight:800; color:var(--bk-yellow-light); white-space:nowrap; }
+.day-label { font-size:.78rem; font-weight:800; color:var(--bk-text-muted); }
+.skills-detail { display:flex; flex-direction:column; gap:10px; }
+.skill-row { display:flex; align-items:center; gap:12px; padding:8px; border-radius:10px; transition:background .2s; }
+.skill-row:hover { background:var(--bk-bg-card2); }
+.sk-icon { width:38px; height:38px; border-radius:10px; display:flex; align-items:center; justify-content:center; font-size:1.1rem; flex-shrink:0; }
+.sk-body { flex:1; }
+.sk-top { display:flex; align-items:center; gap:10px; }
+.sk-name { font-weight:800; font-size:.88rem; color:var(--bk-text); flex:1; }
+.sk-level { font-size:.76rem; font-weight:800; }
+.sk-xp { font-size:.72rem; font-weight:700; color:var(--bk-yellow-light); }
+.sk-pct { font-weight:900; font-size:.9rem; white-space:nowrap; min-width:36px; text-align:right; }

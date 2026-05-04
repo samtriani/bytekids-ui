@@ -1,0 +1,104 @@
+<app-shell role="teacher" userName="Profa. García" userAvatar="MG"
+  [navItems]="navItems" pageTitle="Mis Salones"></app-shell>
+<div class="page-wrap">
+  <div class="ph">
+    <div class="ph-left"><h1>Mis Salones</h1><p>Monitorea y gestiona todos tus grupos activos</p></div>
+    <a routerLink="/teacher/ai-assistant" class="btn btn-primary">🤖 Analizar con IA</a>
+  </div>
+
+  <!-- KPIs rápidos -->
+  <div class="g3 mb14">
+    <div class="kpi green"><div class="kpi-ico">🏫</div><div><div class="kpi-val">3</div><div class="kpi-lbl">Salones activos</div></div></div>
+    <div class="kpi"><div class="kpi-ico">👨‍🎓</div><div><div class="kpi-val">65</div><div class="kpi-lbl">Total alumnos</div></div></div>
+    <div class="kpi gold"><div class="kpi-ico">📈</div><div><div class="kpi-val">71%</div><div class="kpi-lbl">Promedio general</div></div></div>
+  </div>
+
+  <div class="cl-layout">
+    <!-- Lista de salones -->
+    <div class="cl-list">
+      @for (r of rooms; track r.name) {
+        <div class="room-card card card-p" [class.selected]="r.name===sel.name" (click)="select(r)">
+          <div class="rc-top">
+            <div>
+              <div class="room-badge" [style.color]="rc(r.avg)" [style.background]="rc(r.avg)+'18'">{{ r.name }}</div>
+            </div>
+            <span class="tag" [class]="r.up?'tag-green':'tag-red'">{{ r.trend }}</span>
+          </div>
+          <div class="prog" style="height:6px;margin:10px 0">
+            <div class="prog-bar" [style.width]="r.avg+'%'" [style.background]="rc(r.avg)"></div>
+          </div>
+          <div class="rc-stats">
+            <div class="rs"><span class="rv">{{ r.students }}</span><span class="rl">Alumnos</span></div>
+            <div class="rs"><span class="rv" [style.color]="rc(r.avg)">{{ r.avg }}%</span><span class="rl">Promedio</span></div>
+            <div class="rs"><span class="rv" style="color:var(--ok)">{{ r.active }}</span><span class="rl">Activos</span></div>
+          </div>
+          @if (r.status==='warn') {
+            <div class="rc-warn">⚠️ Intervención recomendada</div>
+          }
+        </div>
+      }
+    </div>
+
+    <!-- Detalle del salón seleccionado -->
+    <div class="room-detail card card-p">
+      <div class="rd-header">
+        <div>
+          <h2 class="rd-title">Salón {{ sel.name }}</h2>
+          <p class="rd-sub">{{ sel.students }} alumnos · {{ sel.desc }}</p>
+        </div>
+        @if (sel.status==='warn') {
+          <span class="tag tag-red">⚠️ Alerta</span>
+        } @else if (sel.status==='excellent') {
+          <span class="tag tag-green">✅ Excelente</span>
+        } @else {
+          <span class="tag tag-guinda">📊 En progreso</span>
+        }
+      </div>
+
+      @if (sel.status==='warn') {
+        <div class="alert alert-danger mb14">⚠️ Promedio por debajo de la meta (65%). Se recomienda revisar el plan de estudios y apoyar a los alumnos rezagados.</div>
+      }
+      @if (sel.status==='excellent') {
+        <div class="alert alert-ok mb14">✅ ¡Salón {{ sel.name }} es el número 1 de la institución! Sigue motivando a tus alumnos.</div>
+      }
+
+      <div class="rd-body">
+        <div class="rd-left">
+          <div class="card-title mb8">Materias del período</div>
+          <div class="chips mb14">
+            @for (s of sel.subjects; track s) { <span class="chip on">{{ s }}</span> }
+          </div>
+
+          <div class="card-title mb8">Desempeño por materia</div>
+          <div style="height:170px"><canvas #radC></canvas></div>
+        </div>
+        <div class="rd-right">
+          <div class="card-title mb8">Estadísticas del salón</div>
+          <div class="stat-grid">
+            <div class="sg-item"><div class="sg-v" [style.color]="rc(sel.avg)">{{ sel.avg }}%</div><div class="sg-l">Promedio</div></div>
+            <div class="sg-item"><div class="sg-v">{{ sel.missions }}</div><div class="sg-l">Misiones</div></div>
+            <div class="sg-item"><div class="sg-v" style="color:var(--ok)">{{ sel.active }}</div><div class="sg-l">Activos hoy</div></div>
+            <div class="sg-item"><div class="sg-v" style="font-size:.72rem">{{ sel.topStudent }}</div><div class="sg-l">⭐ Top alumno</div></div>
+          </div>
+
+          <div class="card-title mt14 mb8">Evolución semanal</div>
+          <div class="week-bars">
+            @for (v of sel.weekly; track $index) {
+              <div class="wb-col">
+                <div class="wb-bar" [style.height.%]="v" [style.background]="rc(sel.avg)"></div>
+                <span class="wb-lbl">S{{ $index+1 }}</span>
+              </div>
+            }
+          </div>
+
+          <div class="rd-actions">
+            <a routerLink="/teacher/students" class="btn btn-primary btn-block">👨‍🎓 Ver alumnos</a>
+            <a routerLink="/teacher/reports"  class="btn btn-outline btn-block">📊 Reportes</a>
+            <a routerLink="/teacher/create"   class="btn btn-ghost btn-block">＋ Nueva misión</a>
+            <a routerLink="/teacher/messages" class="btn btn-ghost btn-block">💬 Enviar mensaje</a>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>

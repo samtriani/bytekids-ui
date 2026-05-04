@@ -1,0 +1,45 @@
+<app-shell role="admin" [userName]="userName" [userAvatar]="userAvatar"
+  [navItems]="navItems" pageTitle="Todos los Salones"></app-shell>
+<div class="page-wrap">
+  <div class="ph">
+    <div class="ph-left"><h1>Todos los Salones</h1><p>Visión institucional de todos los grupos activos</p></div>
+    <a routerLink="/admin/ai-reports" class="btn btn-primary">🤖 Análisis IA</a>
+  </div>
+
+  <div class="g4 mb14">
+    <div class="kpi green"><div class="kpi-ico">🏫</div><div><div class="kpi-val">{{ rooms.length }}</div><div class="kpi-lbl">Salones activos</div></div></div>
+    <div class="kpi"><div class="kpi-ico">👨‍🎓</div><div><div class="kpi-val">{{ totalStudents }}</div><div class="kpi-lbl">Total alumnos</div></div></div>
+    <div class="kpi gold"><div class="kpi-ico">📈</div><div><div class="kpi-val">—</div><div class="kpi-lbl">Promedio general</div></div></div>
+    <div class="kpi red"><div class="kpi-ico">⚠️</div><div><div class="kpi-val">{{ alertCount }}</div><div class="kpi-lbl">Salón en alerta</div></div></div>
+  </div>
+
+  <div class="gauto">
+    @for (r of rooms; track r.name) {
+      <div class="room-card card card-p" [class.warn-card]="r.status==='warn'" [class.top-card]="r.status==='excellent'">
+        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px">
+          <div class="room-badge" [style.color]="rc(r.avg)" [style.background]="rc(r.avg)+'12'">{{ r.name }}</div>
+          <span class="tag" [class]="r.up?'tag-green':'tag-red'">{{ r.trend }}</span>
+        </div>
+        <div style="font-size:.78rem;color:var(--tx3);margin-bottom:10px">👩‍🏫 {{ r.teacher }}</div>
+        <div class="prog" style="height:7px;margin-bottom:10px">
+          <div class="prog-bar" [style.width]="r.avg+'%'" [style.background]="rc(r.avg)"></div>
+        </div>
+        <div class="room-stats">
+          <div class="rs"><span class="rv">{{ r.students }}</span><span class="rl">Alumnos</span></div>
+          <div class="rs"><span class="rv" [style.color]="rc(r.avg)">{{ r.avg }}%</span><span class="rl">Promedio</span></div>
+          <div class="rs"><span class="rv" style="color:var(--ok)">{{ r.active }}</span><span class="rl">Activos</span></div>
+          <div class="rs"><span class="rv">{{ r.missions }}</span><span class="rl">Misiones</span></div>
+        </div>
+        <div class="chips" style="margin-top:10px">
+          @for (s of r.subjects; track s) { <span class="chip" style="font-size:.63rem;padding:2px 7px">{{ s }}</span> }
+        </div>
+        @if (r.status==='warn') {
+          <div class="alert alert-danger" style="margin-top:10px;font-size:.74rem">⚠️ Promedio bajo — requiere intervención</div>
+        }
+        @if (r.status==='excellent') {
+          <div class="alert alert-ok" style="margin-top:10px;font-size:.74rem">🏆 Mejor salón de la institución</div>
+        }
+      </div>
+    }
+  </div>
+</div>

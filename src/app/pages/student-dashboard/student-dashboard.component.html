@@ -1,0 +1,84 @@
+<app-shell role="student" userName="Axel Partida" userAvatar="AP" [navItems]="navItems">
+</app-shell>
+
+<!-- This page renders INSIDE the shell via router-outlet when on /student -->
+<div class="s-dashboard">
+  <!-- Stats -->
+  <div class="bk-grid-4 fade-in-up" style="margin-bottom:20px">
+    @for (s of stats; track s.label) {
+      <div class="stat-card" [style.--card-color]="s.color">
+        <div class="stat-icon">{{ s.icon }}</div>
+        <div class="stat-info"><span class="stat-value">{{ s.value }}</span><span class="stat-label">{{ s.label }}</span></div>
+        <div class="stat-change" [class]="s.cls">{{ s.change }}</div>
+      </div>
+    }
+  </div>
+
+  <!-- Level strip -->
+  <div class="level-strip fade-in-up" style="animation-delay:.06s; margin-bottom:20px">
+    <div class="lv-left">
+      <div class="lv-badge">Nivel 5</div>
+      <div><div class="lv-title">Code Explorer 🌟</div><div class="lv-sub">1,250 / 2,000 XP para Nivel 6</div></div>
+    </div>
+    <div class="lv-right">
+      <div class="bk-progress" style="height:10px; flex:1"><div class="bar gradient" style="width:62.5%"></div></div>
+      <span class="lv-pct">62.5%</span>
+    </div>
+  </div>
+
+  <!-- Charts -->
+  <div class="bk-grid-2 fade-in-up" style="animation-delay:.1s; margin-bottom:20px">
+    <div class="bk-card">
+      <div class="card-header"><span class="card-title">📈 XP Semanal</span><a routerLink="/student/progress" class="see-all">Ver detalles →</a></div>
+      <div style="height:185px"><canvas #xpChart></canvas></div>
+    </div>
+    <div class="bk-card">
+      <div class="card-header"><span class="card-title">💡 Mapa de Habilidades</span></div>
+      <div style="height:185px"><canvas #skillsChart></canvas></div>
+    </div>
+  </div>
+
+  <!-- Missions + Achievements -->
+  <div class="bk-grid-2 fade-in-up" style="animation-delay:.14s">
+    <div class="bk-card">
+      <div class="card-header">
+        <span class="card-title">🎯 Misiones Activas</span>
+        <a routerLink="/student/missions" class="see-all">Ver todas →</a>
+      </div>
+      <div class="missions-list">
+        @for (m of missions; track m.title) {
+          <div class="mission-row">
+            <div class="m-icon" [style.background]="m.color+'18'">{{ m.icon }}</div>
+            <div class="m-body">
+              <div class="m-top"><span class="m-name">{{ m.title }}</span><span class="m-xp">+{{ m.xp }} XP</span></div>
+              <span class="m-subj">{{ m.subject }}</span>
+              <div class="bk-progress" style="height:5px;margin-top:4px"><div class="bar" [style.width]="m.progress+'%'" [style.background]="m.color"></div></div>
+            </div>
+            <div class="m-badge" [class]="m.cls">{{ m.cls==='done'?'✓':m.cls==='new'?'★':'▶' }}</div>
+          </div>
+        }
+      </div>
+    </div>
+
+    <div class="bk-card">
+      <div class="card-header">
+        <span class="card-title">🏆 Mis Logros</span>
+        <a routerLink="/student/achievements" class="see-all">Ver todos →</a>
+      </div>
+      <div class="achieve-grid">
+        @for (a of achievements; track a.title) {
+          <div class="achieve-item" [class.earned]="a.earned">
+            <div class="a-icon">{{ a.icon }}</div>
+            <span class="a-name">{{ a.title }}</span>
+            <span>{{ a.earned?'✓':'🔒' }}</span>
+          </div>
+        }
+      </div>
+
+      <a routerLink="/student/ai-tutor" class="ai-cta">
+        <div class="ai-left"><img src="assets/logo-bytekids.jpeg" class="ai-logo" alt="ByteBot"><div><div class="ai-t">Tutor IA — ByteBot</div><div class="ai-s">Tengo una duda... 🤖</div></div></div>
+        <span class="bk-btn yellow" style="font-size:.8rem;padding:8px 14px">Chatear ✨</span>
+      </a>
+    </div>
+  </div>
+</div>

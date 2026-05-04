@@ -1,0 +1,67 @@
+<div class="shell">
+  <!-- ══ SIDEBAR ══ -->
+  <aside class="sidebar" [attr.data-role]="role">
+    <!-- Logo -->
+    <div class="sb-logo" (click)="goHome()">
+      <img src="assets/logo-bytekids.jpeg" alt="ByteKids Academy" class="logo-img">
+      <div class="logo-text">
+        <span class="logo-name">ByteKids</span>
+        <span class="logo-sub">AI Platform</span>
+      </div>
+    </div>
+
+    <!-- Role badge -->
+    <div class="sb-role" [style.color]="cfg.color" [style.border-color]="cfg.color+'35'" [style.background]="cfg.color+'0D'">
+      <span>{{ cfg.emoji }}</span><span>{{ cfg.label }}</span>
+    </div>
+
+    <!-- Nav -->
+    <nav class="sb-nav">
+      @for (item of navItems; track item.route) {
+        <a class="nav-item"
+           [routerLink]="item.route ?? null"
+           routerLinkActive="active"
+           [routerLinkActiveOptions]="{exact: (item.route ?? '').split('/').length <= 3}">
+          <span class="ni-icon">{{ item.icon }}</span>
+          <span class="ni-label">{{ item.label }}</span>
+          @if (item.badge) {
+            <span class="ni-badge">{{ item.badge }}</span>
+          }
+          <span class="ni-accent" [style.background]="cfg.color"></span>
+        </a>
+      }
+    </nav>
+
+    <!-- User -->
+    <div class="sb-user">
+      <div class="sb-avatar" [style.background]="cfg.color+'20'" [style.color]="cfg.color">{{ userAvatar }}</div>
+      <div class="sb-uinfo">
+        <span class="sb-uname">{{ userName }}</span>
+        <span class="sb-urole">{{ cfg.label }}</span>
+      </div>
+      <button class="sb-logout" (click)="goHome()" title="Cambiar perfil">⟵</button>
+    </div>
+  </aside>
+
+  <!-- ══ MAIN ══ -->
+  <div class="shell-main">
+    <!-- Topbar -->
+    <header class="topbar">
+      <div class="tb-left">
+        <span class="tb-date">📅 {{ today }}</span>
+      </div>
+      <div class="tb-right">
+        <div class="tb-notif">🔔<span class="tb-dot"></span></div>
+        <div class="tb-user">
+          <div class="tb-avatar" [style.background]="cfg.color+'20'" [style.color]="cfg.color" [style.border]="'1px solid '+cfg.color+'40'">{{ userAvatar }}</div>
+          <span class="tb-uname">{{ userName }}</span>
+        </div>
+      </div>
+    </header>
+
+    <!-- Page content -->
+    <main class="shell-content">
+      <router-outlet></router-outlet>
+    </main>
+  </div>
+</div>

@@ -1,0 +1,41 @@
+<app-shell role="teacher" userName="Profa. García" userAvatar="MG" [navItems]="navItems"></app-shell>
+<div class="ai-page">
+  <div class="ai-header fade-in-up">
+    <div class="ai-header-left">
+      <div class="bot-av"><img src="assets/logo-bytekids.jpeg" class="bot-img" alt="AI"><div class="bot-dot"></div></div>
+      <div><h1 class="ai-title">Asistente Pedagógico IA 🎓</h1><span class="ai-sub">Especialista en educación · ByteKids Academy</span></div>
+    </div>
+    <button class="bk-btn ghost" (click)="clearChat()" style="font-size:.8rem;padding:7px 14px">🗑️ Limpiar</button>
+  </div>
+  <div class="ai-layout">
+    <div class="chat-box fade-in-up" style="animation-delay:.06s">
+      <div class="chat-msgs">
+        @for (msg of messages; track $index) {
+          <div class="chat-msg" [class]="msg.role">
+            @if (msg.role==='assistant') { <div class="msg-av bot"><img src="assets/logo-bytekids.jpeg" class="msg-img" alt=""></div> }
+            <div class="msg-bubble" [innerHTML]="formatMessage(msg.content)"></div>
+            @if (msg.role==='user') { <div class="msg-av user">MG</div> }
+          </div>
+        }
+        @if (isLoading) {
+          <div class="chat-msg assistant"><div class="msg-av bot"><img src="assets/logo-bytekids.jpeg" class="msg-img" alt=""></div><div class="msg-bubble typing"><span></span><span></span><span></span></div></div>
+        }
+        <div #chatEnd></div>
+      </div>
+      <div class="input-wrap">
+        <textarea class="chat-input" [(ngModel)]="userInput" (keydown)="onKeydown($event)" placeholder="Escribe tu consulta pedagógica..." rows="2" [disabled]="isLoading"></textarea>
+        <button class="send-btn" (click)="send()" [disabled]="!userInput.trim()||isLoading" [class.active]="userInput.trim()">{{ isLoading ? '⟳' : '↑' }}</button>
+      </div>
+    </div>
+    <div class="ai-side fade-in-up" style="animation-delay:.1s">
+      <div class="bk-card" style="margin-bottom:14px">
+        <div class="card-title" style="margin-bottom:12px">⚡ Consultas rápidas</div>
+        <div style="display:flex;flex-direction:column;gap:6px">
+          @for (q of quickPrompts; track q) {
+            <button class="quick-btn" (click)="send(q)">{{ q }}</button>
+          }
+        </div>
+      </div>
+    </div>
+  </div>
+</div>

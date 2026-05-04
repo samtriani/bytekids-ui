@@ -1,0 +1,146 @@
+<app-shell role="student" userName="Axel Partida" userAvatar="AP" [navItems]="navItems">
+</app-shell>
+
+<div class="ai-tutor-page">
+  <!-- Header -->
+  <div class="at-header fade-in-up">
+    <div class="at-header-left">
+      <div class="bot-avatar">
+        <img src="assets/logo-bytekids.jpeg" alt="ByteBot" class="bot-img">
+        <div class="bot-status"></div>
+      </div>
+      <div>
+        <h1 class="at-title">ByteBot — Tutor IA 🤖</h1>
+        <span class="at-sub">Powered by Claude · Siempre disponible · Personalizado para ti</span>
+      </div>
+    </div>
+    <button class="bk-btn ghost" (click)="clearChat()" style="font-size:.8rem;padding:7px 14px">🗑️ Limpiar chat</button>
+  </div>
+
+  <!-- Panel de misión activa -->
+  @if (activeMission) {
+    <div class="mission-banner" [class.completed]="missionCompleted">
+      <div class="mb-left">
+        <span class="mb-icon">🎯</span>
+        <div>
+          <div class="mb-label">{{ missionCompleted ? '✅ Misión completada' : 'Misión activa' }}</div>
+          <div class="mb-title">{{ activeMission.title }}</div>
+          <div class="mb-subject">{{ activeMission.subject }} · +{{ activeMission.xp }} XP</div>
+        </div>
+      </div>
+      <div class="mb-actions">
+        @if (!missionCompleted) {
+          <button class="mb-complete-btn" (click)="completeMission()" [disabled]="exchangeCount < 1">
+            {{ exchangeCount < 1 ? 'Habla con ByteBot primero' : '✅ Marcar como completada' }}
+          </button>
+        } @else {
+          <button class="mb-back-btn" (click)="backToMissions()">← Volver a misiones</button>
+        }
+      </div>
+    </div>
+  }
+
+  <div class="at-layout" [class.has-workspace]="activeMission && exercise">
+    <!-- Chat area -->
+    <div class="chat-container fade-in-up" style="animation-delay:.06s">
+      <div class="chat-messages">
+        @for (msg of messages; track $index) {
+          <div class="chat-msg" [class]="msg.role">
+            @if (msg.role === 'assistant') {
+              <div class="msg-avatar bot"><img src="assets/logo-bytekids.jpeg" alt="ByteBot" class="msg-bot-img"></div>
+            }
+            <div class="msg-bubble" [innerHTML]="formatMessage(msg.content)"></div>
+            @if (msg.role === 'user') {
+              <div class="msg-avatar user">AX</div>
+            }
+          </div>
+        }
+        @if (isLoading) {
+          <div class="chat-msg assistant">
+            <div class="msg-avatar bot"><img src="assets/logo-bytekids.jpeg" alt="" class="msg-bot-img"></div>
+            <div class="msg-bubble typing">
+              <span></span><span></span><span></span>
+            </div>
+          </div>
+        }
+        <div #chatEnd></div>
+      </div>
+
+      <!-- Input -->
+      <div class="chat-input-wrap">
+        <textarea
+          #inputRef
+          class="chat-input"
+          [(ngModel)]="userInput"
+          (keydown)="onKeydown($event)"
+          placeholder="Escribe tu pregunta aquí... (Enter para enviar)"
+          rows="2"
+          [disabled]="isLoading">
+        </textarea>
+        <button class="send-btn" (click)="send()" [disabled]="!userInput.trim() || isLoading" [class.active]="userInput.trim()">
+          @if (isLoading) { <span class="loading-spin">⟳</span> }
+          @else { <span>↑</span> }
+        </button>
+      </div>
+    </div>
+
+    <!-- Sidebar: editor cuando hay misión, preguntas rápidas cuando no -->
+    @if (activeMission && exercise) {
+      <div class="workspace-panel fade-in-up" style="animation-delay:.1s">
+        <div class="ws-header">
+          <span class="ws-title">💻 Área de trabajo</span>
+          <span class="ws-mission">{{ activeMission.title }}</span>
+        </div>
+        <div class="ws-instructions">{{ exercise.instructions }}</div>
+        <div class="ws-editor-wrap">
+          <div class="ws-editor-bar">
+            <span class="ws-lang">{{ activeMission.subject }}</span>
+            <button class="ws-reset" (click)="userCode = exercise!.starter; codeOutput = ''">↺ Reset</button>
+          </div>
+          <textarea class="ws-editor" [(ngModel)]="userCode" spellcheck="false" autocorrect="off" autocapitalize="off"></textarea>
+        </div>
+        <button class="ws-run-btn" (click)="runCode()">▶ Ejecutar código</button>
+        @if (codeOutput) {
+          <div class="ws-output" [class.error]="outputError">
+            <div class="ws-output-label">{{ outputError ? '⚠️ Resultado' : '✅ Salida' }}</div>
+            <pre class="ws-output-pre">{{ codeOutput }}</pre>
+            @if (!outputError && !missionCompleted) {
+              <button class="ws-submit-btn" (click)="completeMission()">🏆 Entregar misión +{{ activeMission.xp }} XP</button>
+            }
+          </div>
+        }
+        <div class="ws-hint">💡 Pídele ayuda a ByteBot si te trabas →</div>
+      </div>
+    } @else {
+      <div class="at-sidebar fade-in-up" style="animation-delay:.1s">
+        <div class="bk-card" style="margin-bottom:16px">
+          <div class="card-title" style="margin-bottom:12px">⚡ Preguntas rápidas</div>
+          <div class="quick-list">
+            @for (q of quickQuestions; track q) {
+              <button class="quick-btn" (click)="send(q)">{{ q }}</button>
+            }
+          </div>
+        </div>
+        <div class="bk-card">
+          <div class="card-title" style="margin-bottom:12px">💡 ByteBot puede ayudarte con</div>
+          <div class="capabilities-list">
+            <div class="cap-item"><span>🐍</span><span>Python & programación</span></div>
+            <div class="cap-item"><span>🧩</span><span>Scratch & animaciones</span></div>
+            <div class="cap-item"><span>🌐</span><span>HTML, CSS & JavaScript</span></div>
+            <div class="cap-item"><span>🤖</span><span>Robótica & Arduino</span></div>
+            <div class="cap-item"><span>🎮</span><span>Roblox Studio & Lua</span></div>
+            <div class="cap-item"><span>📐</span><span>Matemáticas</span></div>
+            <div class="cap-item"><span>🔬</span><span>Ciencias</span></div>
+            <div class="cap-item"><span>📚</span><span>Cualquier materia escolar</span></div>
+          </div>
+        </div>
+      </div>
+    }
+  </div>
+</div>
+
+@if (showXpToast) {
+  <div class="xp-toast">
+    🏆 +{{ activeMission?.xp }} XP ganados · ¡Misión completada!
+  </div>
+}

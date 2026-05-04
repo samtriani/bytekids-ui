@@ -1,0 +1,17 @@
+<header class="topbar">
+  <div class="topbar-left">
+    <h1 class="topbar-title">{{ title }}</h1>
+    @if (subtitle) { <span class="topbar-subtitle">{{ subtitle }}</span> }
+  </div>
+  <div class="topbar-right">
+    <div class="topbar-date">📅 {{ today }}</div>
+    <div class="notif-btn">
+      🔔
+      <span class="notif-dot"></span>
+    </div>
+    <div class="topbar-user">
+      <div class="topbar-avatar" [style.background]="color + '20'" [style.color]="color" [style.border]="'1px solid ' + color + '40'">{{ userAvatar }}</div>
+      <span class="topbar-name">{{ userName }}</span>
+    </div>
+  </div>
+</header>

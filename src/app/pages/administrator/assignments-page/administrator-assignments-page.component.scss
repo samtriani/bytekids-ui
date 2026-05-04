@@ -1,0 +1,33 @@
+@import '../users-page/administrator-users-page.component.scss';
+
+.btn-row {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 8px;
+}
+
+.linked-row small {
+  display: block;
+  color: var(--tx3);
+  margin-top: 2px;
+}
+
+.detail-menu-item-wrap {
+  display: flex;
+  align-items: stretch;
+  gap: 4px;
+  .detail-menu-item { flex: 1; }
+}
+
+.btn-baja {
+  background: none;
+  border: 1px solid var(--danger, #c0392b);
+  color: var(--danger, #c0392b);
+  border-radius: 6px;
+  padding: 0 8px;
+  cursor: pointer;
+  font-size: 12px;
+  opacity: 0.6;
+  transition: opacity .2s;
+  &:hover { opacity: 1; }
+}

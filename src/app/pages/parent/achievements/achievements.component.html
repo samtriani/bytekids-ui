@@ -1,0 +1,45 @@
+<app-shell role="parent" userName="Sam Partida" userAvatar="SP"
+  [navItems]="navItems" pageTitle="Logros"></app-shell>
+<div class="page-wrap">
+  <div class="ph"><div class="ph-left"><h1>Logros y reconocimientos</h1><p>Medallas obtenidas por tus hijos en ByteKids Academy</p></div></div>
+
+  <!-- Resumen por hijo -->
+  <div class="g2 mb14">
+    <div class="child-summary card card-p">
+      <div class="av" style="width:40px;height:40px;font-size:.82rem">AX</div>
+      <div style="flex:1"><div style="font-weight:800">Axel Partida</div><div style="font-size:.74rem;color:var(--tx3)">4 logros desbloqueados</div></div>
+      <div style="text-align:right"><div style="font-weight:900;color:var(--guinda)">{{ totalXp('Axel') }} XP</div><div style="font-size:.64rem;color:var(--tx3)">obtenidos</div></div>
+    </div>
+    <div class="child-summary card card-p">
+      <div class="av" style="width:40px;height:40px;font-size:.82rem;background:var(--info-lt);color:var(--info)">AN</div>
+      <div style="flex:1"><div style="font-weight:800">Antonella Partida</div><div style="font-size:.74rem;color:var(--tx3)">2 logros desbloqueados</div></div>
+      <div style="text-align:right"><div style="font-weight:900;color:var(--info)">{{ totalXp('Anton') }} XP</div><div style="font-size:.64rem;color:var(--tx3)">obtenidos</div></div>
+    </div>
+  </div>
+
+  <!-- Filtros -->
+  <div class="chips mb14">
+    @for (f of ['Todos','Axel','Antonella']; track f) {
+      <button class="chip" [class.on]="filt===f" (click)="filt=f">{{ f }}</button>
+    }
+  </div>
+
+  <!-- Grid de logros -->
+  <div class="ach-grid">
+    @for (a of rows; track a.title) {
+      <div class="ach-card card card-p" [class.earned]="a.earned" [class.locked]="!a.earned">
+        <div class="ac-top">
+          <span class="tag tag-gray" style="font-size:.62rem">{{ a.child }}</span>
+          @if (!a.earned) { <span style="font-size:.75rem">🔒</span> }
+        </div>
+        <div class="ach-icon">{{ a.icon }}</div>
+        <div class="ach-title">{{ a.title }}</div>
+        <div class="ach-desc">{{ a.desc }}</div>
+        <div class="ach-foot">
+          <span class="tag tag-guinda" style="font-size:.62rem">+{{ a.xp }} XP</span>
+          @if (a.earned) { <span style="font-size:.68rem;color:var(--ok);font-weight:700">✓ {{ a.date }}</span> }
+        </div>
+      </div>
+    }
+  </div>
+</div>

@@ -1,0 +1,69 @@
+<app-shell role="student" userName="Axel Partida" userAvatar="AP" [navItems]="navItems"></app-shell>
+<div class="progress-page fade-in-up">
+  <div class="page-header"><h1>📈 Mi Progreso</h1><p>Tu evolución de aprendizaje semana a semana</p></div>
+
+  <!-- Top stats -->
+  <div class="bk-grid-4" style="margin-bottom:22px">
+    <div class="stat-card" style="--card-color:#7C3AED"><div class="stat-icon">⭐</div><div class="stat-info"><span class="stat-value">1,250</span><span class="stat-label">XP Total</span></div><div class="stat-change up">+350 este mes</div></div>
+    <div class="stat-card" style="--card-color:#2563EB"><div class="stat-icon">📚</div><div class="stat-info"><span class="stat-value">8/14</span><span class="stat-label">Misiones completas</span></div><div class="stat-change up">57% completado</div></div>
+    <div class="stat-card" style="--card-color:#F59E0B"><div class="stat-icon">🔥</div><div class="stat-info"><span class="stat-value">12</span><span class="stat-label">Días de racha</span></div><div class="stat-change neutral">¡Sigue así!</div></div>
+    <div class="stat-card" style="--card-color:#10B981"><div class="stat-icon">📅</div><div class="stat-info"><span class="stat-value">5/7</span><span class="stat-label">Días activos</span></div><div class="stat-change up">Esta semana</div></div>
+  </div>
+
+  <!-- Charts row -->
+  <div class="bk-grid-2" style="margin-bottom:22px">
+    <div class="bk-card">
+      <div class="card-header"><span class="card-title">📈 XP acumulado — 8 semanas</span></div>
+      <div style="height:200px"><canvas #xpLine></canvas></div>
+    </div>
+    <div class="bk-card">
+      <div class="card-header"><span class="card-title">🎯 XP por materia</span></div>
+      <div style="height:200px"><canvas #subjectPie></canvas></div>
+    </div>
+  </div>
+
+  <!-- Skills + Weekly activity -->
+  <div class="bk-grid-2" style="margin-bottom:22px">
+    <div class="bk-card">
+      <div class="card-header"><span class="card-title">💪 Nivel por materia</span></div>
+      <div style="height:200px"><canvas #skillBar></canvas></div>
+    </div>
+    <div class="bk-card">
+      <div class="card-header"><span class="card-title">📅 Actividad esta semana</span></div>
+      <div class="week-grid">
+        @for (d of weekActivity; track d.day) {
+          <div class="day-col" [class.active]="d.active">
+            <div class="day-bar-wrap">
+              <div class="day-bar" [style.height]="d.active ? (d.xp/180*100)+'%' : '8%'" [style.background]="d.active ? 'linear-gradient(180deg,#7C3AED,#2563EB)' : 'var(--bk-bg-card2)'"></div>
+            </div>
+            <div class="day-xp">{{ d.active ? '+'+d.xp : '—' }}</div>
+            <div class="day-label">{{ d.day }}</div>
+          </div>
+        }
+      </div>
+    </div>
+  </div>
+
+  <!-- Skill details -->
+  <div class="bk-card">
+    <div class="card-header"><span class="card-title">🧬 Detalle de habilidades</span></div>
+    <div class="skills-detail">
+      @for (s of skillProgress; track s.name) {
+        <div class="skill-row">
+          <div class="sk-icon" [style.background]="s.color+'18'">{{ s.icon }}</div>
+          <div class="sk-body">
+            <div class="sk-top">
+              <span class="sk-name">{{ s.name }}</span>
+              <span class="sk-level" [style.color]="s.color">Nivel {{ s.level }}</span>
+              <span class="sk-xp">{{ s.xp }} XP</span>
+            </div>
+            <div class="bk-progress" style="height:7px; margin-top:5px">
+              <div class="bar" [style.width]="s.pct+'%'" [style.background]="s.color"></div>
+            </div>
+          </div>
+          <span class="sk-pct" [style.color]="s.color">{{ s.pct }}%</span>
+        </div>
+      }
+    </div>
+  </div>
+</div>

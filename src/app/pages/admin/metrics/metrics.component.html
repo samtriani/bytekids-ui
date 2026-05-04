@@ -1,0 +1,25 @@
+<app-shell role="admin" [userName]="userName" [userAvatar]="userAvatar"
+  [navItems]="navItems" pageTitle="Métricas institucionales"></app-shell>
+<div class="page-wrap">
+  <div class="ph">
+    <div class="ph-left"><h1>Métricas institucionales</h1><p>Análisis profundo del desempeño de la academia Ciclo 2025-2026</p></div>
+    <a routerLink="/admin/ai-reports" class="btn btn-primary">🤖 Reporte IA completo</a>
+  </div>
+
+  <div class="g4 mb14">
+    <div class="kpi gold"><div class="kpi-ico">👨‍🎓</div><div><div class="kpi-val">{{ totalStudents }}</div><div class="kpi-lbl">Alumnos activos</div><div class="kpi-dl up">Registrados en plataforma</div></div></div>
+    <div class="kpi green"><div class="kpi-ico">👩‍🏫</div><div><div class="kpi-val">{{ totalTeachers }}</div><div class="kpi-lbl">Maestros activos</div><div class="kpi-dl up">Registrados</div></div></div>
+    <div class="kpi"><div class="kpi-ico">🏫</div><div><div class="kpi-val">{{ totalClassrooms }}</div><div class="kpi-lbl">Salones activos</div><div class="kpi-dl up">Ciclo actual</div></div></div>
+    <div class="kpi red"><div class="kpi-ico">📚</div><div><div class="kpi-val">{{ totalSubjects }}</div><div class="kpi-lbl">Materias en catálogo</div><div class="kpi-dl flat">Disponibles</div></div></div>
+  </div>
+
+  <div class="g2 mb14">
+    <div class="card"><div class="card-h"><span class="card-title">Crecimiento de alumnos — 2026</span></div><div class="card-p" style="padding-top:10px"><div style="height:190px"><canvas #enrollC></canvas></div></div></div>
+    <div class="card"><div class="card-h"><span class="card-title">Engagement por materia</span></div><div class="card-p" style="padding-top:10px"><div style="height:190px"><canvas #engC></canvas></div></div></div>
+  </div>
+
+  <div class="card">
+    <div class="card-h"><span class="card-title">Rendimiento por salón — últimos 6 meses</span></div>
+    <div class="card-p" style="padding-top:10px"><div style="height:210px"><canvas #perfC></canvas></div></div>
+  </div>
+</div>

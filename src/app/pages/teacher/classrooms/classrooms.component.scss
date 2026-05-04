@@ -1,0 +1,27 @@
+.mb14 { margin-bottom:14px; } .mt14 { margin-top:14px; } .mb8 { margin-bottom:8px; }
+.cl-layout { display:grid; grid-template-columns:260px 1fr; gap:14px; }
+.cl-list { display:flex; flex-direction:column; gap:8px; }
+.room-card { cursor:pointer; transition:all .14s; border-left:3px solid transparent; }
+.room-card:hover { box-shadow:var(--sh2); transform:translateX(2px); }
+.room-card.selected { border-left-color:var(--guinda); background:var(--guinda-lt) !important; }
+.rc-top { display:flex; align-items:center; justify-content:space-between; }
+.room-badge { display:inline-flex; padding:4px 12px; border-radius:20px; font-size:.9rem; font-weight:900; }
+.rc-stats { display:flex; gap:16px; }
+.rs { display:flex; flex-direction:column; align-items:center; gap:1px; }
+.rv { font-size:.95rem; font-weight:800; color:var(--tx1); }
+.rl { font-size:.58rem; font-weight:700; color:var(--tx3); text-transform:uppercase; }
+.rc-warn { margin-top:8px; font-size:.7rem; font-weight:700; color:var(--danger); background:var(--danger-lt); padding:4px 8px; border-radius:5px; }
+.room-detail { flex:1; }
+.rd-header { display:flex; align-items:flex-start; justify-content:space-between; margin-bottom:16px; gap:10px; }
+.rd-title { font-size:1.2rem; font-weight:900; color:var(--tx1); }
+.rd-sub { font-size:.8rem; color:var(--tx3); margin-top:3px; }
+.rd-body { display:grid; grid-template-columns:1fr 1fr; gap:20px; }
+.stat-grid { display:grid; grid-template-columns:1fr 1fr; gap:10px; }
+.sg-item { background:var(--surface2); border-radius:var(--r2); padding:12px; text-align:center; }
+.sg-v { font-size:1.1rem; font-weight:900; color:var(--tx1); }
+.sg-l { font-size:.62rem; font-weight:700; color:var(--tx3); text-transform:uppercase; margin-top:3px; }
+.week-bars { display:flex; align-items:flex-end; gap:4px; height:60px; background:var(--surface2); border-radius:var(--r2); padding:8px; }
+.wb-col { flex:1; display:flex; flex-direction:column; align-items:center; justify-content:flex-end; gap:3px; height:100%; }
+.wb-bar { width:100%; min-height:4px; border-radius:3px 3px 0 0; transition:height .3s; }
+.wb-lbl { font-size:.58rem; font-weight:700; color:var(--tx4); }
+.rd-actions { display:grid; grid-template-columns:1fr 1fr; gap:6px; margin-top:14px; }

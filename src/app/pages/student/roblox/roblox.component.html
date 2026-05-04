@@ -1,0 +1,66 @@
+<app-shell role="student" userName="Axel Partida" userAvatar="AP" [navItems]="navItems"></app-shell>
+<div class="roblox-page fade-in-up">
+  <div class="page-header"><h1>🎮 Roblox Studio</h1><p>Crea tus propios videojuegos con Lua y Roblox Studio</p></div>
+
+  <!-- Banner -->
+  <div class="roblox-banner">
+    <div class="rb-left">
+      <div class="rb-badge">🎮 Módulo especial</div>
+      <h2 class="rb-title">Construye mundos.<br><span class="rb-accent">Programa el futuro.</span></h2>
+      <p class="rb-desc">Aprende Lua — el mismo lenguaje que usan los developers reales de Roblox. ¡Crea y publica tus propios juegos!</p>
+      <a [routerLink]="'/student/ai-tutor'" [queryParams]="{q:'Quiero aprender Roblox Studio. ¿Por dónde empiezo?'}" class="bk-btn yellow" style="display:inline-flex; margin-top:12px">🤖 Pedir ayuda a ByteBot</a>
+    </div>
+    <div class="rb-stats">
+      <div class="rb-stat"><span class="rb-sval">Nivel 2</span><span class="rb-slbl">Tu nivel actual</span></div>
+      <div class="rb-stat"><span class="rb-sval" style="color:var(--bk-yellow-light)">290 XP</span><span class="rb-slbl">XP ganado</span></div>
+      <div class="rb-stat"><span class="rb-sval" style="color:var(--bk-green)">35%</span><span class="rb-slbl">Progreso total</span></div>
+    </div>
+  </div>
+
+  <div class="bk-grid-2">
+    <!-- Modules -->
+    <div class="bk-card">
+      <div class="card-header"><span class="card-title">📚 Módulos del curso</span></div>
+      <div class="modules-list">
+        @for (m of modules; track m.title) {
+          <div class="module-row" [class.locked]="m.status==='Bloqueado'" [class.clickable]="m.status!=='Bloqueado'" (click)="openModule(m)">
+            <div class="mod-icon" [style.background]="m.color+'18'">{{ m.icon }}</div>
+            <div class="mod-body">
+              <div class="mod-top">
+                <span class="mod-title">{{ m.title }}</span>
+                <span class="mod-count">{{ m.done }}/{{ m.lessons }}</span>
+              </div>
+              <div class="bk-progress" style="height:5px; margin-top:4px">
+                <div class="bar" [style.width]="(m.done/m.lessons*100)+'%'" [style.background]="m.color"></div>
+              </div>
+            </div>
+            <span class="mod-status" [class]="m.status==='Completado'?'done':m.status==='En progreso'?'active':'locked'">
+              {{ m.status==='Completado'?'✓':m.status==='En progreso'?'▶':'🔒' }}
+            </span>
+          </div>
+        }
+      </div>
+    </div>
+
+    <!-- Lua snippets -->
+    <div class="bk-card">
+      <div class="card-header"><span class="card-title">💻 Ejemplos de Lua</span></div>
+      <div class="snippets-list">
+        @for (s of luaSnippets; track s.title) {
+          <div class="snippet-item">
+            <div class="snip-header">
+              <div class="snip-title">{{ s.title }}</div>
+              <button class="snip-copy" (click)="copySnippet(s)" title="Copiar código">📋</button>
+            </div>
+            <pre class="snip-code">{{ s.code }}</pre>
+          </div>
+        }
+        <a [routerLink]="'/student/ai-tutor'" [queryParams]="{q:'Muéstrame más ejemplos de código Lua para Roblox Studio'}" class="bk-btn purple" style="display:flex;justify-content:center;margin-top:8px;font-size:.83rem">🤖 Ver más con ByteBot</a>
+      </div>
+    </div>
+  </div>
+</div>
+
+@if (toast) {
+  <div class="roblox-toast">{{ toast }}</div>
+}

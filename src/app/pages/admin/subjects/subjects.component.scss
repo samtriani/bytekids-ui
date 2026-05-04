@@ -1,0 +1,8 @@
+.mb14 { margin-bottom:14px; }
+.subj-card { transition:all .14s; }
+.subj-card:hover { transform:translateY(-2px); box-shadow:var(--sh2); }
+.sj-ico { width:40px; height:40px; background:var(--guinda-lt); border-radius:10px; display:flex; align-items:center; justify-content:center; font-size:1.2rem; flex-shrink:0; }
+.sj-stats { display:flex; gap:10px; }
+.rs { display:flex; flex-direction:column; align-items:center; flex:1; background:var(--surface2); border-radius:var(--r2); padding:7px; }
+.rv { font-size:.92rem; font-weight:800; color:var(--tx1); }
+.rl { font-size:.58rem; font-weight:700; color:var(--tx3); text-transform:uppercase; margin-top:2px; }

@@ -1,0 +1,150 @@
+<app-shell role="teacher" userName="Profa. García" userAvatar="MG"
+  [navItems]="navItems" pageTitle="Alumnos — 4°A"></app-shell>
+<div class="page-wrap">
+  <div class="ph">
+    <div class="ph-left"><h1>Alumnos — Salón 4°A</h1><p>Seguimiento individual de los 22 estudiantes activos</p></div>
+    <a routerLink="/teacher/ai-assistant" class="btn btn-primary">🤖 Análisis IA</a>
+  </div>
+
+  <div class="g4 mb14">
+    <div class="kpi green"><div class="kpi-ico">⭐</div><div><div class="kpi-val">2</div><div class="kpi-lbl">Excelentes</div></div></div>
+    <div class="kpi"><div class="kpi-ico">📊</div><div><div class="kpi-val">3</div><div class="kpi-lbl">En progreso</div></div></div>
+    <div class="kpi red"><div class="kpi-ico">⚠️</div><div><div class="kpi-val">1</div><div class="kpi-lbl">Necesitan apoyo</div></div></div>
+    <div class="kpi gold"><div class="kpi-ico">🔥</div><div><div class="kpi-val">22d</div><div class="kpi-lbl">Racha máx.</div></div></div>
+  </div>
+
+  <div class="toolbar mb14">
+    <input class="input" [(ngModel)]="search" placeholder="🔍 Buscar alumno..." style="max-width:240px">
+    <div class="chips">
+      @for (f of filters; track f) { <button class="chip" [class.on]="filt===f" (click)="filt=f">{{ f }}</button> }
+    </div>
+    <div class="view-toggle">
+      <button class="vt-btn" [class.active]="view==='table'" (click)="view='table'">☰ Lista</button>
+      <button class="vt-btn" [class.active]="view==='cards'" (click)="view='cards'">⊞ Tarjetas</button>
+    </div>
+  </div>
+
+  @if (view==='table') {
+    <div class="card" style="overflow:hidden">
+      <table class="tbl">
+        <thead>
+          <tr><th>Alumno</th><th>Progreso</th><th>XP</th><th>Racha</th><th>Estado</th><th>Último acceso</th><th>Siguiente misión</th><th></th></tr>
+        </thead>
+        <tbody>
+          @for (s of rows; track s.n) {
+            <tr [class.row-warn]="s.status==='Necesita apoyo'" style="cursor:pointer" (click)="openStudent(s)">
+              <td>
+                <div style="display:flex;align-items:center;gap:8px">
+                  <div class="av" style="width:32px;height:32px;font-size:.72rem" [style.background]="s.status==='Excelente'?'var(--oro-lt)':s.status==='Necesita apoyo'?'var(--danger-lt)':'var(--guinda-lt)'" [style.color]="s.status==='Excelente'?'#7A4F00':s.status==='Necesita apoyo'?'var(--danger)':'var(--guinda)'">{{ s.av }}</div>
+                  <div><div style="font-weight:700;font-size:.85rem">{{ s.n }}</div><div style="font-size:.68rem;color:var(--tx3)">{{ s.cls }}</div></div>
+                </div>
+              </td>
+              <td>
+                <div style="display:flex;align-items:center;gap:7px">
+                  <div class="prog" style="height:6px;width:75px"><div class="prog-bar" [style.width]="s.prog+'%'" [style.background]="pc(s.prog)"></div></div>
+                  <span style="font-weight:800;font-size:.8rem" [style.color]="pc(s.prog)">{{ s.prog }}%</span>
+                </div>
+              </td>
+              <td style="font-weight:700;color:var(--guinda);font-size:.84rem">{{ s.xp }}</td>
+              <td>🔥 <strong>{{ s.streak }}d</strong></td>
+              <td><span class="tag" [class]="sc(s.status)">{{ s.status }}</span></td>
+              <td style="font-size:.76rem" [style.color]="s.last.includes('días')?'var(--danger)':'var(--tx3)'">{{ s.last }}</td>
+              <td style="font-size:.75rem;color:var(--tx3)">{{ s.nextMission }}</td>
+              <td (click)="$event.stopPropagation()">
+                <button class="btn btn-ghost btn-sm" (click)="msgStudent(s)">💬</button>
+              </td>
+            </tr>
+          }
+          @empty {
+            <tr><td colspan="8" style="text-align:center;padding:24px;color:var(--tx3)">Sin resultados</td></tr>
+          }
+        </tbody>
+      </table>
+    </div>
+  }
+
+  @if (view==='cards') {
+    <div class="gauto">
+      @for (s of rows; track s.n) {
+        <div class="stu-card card card-p" (click)="openStudent(s)">
+          <div class="sc-top">
+            <div class="av" style="width:42px;height:42px;font-size:.82rem" [style.background]="s.status==='Excelente'?'var(--oro-lt)':s.status==='Necesita apoyo'?'var(--danger-lt)':'var(--guinda-lt)'" [style.color]="s.status==='Excelente'?'#7A4F00':s.status==='Necesita apoyo'?'var(--danger)':'var(--guinda)'">{{ s.av }}</div>
+            <div style="flex:1">
+              <div style="font-weight:800;font-size:.9rem">{{ s.n }}</div>
+              <div style="font-size:.72rem;color:var(--tx3)">{{ s.cls }} · {{ s.last }}</div>
+            </div>
+            <span class="tag" [class]="sc(s.status)">{{ s.status }}</span>
+          </div>
+          <div class="prog" style="height:7px;margin:10px 0">
+            <div class="prog-bar" [style.width]="s.prog+'%'" [style.background]="pc(s.prog)"></div>
+          </div>
+          <div style="display:flex;justify-content:space-between;font-size:.75rem;color:var(--tx3);margin-bottom:10px">
+            <span><strong style="color:var(--tx1)">{{ s.prog }}%</strong> progreso</span>
+            <span><strong style="color:var(--guinda)">{{ s.xp }}</strong> XP</span>
+            <span>🔥 <strong>{{ s.streak }}d</strong></span>
+          </div>
+          <div class="chips" style="margin-bottom:10px">
+            @for (sub of s.subjects; track sub) { <span class="chip on" style="font-size:.65rem;padding:2px 7px">{{ sub }}</span> }
+          </div>
+          <button class="btn btn-ghost btn-sm btn-block" (click)="$event.stopPropagation(); msgStudent(s)">💬 Enviar mensaje</button>
+        </div>
+      }
+    </div>
+  }
+</div>
+
+<!-- Modal detalle alumno -->
+@if (selected) {
+  <div class="modal-bg" (click)="closeModal()">
+    <div class="modal" (click)="$event.stopPropagation()">
+      <div class="modal-header">
+        <div style="display:flex;align-items:center;gap:12px">
+          <div class="av" style="width:48px;height:48px;font-size:.9rem" [style.background]="selected.status==='Excelente'?'var(--oro-lt)':selected.status==='Necesita apoyo'?'var(--danger-lt)':'var(--guinda-lt)'" [style.color]="selected.status==='Excelente'?'#7A4F00':selected.status==='Necesita apoyo'?'var(--danger)':'var(--guinda)'">{{ selected.av }}</div>
+          <div>
+            <div style="font-weight:900;font-size:1rem">{{ selected.n }}</div>
+            <div style="font-size:.75rem;color:var(--tx3)">{{ selected.cls }} · Último acceso: {{ selected.last }}</div>
+          </div>
+        </div>
+        <button class="modal-close" (click)="closeModal()">✕</button>
+      </div>
+
+      <div class="modal-body">
+        <div class="g3" style="margin-bottom:14px">
+          <div class="kpi" style="padding:10px 12px"><div class="kpi-ico" style="font-size:1.1rem">📈</div><div><div class="kpi-val" style="font-size:1.1rem" [style.color]="pc(selected.prog)">{{ selected.prog }}%</div><div class="kpi-lbl">Progreso</div></div></div>
+          <div class="kpi" style="padding:10px 12px"><div class="kpi-ico" style="font-size:1.1rem">⭐</div><div><div class="kpi-val" style="font-size:1.1rem">{{ selected.xp }}</div><div class="kpi-lbl">XP total</div></div></div>
+          <div class="kpi" style="padding:10px 12px"><div class="kpi-ico" style="font-size:1.1rem">🔥</div><div><div class="kpi-val" style="font-size:1.1rem">{{ selected.streak }}d</div><div class="kpi-lbl">Racha</div></div></div>
+        </div>
+
+        <div style="margin-bottom:10px">
+          <div style="font-size:.72rem;font-weight:800;color:var(--tx3);text-transform:uppercase;margin-bottom:6px">Nota del maestro</div>
+          <div style="font-size:.84rem;color:var(--tx2);background:var(--bg2);border-radius:8px;padding:10px 12px">{{ selected.note }}</div>
+        </div>
+
+        <div style="margin-bottom:14px">
+          <div style="font-size:.72rem;font-weight:800;color:var(--tx3);text-transform:uppercase;margin-bottom:6px">Misiones completadas</div>
+          @if (selected.missions.length) {
+            <div style="display:flex;flex-direction:column;gap:4px">
+              @for (m of selected.missions; track m) {
+                <div style="font-size:.8rem;color:var(--tx2);padding:4px 0;border-bottom:1px solid var(--border)">{{ m }}</div>
+              }
+            </div>
+          } @else {
+            <div style="font-size:.82rem;color:var(--tx3)">Sin misiones completadas aún.</div>
+          }
+        </div>
+
+        <div style="display:flex;gap:8px;flex-wrap:wrap">
+          <button class="btn btn-primary" style="flex:1" (click)="msgStudent(selected)">💬 Enviar mensaje</button>
+          <button class="btn btn-outline" style="flex:1" (click)="assignMission(selected)">📝 Asignar misión</button>
+          @if (selected.status==='Necesita apoyo') {
+            <button class="btn btn-danger btn-block" (click)="sendAlert(selected)">⚠️ Alertar a padres</button>
+          }
+        </div>
+      </div>
+    </div>
+  </div>
+}
+
+@if (toast) {
+  <div class="teacher-toast">{{ toast }}</div>
+}

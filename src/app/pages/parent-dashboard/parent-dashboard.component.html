@@ -1,0 +1,78 @@
+<app-shell role="parent" userName="Sam Partida" userAvatar="SP" [navItems]="navItems" pageTitle="Panel de Familia"></app-shell>
+<div class="app-shell-content fade-in">
+  <div class="page-header">
+    <div><h1>Bienvenido, Sam</h1><p>Aquí puedes ver el progreso de Axel y Antonella</p></div>
+    <a [routerLink]="'/parent/ai-assistant'" class="btn btn-primary">🤖 Asistente IA</a>
+  </div>
+
+  <!-- Children cards -->
+  <div class="grid-2" style="margin-bottom:20px">
+    @for (c of children; track c.name) {
+      <div class="card card-padded child-card" [style.border-top-color]="c.color">
+        <div style="display:flex;align-items:center;gap:12px;margin-bottom:14px">
+          <div class="avatar" style="width:48px;height:48px;font-size:.9rem" [style.background]="c.color+'12'" [style.color]="c.color">{{ c.avatar }}</div>
+          <div style="flex:1">
+            <div style="font-weight:800;font-size:1rem">{{ c.name }}</div>
+            <div style="font-size:0.76rem;color:var(--text-muted)">{{ c.grade }} · Nivel {{ c.level }} · {{ c.subject }}</div>
+          </div>
+          <span class="badge badge-guinda" [style.background]="c.color+'12'" [style.color]="c.color" [style.border-color]="c.color+'25'">Activo</span>
+        </div>
+        <div class="grid-3" style="margin-bottom:12px">
+          <div style="text-align:center"><div style="font-weight:800;font-size:1.2rem" [style.color]="c.color">{{ c.xp }}</div><div style="font-size:0.66rem;color:var(--text-muted);text-transform:uppercase;font-weight:600">XP</div></div>
+          <div style="text-align:center"><div style="font-weight:800;font-size:1.2rem">{{ c.progress }}%</div><div style="font-size:0.66rem;color:var(--text-muted);text-transform:uppercase;font-weight:600">Progreso</div></div>
+          <div style="text-align:center"><div style="font-weight:800;font-size:1.2rem">🔥{{ c.streak }}d</div><div style="font-size:0.66rem;color:var(--text-muted);text-transform:uppercase;font-weight:600">Racha</div></div>
+        </div>
+        <div class="progress-wrap" style="height:7px;margin-bottom:10px">
+          <div class="progress-bar" [style.width]="c.progress+'%'" [style.background]="c.color"></div>
+        </div>
+        <a [routerLink]="'/parent/children'" class="btn btn-ghost btn-sm" style="width:100%;justify-content:center">Ver perfil completo →</a>
+      </div>
+    }
+  </div>
+
+  <div class="grid-2">
+    <!-- Weekly activity chart -->
+    <div class="card card-padded">
+      <div class="card-header-row">
+        <span class="card-title">Actividad semanal</span>
+        <a [routerLink]="'/parent/progress'" class="btn btn-ghost btn-sm">Ver progreso →</a>
+      </div>
+      <div style="height:200px"><canvas #actChart></canvas></div>
+    </div>
+
+    <!-- Activity + Messages -->
+    <div style="display:flex;flex-direction:column;gap:14px">
+      <div class="card card-padded" style="flex:1">
+        <div class="card-header-row">
+          <span class="card-title">Actividad reciente</span>
+          <a [routerLink]="'/parent/children'" class="btn btn-ghost btn-sm">Ver todo →</a>
+        </div>
+        @for (a of recentActivity; track a.text) {
+          <div class="act-row">
+            <div class="act-dot" [style.background]="a.color"></div>
+            <div>
+              <div style="font-size:0.82rem;font-weight:600;color:var(--text-primary)">{{ a.icon }} {{ a.text }}</div>
+              <div style="font-size:0.7rem;color:var(--text-muted)">{{ a.child }} · {{ a.time }}</div>
+            </div>
+          </div>
+        }
+      </div>
+      <div class="card card-padded">
+        <div class="card-header-row">
+          <span class="card-title">Mensajes de maestros</span>
+          <a [routerLink]="'/parent/messages'" class="btn btn-outline btn-sm">💬 Abrir</a>
+        </div>
+        @for (m of messages; track m.from) {
+          <div class="msg-preview">
+            <div class="avatar" style="width:30px;height:30px;font-size:.66rem;flex-shrink:0">{{ m.avatar }}</div>
+            <div style="flex:1;min-width:0">
+              <div style="font-weight:700;font-size:0.8rem">{{ m.from }}</div>
+              <div style="font-size:0.75rem;color:var(--text-muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis">{{ m.text }}</div>
+            </div>
+            <span style="font-size:0.68rem;color:var(--text-dim);white-space:nowrap">{{ m.time }}</span>
+          </div>
+        }
+      </div>
+    </div>
+  </div>
+</div>

@@ -1,0 +1,54 @@
+<app-shell role="student" userName="Axel Partida" userAvatar="AP" [navItems]="navItems"></app-shell>
+
+<div class="missions-page fade-in-up">
+  <div class="page-header">
+    <h1>🎯 Mis Misiones</h1>
+    <p>Completa misiones para ganar XP y subir de nivel</p>
+  </div>
+
+  <!-- Stats row -->
+  <div class="missions-stats">
+    <div class="ms-card" style="--c:#10B981"><span class="ms-val">14</span><span class="ms-lbl">Total</span></div>
+    <div class="ms-card" style="--c:#2563EB"><span class="ms-val">3</span><span class="ms-lbl">En progreso</span></div>
+    <div class="ms-card" style="--c:#7C3AED"><span class="ms-val">8</span><span class="ms-lbl">Completadas</span></div>
+    <div class="ms-card" style="--c:#F59E0B"><span class="ms-val">3</span><span class="ms-lbl">Disponibles</span></div>
+  </div>
+
+  <!-- Filters -->
+  <div class="filters">
+    @for (f of filters; track f) {
+      <button class="filter-btn" [class.active]="activeFilter === f" (click)="setFilter(f)">{{ f }}</button>
+    }
+  </div>
+
+  <!-- Missions grid -->
+  <div class="missions-grid">
+    @for (m of filtered; track m.title) {
+      <div class="mission-card" [class.locked]="m.locked" [class.done]="m.status==='Completado'">
+        <div class="mc-header">
+          <div class="mc-icon" [style.background]="m.color+'18'">{{ m.icon }}</div>
+          <div class="mc-meta">
+            <span class="mc-subj" [style.color]="m.color">{{ m.subject }}</span>
+            <span class="mc-diff">{{ m.difficulty }}</span>
+          </div>
+          <div class="mc-xp">+{{ m.xp }} XP</div>
+        </div>
+        <h3 class="mc-title">{{ m.title }}</h3>
+        <div class="mc-info">
+          <span>⏱️ {{ m.time }}</span>
+          <span class="mc-status" [class]="m.status.replace(' ','-').toLowerCase()">{{ m.status }}</span>
+        </div>
+        <div class="bk-progress" style="height:6px; margin:10px 0">
+          <div class="bar" [style.width]="m.progress+'%'" [style.background]="m.color"></div>
+        </div>
+        @if (!m.locked) {
+          <button class="mc-btn" [style.background]="m.color" (click)="startMission(m)">
+            {{ m.status==='Completado' ? '🔁 Repasar' : m.progress > 0 ? '▶ Continuar' : '🚀 Iniciar' }}
+          </button>
+        } @else {
+          <div class="mc-btn locked-btn">🔒 Bloqueado</div>
+        }
+      </div>
+    }
+  </div>
+</div>

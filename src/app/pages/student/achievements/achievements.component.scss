@@ -1,0 +1,25 @@
+.ach-page {}
+.ach-summary { background:var(--bk-bg-card); border:1px solid var(--bk-border); border-radius:var(--bk-radius); padding:20px 28px; display:flex; align-items:center; gap:24px; margin-bottom:20px; flex-wrap:wrap; }
+.as-stat { display:flex; flex-direction:column; gap:2px; }
+.as-val  { font-family:'Syne',sans-serif; font-size:1.6rem; font-weight:800; color:var(--bk-text); }
+.as-lbl  { font-size:.72rem; color:var(--bk-text-muted); font-weight:700; text-transform:uppercase; letter-spacing:.04em; }
+.as-sep  { width:1px; height:44px; background:var(--bk-border); }
+.as-progress-wrap { display:flex; align-items:center; gap:10px; }
+.as-pct  { font-weight:800; font-size:.83rem; color:var(--bk-purple-light); white-space:nowrap; }
+.ach-filters { display:flex; gap:8px; margin-bottom:18px; flex-wrap:wrap; }
+.filter-btn { padding:6px 16px; border-radius:20px; border:1px solid var(--bk-border); background:transparent; color:var(--bk-text-muted); font-size:.78rem; font-weight:700; cursor:pointer; transition:all .2s; font-family:'Nunito',sans-serif; }
+.filter-btn.active { background:var(--bk-purple); color:#fff; border-color:var(--bk-purple); }
+.ach-grid { display:grid; grid-template-columns:repeat(auto-fill, minmax(220px,1fr)); gap:14px; }
+.ach-card { background:var(--bk-bg-card); border:1px solid var(--bk-border); border-radius:16px; padding:20px; display:flex; flex-direction:column; align-items:center; gap:8px; text-align:center; transition:all .2s; }
+.ach-card.earned { border-color:rgba(37,99,235,0.35); background:rgba(37,99,235,0.04); }
+.ach-card.earned:hover { transform:translateY(-4px); box-shadow:0 12px 30px rgba(0,0,0,0.3); }
+.ach-card.locked { opacity:.45; }
+.ac-rarity { padding:3px 9px; border-radius:20px; font-size:.64rem; font-weight:800; text-transform:uppercase; letter-spacing:.05em; }
+.ac-icon { font-size:2.5rem; filter:grayscale(0); }
+.locked .ac-icon { filter:grayscale(1) opacity(.5); }
+.ac-title { font-family:'Syne',sans-serif; font-weight:800; font-size:.92rem; color:var(--bk-text); }
+.ac-desc { font-size:.75rem; color:var(--bk-text-muted); font-weight:600; line-height:1.45; }
+.ac-footer { display:flex; align-items:center; justify-content:space-between; width:100%; margin-top:4px; }
+.ac-xp   { font-size:.76rem; font-weight:800; color:var(--bk-yellow-light); }
+.ac-date { font-size:.72rem; color:var(--bk-green); font-weight:700; }
+.ac-lock { font-size:.85rem; }

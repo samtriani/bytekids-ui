@@ -1,0 +1,64 @@
+<app-shell role="teacher" userName="Profa. García" userAvatar="MG"
+  [navItems]="navItems" pageTitle="Mensajes"></app-shell>
+<div class="msg-layout">
+  <!-- Lista de conversaciones -->
+  <div class="conv-panel">
+    <div class="conv-header">
+      <span style="font-weight:800;font-size:.9rem;color:var(--tx1)">Mensajes</span>
+      <span class="badge badge-guinda">5</span>
+    </div>
+    <div class="conv-list">
+      @for (c of conversations; track c.id) {
+        <div class="conv-item" [class.active]="c.id===selectedId" (click)="select(c.id)">
+          <div class="avatar" style="width:38px;height:38px;position:relative">{{ c.av }}
+            @if (c.online) { <span class="online-dot"></span> }
+          </div>
+          <div class="conv-body">
+            <div style="display:flex;justify-content:space-between;align-items:center">
+              <span style="font-weight:700;font-size:.84rem;color:var(--tx1)">{{ c.name }}</span>
+              <span style="font-size:.67rem;color:var(--tx4)">{{ c.time }}</span>
+            </div>
+            <div style="font-size:.7rem;color:var(--tx3);margin-top:1px">{{ c.role | role }}</div>
+            <div style="display:flex;justify-content:space-between;align-items:center;margin-top:3px">
+              <span style="font-size:.74rem;color:var(--tx4);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;max-width:160px">{{ c.lastMsg }}</span>
+              @if (c.unread) { <span class="badge badge-guinda" style="font-size:.59rem;padding:1px 5px">{{ c.unread }}</span> }
+            </div>
+          </div>
+        </div>
+      }
+    </div>
+  </div>
+
+  <!-- Ventana de chat -->
+  <div class="chat-panel">
+    <div class="chat-header">
+      <div class="avatar" style="width:36px;height:36px">{{ selected.av }}</div>
+      <div>
+        <div style="font-weight:800;font-size:.9rem;color:var(--tx1)">{{ selected.name }}</div>
+        <div style="font-size:.72rem;color:var(--tx3)">
+          {{ selected.role | role }}
+          @if (selected.online) { · <span style="color:var(--ok);font-weight:700">● En línea</span> }
+        </div>
+      </div>
+      <div style="margin-left:auto;display:flex;gap:6px">
+        <button class="btn btn-ghost btn-sm">📋 Perfil</button>
+        <button class="btn btn-ghost btn-sm">📎</button>
+      </div>
+    </div>
+
+    <div class="chat-messages">
+      @for (m of messages; track $index) {
+        <div class="msg-row" [class]="m.from">
+          <div class="bubble" [class]="m.from">{{ m.text }}</div>
+          <span class="msg-time">{{ m.time }}</span>
+        </div>
+      }
+    </div>
+
+    <div class="chat-input">
+      <textarea class="chat-textarea" [(ngModel)]="newMsg" (keydown)="onKey($event)"
+        placeholder="Escribe un mensaje... (Enter para enviar)" rows="2"></textarea>
+      <button class="send-btn" [class.active]="newMsg.trim()" (click)="send()">→</button>
+    </div>
+  </div>
+</div>

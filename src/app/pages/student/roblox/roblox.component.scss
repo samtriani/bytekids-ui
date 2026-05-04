@@ -1,0 +1,33 @@
+.roblox-page {}
+.roblox-banner { background:linear-gradient(135deg, rgba(16,185,129,0.1), rgba(37,99,235,0.06)); border:1px solid rgba(16,185,129,0.25); border-radius:var(--bk-radius); padding:28px 32px; margin-bottom:22px; display:flex; gap:32px; align-items:center; }
+.rb-left { flex:1; }
+.rb-badge { background:rgba(16,185,129,0.15); color:var(--bk-green); border:1px solid rgba(16,185,129,0.3); padding:4px 12px; border-radius:20px; font-size:.72rem; font-weight:800; text-transform:uppercase; letter-spacing:.06em; display:inline-flex; margin-bottom:10px; }
+.rb-title { font-family:'Syne',sans-serif; font-size:1.6rem; font-weight:800; color:var(--bk-text); line-height:1.2; margin-bottom:8px; }
+.rb-accent { color:var(--bk-green); }
+.rb-desc { font-size:.86rem; color:var(--bk-text-muted); font-weight:600; line-height:1.5; }
+.rb-stats { display:flex; gap:20px; }
+.rb-stat { display:flex; flex-direction:column; align-items:center; gap:4px; }
+.rb-sval { font-family:'Syne',sans-serif; font-size:1.3rem; font-weight:800; color:var(--bk-text); }
+.rb-slbl { font-size:.68rem; color:var(--bk-text-muted); font-weight:700; text-transform:uppercase; text-align:center; }
+.modules-list { display:flex; flex-direction:column; gap:10px; }
+.module-row { display:flex; align-items:center; gap:10px; padding:9px; border-radius:10px; transition:background .2s; }
+.module-row.clickable { cursor:pointer; }
+.module-row.clickable:hover { background:var(--bk-bg-card2); }
+.module-row.locked { opacity:.45; cursor:default; }
+.mod-icon { width:40px; height:40px; border-radius:10px; display:flex; align-items:center; justify-content:center; font-size:1.1rem; flex-shrink:0; }
+.mod-body { flex:1; }
+.mod-top { display:flex; justify-content:space-between; margin-bottom:2px; }
+.mod-title { font-weight:800; font-size:.85rem; color:var(--bk-text); }
+.mod-count { font-size:.72rem; font-weight:700; color:var(--bk-text-muted); }
+.mod-status { width:26px; height:26px; border-radius:8px; display:flex; align-items:center; justify-content:center; font-size:.78rem; font-weight:900; flex-shrink:0; }
+.mod-status.done   { background:rgba(16,185,129,.2); color:var(--bk-green); }
+.mod-status.active { background:rgba(37,99,235,.2);  color:var(--bk-blue-light); }
+.mod-status.locked { background:var(--bk-bg-card2); color:var(--bk-text-muted); }
+.snippets-list { display:flex; flex-direction:column; gap:12px; }
+.snippet-item { background:var(--bk-bg-card2); border:1px solid var(--bk-border); border-radius:10px; overflow:hidden; }
+.snip-header { display:flex; align-items:center; justify-content:space-between; padding:8px 12px; border-bottom:1px solid var(--bk-border); }
+.snip-title { font-weight:800; font-size:.8rem; color:var(--bk-text); }
+.snip-copy { background:transparent; border:none; cursor:pointer; font-size:.85rem; padding:2px 4px; border-radius:6px; transition:background .15s; }
+.snip-copy:hover { background:var(--bk-border); }
+.snip-code { padding:10px 12px; font-family:'Space Mono',monospace; font-size:.76rem; color:#A5F3FC; line-height:1.5; margin:0; overflow-x:auto; }
+.roblox-toast { position:fixed; bottom:28px; left:50%; transform:translateX(-50%); background:var(--guinda); color:#fff; padding:10px 22px; border-radius:30px; font-weight:700; font-size:.85rem; z-index:9999; box-shadow:0 4px 20px rgba(0,0,0,0.3); white-space:nowrap; }

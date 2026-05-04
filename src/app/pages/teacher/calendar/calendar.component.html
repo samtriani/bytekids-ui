@@ -1,0 +1,136 @@
+<app-shell role="teacher" userName="Profa. García" userAvatar="MG"
+  [navItems]="navItems" pageTitle="Calendario"></app-shell>
+<div class="page-wrap">
+  <div class="ph">
+    <div class="ph-left"><h1>Calendario</h1><p>Organiza clases, exámenes y eventos del salón</p></div>
+    <button class="btn btn-primary" (click)="openNewEvent()">➕ Nuevo evento</button>
+  </div>
+
+  <div class="cal-layout">
+    <div class="card card-p" style="flex:1">
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:16px">
+        <button class="cal-nav" (click)="prevMonth()" [disabled]="monthIdx===0">‹</button>
+        <h2 style="font-size:1rem;font-weight:800;color:var(--tx1)">{{ monthName }}</h2>
+        <button class="cal-nav" (click)="nextMonth()" [disabled]="monthIdx===3">›</button>
+      </div>
+      <div class="cal-days-header">
+        @for (d of days; track d) { <div class="cal-day-name">{{ d }}</div> }
+      </div>
+      <div class="cal-grid">
+        @for (week of weeks; track $index) {
+          @for (d of week; track $index) {
+            <div class="cal-cell"
+              [class.today]="d===today && monthIdx===2"
+              [class.selected]="d===selectedDay"
+              [class.has-event]="hasEvent(d)"
+              [class.empty]="!d"
+              (click)="d&&(selectedDay=d)">
+              @if (d) {
+                <span class="cal-num">{{ d }}</span>
+                @if (hasEvent(d)) { <span class="event-pip"></span> }
+              }
+            </div>
+          }
+        }
+      </div>
+    </div>
+
+    <div style="display:flex;flex-direction:column;gap:12px;width:270px">
+      <div class="card card-p">
+        <div class="card-title" style="margin-bottom:10px">{{ selectedDay }} de {{ monthName.split(' ')[0] }}</div>
+        @if (selectedEvents.length) {
+          <div style="display:flex;flex-direction:column;gap:8px">
+            @for (e of selectedEvents; track e.title) {
+              <div class="event-item" [style.border-left-color]="e.color" [style.background]="e.color+'08'" style="cursor:pointer" (click)="openEvent(e)">
+                <div style="font-size:.64rem;font-weight:800;color:var(--tx3);text-transform:uppercase;margin-bottom:2px">{{ typeLabel(e.type) }}</div>
+                <div style="font-weight:700;font-size:.84rem;color:var(--tx1)">{{ e.title }}</div>
+                <div style="font-size:.74rem;color:var(--tx3);margin-top:2px">🕐 {{ e.time }}</div>
+              </div>
+            }
+          </div>
+        } @else {
+          <p style="text-align:center;padding:16px 0;font-size:.84rem;color:var(--tx3)">Sin eventos este día</p>
+        }
+        <button class="btn btn-outline btn-block" style="margin-top:10px" (click)="openNewEvent()">➕ Agregar evento</button>
+      </div>
+
+      <div class="card card-p">
+        <div class="card-title" style="margin-bottom:10px">Próximos eventos</div>
+        <div style="display:flex;flex-direction:column;gap:8px">
+          @for (u of upcoming; track u.day) {
+            <div class="upcoming-item">
+              <span class="up-day">{{ u.day }}</span>
+              <div>
+                <div style="font-weight:700;font-size:.82rem">{{ u.ev.title }}</div>
+                <div style="font-size:.7rem;color:var(--tx3)">{{ u.ev.time }} · {{ typeLabel(u.ev.type) }}</div>
+              </div>
+            </div>
+          }
+          @empty {
+            <p style="font-size:.82rem;color:var(--tx3)">Sin próximos eventos</p>
+          }
+        </div>
+      </div>
+
+      <div class="card card-p" style="background:var(--guinda-lt);border-color:var(--guinda-border)">
+        <div style="font-weight:800;font-size:.84rem;color:var(--guinda);margin-bottom:4px">🤖 Asistente de planeación</div>
+        <div style="font-size:.75rem;color:var(--tx2);margin-bottom:10px">El IA puede sugerirte actividades y fechas de evaluación óptimas para tu salón.</div>
+        <a routerLink="/teacher/ai-assistant" class="btn btn-primary btn-block">Abrir Asistente IA</a>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Modal nuevo evento -->
+@if (showModal) {
+  <div class="modal-bg" (click)="closeModal()">
+    <div class="modal" style="max-width:400px" (click)="$event.stopPropagation()">
+      <div class="modal-header">
+        <span style="font-weight:900;font-size:1rem">➕ Nuevo evento — Día {{ selectedDay }}</span>
+        <button class="modal-close" (click)="closeModal()">✕</button>
+      </div>
+      <div class="modal-body" style="display:flex;flex-direction:column;gap:12px">
+        <div>
+          <label class="label">Título *</label>
+          <input class="input" [(ngModel)]="newEvent.title" placeholder="Ej: Examen Python 4°A">
+        </div>
+        <div class="fg-row fg">
+          <div>
+            <label class="label">Tipo</label>
+            <select class="select" [(ngModel)]="newEvent.type">
+              @for (t of types; track t) { <option [value]="t">{{ typeLabel(t) }}</option> }
+            </select>
+          </div>
+          <div>
+            <label class="label">Hora</label>
+            <input type="time" class="input" [(ngModel)]="newEvent.time">
+          </div>
+        </div>
+        <div style="display:flex;gap:8px">
+          <button class="btn btn-primary" style="flex:1" (click)="saveEvent()">✅ Guardar</button>
+          <button class="btn btn-ghost" (click)="closeModal()">Cancelar</button>
+        </div>
+      </div>
+    </div>
+  </div>
+}
+
+<!-- Modal detalle evento -->
+@if (selectedEvent) {
+  <div class="modal-bg" (click)="selectedEvent=null">
+    <div class="modal" style="max-width:360px" (click)="$event.stopPropagation()">
+      <div class="modal-header">
+        <span style="font-weight:900;font-size:1rem">{{ selectedEvent.title }}</span>
+        <button class="modal-close" (click)="selectedEvent=null">✕</button>
+      </div>
+      <div class="modal-body">
+        <div style="font-size:.84rem;color:var(--tx2);margin-bottom:16px">
+          <div>📅 Día {{ selectedDay }} · {{ monthName }}</div>
+          <div>🕐 {{ selectedEvent.time }}</div>
+          <div>🏷️ {{ typeLabel(selectedEvent.type) }}</div>
+        </div>
+        <button class="btn btn-danger btn-block" (click)="deleteEvent(selectedEvent)">🗑️ Eliminar evento</button>
+      </div>
+    </div>
+  </div>
+}

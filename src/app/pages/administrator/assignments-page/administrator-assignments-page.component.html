@@ -1,0 +1,117 @@
+<app-shell role="administrator" [userName]="userName" [userAvatar]="userAvatar" [navItems]="navItems" pageTitle="Modulo Administrador"></app-shell>
+
+<div class="page-wrap">
+  <div class="ph">
+    <div class="ph-left">
+      <h1>Asignaciones</h1>
+      <p>Asigna o elimina relaciones entre salones, profesores, alumnos y materias desde una sola vista lateral.</p>
+    </div>
+  </div>
+
+  @if (toast) {
+    <div class="alert alert-info mb16">{{ toast }}</div>
+  }
+
+  <div class="layout">
+    <div class="card card-p">
+      <div class="section-head">
+        <h3>Salones</h3>
+        <span class="tag tag-green">{{ classrooms.length }} activos</span>
+      </div>
+      <div class="fg">
+        <label class="label">Buscar salon</label>
+        <input class="input" [(ngModel)]="classroomSearch" placeholder="Busca por nombre o seccion">
+      </div>
+      <div class="detail-menu">
+        @for (classroom of filteredClassrooms; track classroom.id) {
+          <div class="detail-menu-item-wrap">
+            <button class="detail-menu-item"
+                    [class.selected]="selectedClassroom?.id === classroom.id"
+                    (click)="selectClassroom(classroom)">
+              <strong>{{ classroom.name }}</strong>
+              <small>{{ classroom.schoolYear }}</small>
+            </button>
+            <button class="btn-baja"
+                    title="Dar de baja salón"
+                    (click)="deactivateClassroom(classroom.id, classroom.name)">✕</button>
+          </div>
+        }
+      </div>
+    </div>
+
+    <div class="card card-p">
+      @if (selectedClassroom) {
+        <div class="section-head">
+          <h3>Gestion de {{ selectedClassroom.name }}</h3>
+          <span class="tag tag-blue">{{ selectedClassroom.schoolYear }}</span>
+        </div>
+
+        <div class="g2 mb16">
+          <div class="assignment-box">
+            <div class="subcard-title">Profesor asignado</div>
+
+            @if (selectedClassroom.teacherId) {
+              <!-- Profesor ya asignado: mostrar y permitir cambio o baja -->
+              <div class="linked-row mb8">
+                <div>
+                  <strong>{{ selectedClassroom.teacherName }}</strong>
+                  <small>Profesor titular</small>
+                </div>
+                <button class="btn btn-outline btn-sm" (click)="removeTeacher()" [disabled]="saving">Quitar</button>
+              </div>
+              <div class="subcard-title" style="font-size:11px;margin-top:8px">Cambiar profesor</div>
+            }
+
+            <div class="fg">
+              <label class="label">{{ selectedClassroom.teacherId ? 'Nuevo profesor' : 'Selecciona un profesor' }}</label>
+              <select class="select" [(ngModel)]="teacherAssignment.teacherId">
+                <option value="">-- Selecciona --</option>
+                @for (teacher of teachers; track teacher.id) {
+                  <option [value]="teacher.id">{{ teacher.displayName }}</option>
+                }
+              </select>
+            </div>
+            <button class="btn btn-primary btn-block"
+                    (click)="assignTeacher()"
+                    [disabled]="saving || !teacherAssignment.teacherId">
+              {{ selectedClassroom.teacherId ? 'Cambiar profesor' : 'Asignar profesor' }}
+            </button>
+          </div>
+
+          <div class="assignment-box">
+            <div class="subcard-title">Inscribir alumno</div>
+            <div class="fg">
+              <label class="label">Alumno</label>
+              <select class="select" [(ngModel)]="studentAssignment.studentId">
+                <option value="">Selecciona un alumno</option>
+                @for (student of availableStudents; track student.id) {
+                  <option [value]="student.id">{{ student.displayName }}</option>
+                }
+              </select>
+            </div>
+            <button class="btn btn-primary btn-block" (click)="assignStudent()" [disabled]="saving">Inscribir</button>
+          </div>
+        </div>
+
+        <div class="detail-subcard">
+          <div class="subcard-title">Alumnos inscritos</div>
+          @if (selectedClassroomStudents.length) {
+            @for (student of selectedClassroomStudents; track student.id) {
+              <div class="linked-row">
+                <div>
+                  <strong>{{ student.displayName }}</strong>
+                  <small>{{ student.username }}</small>
+                </div>
+                <button class="btn btn-outline btn-sm" (click)="removeStudent(student.id)" [disabled]="saving">Quitar</button>
+              </div>
+            }
+          } @else {
+            <div class="empty-box">Este salón aún no tiene alumnos inscritos.</div>
+          }
+        </div>
+      } @else {
+        <div class="empty-box">Selecciona un salon para comenzar.</div>
+      }
+    </div>
+  </div>
+</div>

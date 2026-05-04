@@ -1,0 +1,44 @@
+<app-shell role="student" userName="Axel Partida" userAvatar="AP" [navItems]="navItems"></app-shell>
+<div class="ach-page fade-in-up">
+  <div class="page-header"><h1>🏆 Mis Logros</h1><p>Colecciona medallas completando misiones y retos especiales</p></div>
+
+  <div class="ach-summary">
+    <div class="as-stat"><span class="as-val">{{ earnedCount }}</span><span class="as-lbl">Logros desbloqueados</span></div>
+    <div class="as-sep"></div>
+    <div class="as-stat"><span class="as-val">{{ achievements.length - earnedCount }}</span><span class="as-lbl">Por desbloquear</span></div>
+    <div class="as-sep"></div>
+    <div class="as-stat"><span class="as-val" style="color:var(--bk-yellow-light)">{{ totalXp }} XP</span><span class="as-lbl">XP de logros</span></div>
+    <div class="as-sep"></div>
+    <div class="as-progress-wrap">
+      <div class="bk-progress" style="height:8px; min-width:180px">
+        <div class="bar gradient" [style.width]="(earnedCount/achievements.length*100)+'%'"></div>
+      </div>
+      <span class="as-pct">{{ (earnedCount/achievements.length*100)|number:'1.0-0' }}% completo</span>
+    </div>
+  </div>
+
+  <div class="ach-filters">
+    @for (c of categories; track c) {
+      <button class="filter-btn" [class.active]="activeCategory===c" (click)="activeCategory=c">{{ c }}</button>
+    }
+  </div>
+
+  <div class="ach-grid">
+    @for (a of filtered; track a.title) {
+      <div class="ach-card" [class.earned]="a.earned" [class.locked]="!a.earned">
+        <div class="ac-rarity" [style.color]="rarityColor[a.rarity]" [style.background]="rarityColor[a.rarity]+'15'">{{ a.rarity }}</div>
+        <div class="ac-icon" [class.earned]="a.earned">{{ a.icon }}</div>
+        <div class="ac-title">{{ a.title }}</div>
+        <div class="ac-desc">{{ a.desc }}</div>
+        <div class="ac-footer">
+          <span class="ac-xp">+{{ a.xp }} XP</span>
+          @if (a.earned) {
+            <span class="ac-date">✓ {{ a.date }}</span>
+          } @else {
+            <span class="ac-lock">🔒</span>
+          }
+        </div>
+      </div>
+    }
+  </div>
+</div>

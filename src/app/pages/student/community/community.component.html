@@ -1,0 +1,93 @@
+<app-shell role="student" userName="Axel Partida" userAvatar="AP" [navItems]="navItems"></app-shell>
+<div class="community-page fade-in-up">
+  <div class="page-header"><h1>👥 Comunidad ByteKids</h1><p>Aprende junto a tus compañeros, comparte y ayuda</p></div>
+  <div class="community-layout">
+    <!-- Feed -->
+    <div class="comm-feed">
+
+      <!-- Nueva publicación -->
+      @if (!showNewPost) {
+        <div class="new-post-box">
+          <div class="np-avatar" style="background:rgba(6,182,212,.2);color:#06B6D4">AP</div>
+          <button class="np-input" (click)="showNewPost=true">¿Qué aprendiste hoy? Compártelo... ✨</button>
+        </div>
+      } @else {
+        <div class="new-post-form">
+          <div class="npf-header">
+            <div class="np-avatar" style="background:rgba(6,182,212,.2);color:#06B6D4">AP</div>
+            <select class="npf-subject" [(ngModel)]="newPostSubject">
+              @for (s of subjects; track s) { <option>{{ s }}</option> }
+            </select>
+            <button class="npf-cancel" (click)="showNewPost=false">✕</button>
+          </div>
+          <textarea class="npf-textarea" [(ngModel)]="newPostText" placeholder="Comparte lo que aprendiste, una duda, un logro o un tip para tus compañeros..." rows="4"></textarea>
+          <div class="npf-footer">
+            <span class="npf-hint">{{ newPostText.length }}/500 caracteres</span>
+            <button class="bk-btn primary" (click)="publishPost()" [disabled]="!newPostText.trim()">Publicar 🚀</button>
+          </div>
+        </div>
+      }
+
+      @for (p of posts; track p.title; let i = $index) {
+        <div class="post-card">
+          <div class="post-header">
+            <div class="post-avatar" [style.background]="p.color+'20'" [style.color]="p.color">{{ p.avatar }}</div>
+            <div class="post-meta"><span class="post-author">{{ p.author }}</span><span class="post-time">{{ p.time }}</span></div>
+            <span class="bk-tag blue">{{ p.subject }}</span>
+          </div>
+          <h3 class="post-title">{{ p.title }}</h3>
+          <p class="post-body">{{ p.body }}</p>
+          <div class="post-actions">
+            <button class="pa-btn" [class.liked]="liked.has(i)" (click)="toggleLike(i)">
+              {{ liked.has(i)?'❤️':'🤍' }} {{ p.likes + (liked.has(i)?1:0) }}
+            </button>
+            <button class="pa-btn" (click)="toggleComments(p)">
+              💬 {{ p.comments.length }} {{ p.showComments ? '▲' : '▼' }}
+            </button>
+            <button class="pa-btn" (click)="share(p)">🔗 Compartir</button>
+          </div>
+          @if (p.showComments) {
+            <div class="comments-section">
+              @for (c of p.comments; track c) {
+                <div class="comment-item">
+                  <div class="comment-dot"></div>
+                  <span>{{ c }}</span>
+                </div>
+              }
+            </div>
+          }
+        </div>
+      }
+    </div>
+
+    <!-- Sidebar -->
+    <div class="comm-side">
+      <div class="bk-card" style="margin-bottom:14px">
+        <div class="card-title" style="margin-bottom:14px">🏆 Ranking del salón</div>
+        <div style="display:flex;flex-direction:column;gap:8px">
+          @for (s of topStudents; track s.name) {
+            <div class="rank-row" [class.me]="s.name==='Axel Partida'">
+              <span class="rank-num" [class]="s.rank<=3?'gold':''">{{ s.rank === 1?'🥇':s.rank===2?'🥈':s.rank===3?'🥉':s.rank }}</span>
+              <div class="rank-av" [style.background]="s.color+'20'" [style.color]="s.color">{{ s.avatar }}</div>
+              <span class="rank-name">{{ s.name }}</span>
+              <span class="rank-xp">{{ s.xp }} XP</span>
+            </div>
+          }
+        </div>
+      </div>
+      <div class="bk-card">
+        <div class="card-title" style="margin-bottom:10px">🔥 Retos de la semana</div>
+        <div style="display:flex;flex-direction:column;gap:8px">
+          <div class="challenge-item"><span>🐍</span><span>Hacer un juego de adivinanza</span></div>
+          <div class="challenge-item"><span>🌐</span><span>Crear una página con animación</span></div>
+          <div class="challenge-item"><span>🎮</span><span>Publicar tu primer mapa Roblox</span></div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Toast -->
+@if (toast) {
+  <div class="toast-msg">{{ toast }}</div>
+}

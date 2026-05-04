@@ -1,0 +1,127 @@
+<div class="landing">
+
+  <!-- ── Animated background ── -->
+  <div class="bg-scene">
+    <div class="orb orb-blue"></div>
+    <div class="orb orb-purple"></div>
+    <div class="orb orb-yellow"></div>
+    <div class="dot-grid"></div>
+  </div>
+
+  <!-- ── Header ── -->
+  <header class="lp-header">
+    <div class="logo">
+      <div class="logo-mark">
+        <img src="assets/logo-bytekids.jpeg" alt="ByteKids Academy" style="width:48px;height:48px;border-radius:14px;object-fit:cover;box-shadow:0 4px 20px rgba(0,0,0,0.5)">
+      </div>
+      <div class="logo-text">
+        <span class="logo-name">ByteKids <span class="logo-ai">AI</span></span>
+        <span class="logo-tagline">Educación del Futuro</span>
+      </div>
+    </div>
+    <div class="header-pills">
+      <span class="pill pill-blue">🐍 Python</span>
+      <span class="pill pill-purple">🎮 Roblox</span>
+      <span class="pill pill-yellow">🤖 IA en el aula</span>
+    </div>
+  </header>
+
+  <!-- ── Hero ── -->
+  <section class="hero">
+    <div class="hero-badge">
+      <span class="badge-pulse"></span>
+      Transformando la educación en México con Inteligencia Artificial
+    </div>
+
+    <h1 class="hero-title">
+      Cada alumno merece<br>
+      un maestro <span class="title-gradient">de IA</span><br>
+      <span class="title-sub">a su lado.</span>
+    </h1>
+
+    <p class="hero-desc">
+      ByteKids AI lleva Python, Scratch, Robótica, Roblox Studio y cualquier materia
+      escolar a cada aula de México — potenciada con IA personalizada para cada estudiante.
+    </p>
+
+    <!-- Subjects strip -->
+    <div class="subjects-strip">
+      @for (s of subjects; track s.name) {
+        <div class="subject-pill">
+          <span>{{ s.icon }}</span>
+          <span>{{ s.name }}</span>
+        </div>
+      }
+    </div>
+  </section>
+
+  <!-- ── Role Cards ── -->
+  <section class="roles-section">
+    <p class="roles-headline">¿Quién eres hoy? Elige tu portal</p>
+    <div class="roles-grid">
+      @for (role of roles; track role.id; let i = $index) {
+        <div
+          class="role-card"
+          [style.animation-delay]="(i * 0.08) + 's'"
+          (click)="navigate(role.route)"
+        >
+          <!-- Card glow bg -->
+          <div class="rc-glow" [style.background]="role.gradient"></div>
+          <div class="rc-border" [style.--border-color]="role.borderColor"></div>
+
+          <!-- Header -->
+          <div class="rc-top">
+            <div class="rc-icon" [style.background]="role.color + '18'" [style.box-shadow]="'0 0 0 1px ' + role.borderColor">
+              {{ role.emoji }}
+            </div>
+            <span class="rc-badge" [style.color]="role.color" [style.background]="role.color + '12'" [style.border]="'1px solid ' + role.borderColor">
+              {{ role.subtitle }}
+            </span>
+          </div>
+
+          <!-- Content -->
+          <h2 class="rc-title" [style.color]="role.color">{{ role.title }}</h2>
+          <p class="rc-desc">{{ role.description }}</p>
+
+          <ul class="rc-features">
+            @for (f of role.features; track f) {
+              <li>
+                <span class="rc-dot" [style.background]="role.color"></span>
+                {{ f }}
+              </li>
+            }
+          </ul>
+
+          <!-- CTA -->
+          <div class="rc-cta" [style.background]="role.color" [style.box-shadow]="'0 4px 20px ' + role.glowColor">
+            <span>Acceder ahora</span>
+            <span class="rc-arrow">→</span>
+          </div>
+        </div>
+      }
+    </div>
+  </section>
+
+  <!-- ── Vision Banner ── -->
+  <section class="vision-banner">
+    <div class="vb-content">
+      <div class="vb-icon">🇲🇽</div>
+      <div class="vb-text">
+        <span class="vb-title">Nuestra misión: una IA en cada aula de México</span>
+        <span class="vb-sub">No solo programación — cualquier materia, cualquier escuela, cualquier alumno.</span>
+      </div>
+      <div class="vb-stat">
+          <span class="vb-num">∞</span>
+          <span class="vb-slabel">Materias disponibles</span>
+      </div>
+    </div>
+  </section>
+
+  <footer class="lp-footer">
+    <span class="ft-logo">ByteKids AI</span>
+    <span class="ft-sep">·</span>
+    <span>Educación del Futuro, Hoy.</span>
+    <span class="ft-sep">·</span>
+    <span>Hecho con 💙 en México</span>
+  </footer>
+</div>

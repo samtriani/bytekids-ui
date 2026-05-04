@@ -1,0 +1,42 @@
+<aside class="sidebar" [class]="'sidebar--' + role">
+  <!-- Logo -->
+  <div class="sidebar-logo" (click)="goHome()">
+    <div class="logo-mark">
+      <span class="lm-b">B</span><span class="lm-k">K</span>
+    </div>
+    <div class="logo-words">
+      <span class="lw-name">ByteKids <span class="lw-ai">AI</span></span>
+      <span class="lw-sub">Platform</span>
+    </div>
+  </div>
+
+  <!-- Role badge -->
+  <div class="role-badge" [style.border-color]="config.color + '35'" [style.color]="config.color" [style.background]="config.color + '0D'">
+    <span>{{ config.icon }}</span>
+    <span>{{ config.label }}</span>
+  </div>
+
+  <!-- Nav -->
+  <nav class="sidebar-nav">
+    @for (item of navItems; track item.label) {
+      <a class="nav-item" [routerLink]="item.route || null" routerLinkActive="active" [routerLinkActiveOptions]="{exact: true}">
+        <span class="nav-icon">{{ item.icon }}</span>
+        <span class="nav-label">{{ item.label }}</span>
+        @if (item.badge) {
+          <span class="nav-badge">{{ item.badge }}</span>
+        }
+        <span class="nav-accent" [style.background]="config.color"></span>
+      </a>
+    }
+  </nav>
+
+  <!-- User -->
+  <div class="sidebar-user">
+    <div class="user-avatar" [style.background]="config.color + '20'" [style.color]="config.color">{{ userAvatar }}</div>
+    <div class="user-info">
+      <span class="user-name">{{ userName }}</span>
+      <span class="user-role">{{ config.label }}</span>
+    </div>
+    <button class="logout-btn" (click)="goHome()" title="Cambiar perfil">⟵</button>
+  </div>
+</aside>

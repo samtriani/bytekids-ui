@@ -1,0 +1,11 @@
+.mb14 { margin-bottom:14px; }
+.child-summary { display:flex; align-items:center; gap:12px; }
+.ach-grid { display:grid; grid-template-columns:repeat(auto-fill,minmax(170px,1fr)); gap:12px; }
+.ach-card { display:flex; flex-direction:column; align-items:center; text-align:center; gap:7px; }
+.ach-card.locked { opacity:.45; }
+.ach-card.earned { border-top:3px solid var(--guinda); }
+.ac-top { display:flex; justify-content:space-between; width:100%; }
+.ach-icon { font-size:2rem; }
+.ach-title { font-weight:800; font-size:.85rem; color:var(--tx1); }
+.ach-desc  { font-size:.72rem; color:var(--tx3); line-height:1.4; }
+.ach-foot  { display:flex; gap:8px; align-items:center; flex-wrap:wrap; justify-content:center; }

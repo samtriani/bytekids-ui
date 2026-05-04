@@ -1,0 +1,71 @@
+<app-shell role="teacher" userName="Profa. García" userAvatar="MG"
+  [navItems]="navItems" pageTitle="Panel del Maestro — Salón 4°A"></app-shell>
+<div class="page-wrap">
+  <div class="ph">
+    <div class="ph-left">
+      <h1>Panel del Maestro</h1>
+      <p>Salón 4°A · 22 alumnos · Marzo 2026</p>
+    </div>
+    <div class="ph-right">
+      <a routerLink="/teacher/ai-assistant" class="btn btn-outline">🤖 Asistente IA</a>
+      <a routerLink="/teacher/create" class="btn btn-primary">＋ Nueva misión</a>
+    </div>
+  </div>
+
+  <div class="g4 mb18">
+    <div class="kpi"><div class="kpi-ico">👨‍🎓</div><div><div class="kpi-val">22</div><div class="kpi-lbl">Alumnos en 4°A</div><div class="kpi-dl up">16 activos hoy</div></div></div>
+    <div class="kpi gold"><div class="kpi-ico">📈</div><div><div class="kpi-val">70%</div><div class="kpi-lbl">Promedio del salón</div><div class="kpi-dl up">↑ +5% este mes</div></div></div>
+    <div class="kpi green"><div class="kpi-ico">✅</div><div><div class="kpi-val">248</div><div class="kpi-lbl">Misiones completadas</div><div class="kpi-dl up">↑ +42 esta semana</div></div></div>
+    <div class="kpi red"><div class="kpi-ico">⚠️</div><div><div class="kpi-val">3</div><div class="kpi-lbl">Necesitan apoyo</div><div class="kpi-dl flat">Atención requerida</div></div></div>
+  </div>
+
+  <div class="g2 mb18">
+    <div class="card">
+      <div class="card-h"><span class="card-title">Progreso por alumno</span><a routerLink="/teacher/students" class="btn btn-ghost btn-sm">Ver todos →</a></div>
+      <div class="card-p" style="padding-top:12px"><div style="height:200px"><canvas #barC></canvas></div></div>
+    </div>
+    <div class="card">
+      <div class="card-h"><span class="card-title">Distribución de nivel</span><a routerLink="/teacher/reports" class="btn btn-ghost btn-sm">Reportes →</a></div>
+      <div class="card-p" style="padding-top:12px"><div style="height:200px"><canvas #pieC></canvas></div></div>
+    </div>
+  </div>
+
+  <div class="g2">
+    <div class="card">
+      <div class="card-h"><span class="card-title">Alumnos — Salón 4°A</span><a routerLink="/teacher/students" class="btn btn-ghost btn-sm">Ver todos →</a></div>
+      <div style="padding:8px 12px;display:flex;flex-direction:column;gap:4px">
+        @for (s of students; track s.n) {
+          <div class="sl-row">
+            <div class="av" style="width:30px;height:30px">{{ s.av }}</div>
+            <div style="flex:1;min-width:0">
+              <div style="font-size:.82rem;font-weight:700;color:var(--tx1)">{{ s.n }}</div>
+              <div class="prog" style="height:5px;margin-top:3px">
+                <div class="prog-bar" [style.width]="s.prog+'%'" [style.background]="pc(s.prog)"></div>
+              </div>
+            </div>
+            <span style="font-size:.8rem;font-weight:800;min-width:34px;text-align:right" [style.color]="pc(s.prog)">{{ s.prog }}%</span>
+            <span class="tag" [class]="sc(s.status)" style="margin-left:6px">{{ s.status }}</span>
+          </div>
+        }
+      </div>
+    </div>
+
+    <div class="card card-p">
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px">
+        <span class="card-title">Alertas del sistema</span>
+        <a routerLink="/teacher/ai-assistant" class="btn btn-outline btn-sm">🤖 IA</a>
+      </div>
+      <div style="display:flex;flex-direction:column;gap:7px;margin-bottom:16px">
+        @for (a of alerts; track a.text) {
+          <div class="alert" [class]="a.type">{{ a.icon }}<span>{{ a.text }}</span></div>
+        }
+      </div>
+      <div class="card-title" style="margin-bottom:8px">Acciones rápidas</div>
+      <div style="display:flex;flex-direction:column;gap:6px">
+        <a routerLink="/teacher/create" class="btn btn-primary btn-block">＋ Crear nueva misión</a>
+        <a routerLink="/teacher/calendar" class="btn btn-outline btn-block">📅 Ver calendario</a>
+        <a routerLink="/teacher/messages" class="btn btn-ghost btn-block">💬 Mensajes (5 nuevos)</a>
+      </div>
+    </div>
+  </div>
+</div>

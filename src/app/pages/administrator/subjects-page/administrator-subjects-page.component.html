@@ -1,0 +1,74 @@
+<app-shell role="administrator" [userName]="userName" [userAvatar]="userAvatar" [navItems]="navItems" pageTitle="Modulo Administrador"></app-shell>
+
+<div class="page-wrap">
+  <div class="ph">
+    <div class="ph-left">
+      <h1>Materias</h1>
+      <p>Administra el catalogo academico y edita iconos, color y descripcion de cada materia.</p>
+    </div>
+  </div>
+
+  @if (toast) {
+    <div class="alert alert-info mb16">{{ toast }}</div>
+  }
+
+  <div class="layout">
+    <div class="card card-p">
+      <div class="section-head">
+        <h3>Alta de materia</h3>
+        <span class="tag tag-oro">Catalogo</span>
+      </div>
+      <div class="fg"><label class="label">Nombre</label><input class="input" [(ngModel)]="createForm.name"></div>
+      <div class="fg-row">
+        <div class="fg"><label class="label">Icono</label><input class="input" [(ngModel)]="createForm.icon"></div>
+        <div class="fg"><label class="label">Color</label><input class="input" type="color" [(ngModel)]="createForm.color"></div>
+      </div>
+      <div class="fg"><label class="label">Descripcion</label><textarea class="textarea" rows="3" [(ngModel)]="createForm.description"></textarea></div>
+      <button class="btn btn-primary btn-block" (click)="create()" [disabled]="saving">Crear materia</button>
+    </div>
+
+    <div class="card card-p">
+      <div class="section-head">
+        <h3>Detalle y edicion</h3>
+        <span class="tag tag-blue">{{ subjects.length }} materias</span>
+      </div>
+      <div class="fg">
+        <label class="label">Buscar</label>
+        <input class="input" [(ngModel)]="search" placeholder="Busca por nombre o descripcion">
+      </div>
+      <div class="detail-layout">
+        <div class="detail-menu">
+          @for (row of filteredSubjects; track row.id) {
+            <button class="detail-menu-item" [class.selected]="selected?.id === row.id" (click)="select(row)">
+              <strong>{{ row.name }}</strong>
+              <small>{{ row.description || 'Sin descripcion' }}</small>
+            </button>
+          }
+        </div>
+
+        <div class="detail-panel">
+          @if (selected) {
+            <div class="entity-grid">
+              <div class="entity-card"><span>Nombre</span><strong>{{ selected.name }}</strong></div>
+              <div class="entity-card"><span>Icono</span><strong>{{ selected.icon || '--' }}</strong></div>
+              <div class="entity-card"><span>Color</span><strong>{{ selected.color || '--' }}</strong></div>
+              <div class="entity-card"><span>Estatus</span><strong>{{ selected.isActive ? 'Activa' : 'Inactiva' }}</strong></div>
+            </div>
+            <div class="editor-card">
+              <div class="subcard-title">Editar materia</div>
+              <div class="fg"><label class="label">Nombre</label><input class="input" [(ngModel)]="editForm.name"></div>
+              <div class="fg-row">
+                <div class="fg"><label class="label">Icono</label><input class="input" [(ngModel)]="editForm.icon"></div>
+                <div class="fg"><label class="label">Color</label><input class="input" type="color" [(ngModel)]="editForm.color"></div>
+              </div>
+              <div class="fg"><label class="label">Descripcion</label><textarea class="textarea" rows="3" [(ngModel)]="editForm.description"></textarea></div>
+              <button class="btn btn-outline btn-block" (click)="update()" [disabled]="saving">Guardar cambios</button>
+            </div>
+          } @else {
+            <div class="empty-box">Selecciona una materia para editarla.</div>
+          }
+        </div>
+      </div>
+    </div>
+  </div>
+</div>

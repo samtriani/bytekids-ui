@@ -1,0 +1,75 @@
+<app-shell role="parent" userName="Sam Partida" userAvatar="SP"
+  [navItems]="navItems" pageTitle="Calendario"></app-shell>
+<div class="page-wrap">
+  <div class="ph">
+    <div class="ph-left"><h1>Calendario escolar</h1><p>Eventos y fechas importantes de tus hijos, exámenes y eventos del salón</p></div>
+    <button class="btn btn-primary">➕ Nuevo evento</button>
+  </div>
+
+  <div class="cal-layout">
+    <!-- Grid del mes -->
+    <div class="card card-p" style="flex:1">
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:16px">
+        <button class="cal-nav">‹</button>
+        <h2 style="font-size:1rem;font-weight:800;color:var(--tx1)">{{ monthName }}</h2>
+        <button class="cal-nav">›</button>
+      </div>
+      <div class="cal-days-header">
+        @for (d of days; track d) { <div class="cal-day-name">{{ d }}</div> }
+      </div>
+      <div class="cal-grid">
+        @for (week of weeks; track $index) {
+          @for (d of week; track $index) {
+            <div class="cal-cell"
+              [class.today]="d===today"
+              [class.selected]="d===selectedDay"
+              [class.has-event]="hasEvent(d)"
+              [class.empty]="!d"
+              (click)="d&&(selectedDay=d)">
+              @if (d) {
+                <span class="cal-num">{{ d }}</span>
+                @if (hasEvent(d)) { <span class="event-pip"></span> }
+              }
+            </div>
+          }
+        }
+      </div>
+    </div>
+
+    <!-- Panel lateral -->
+    <div style="display:flex;flex-direction:column;gap:12px;width:270px">
+      <div class="card card-p">
+        <div class="card-title" style="margin-bottom:10px">{{ selectedDay }} de Marzo</div>
+        @if (selEvts.length) {
+          <div style="display:flex;flex-direction:column;gap:8px">
+            @for (e of selEvts; track e.title) {
+              <div class="event-item" [style.border-left-color]="e.color" [style.background]="e.color+'08'">
+                <div style="font-size:.64rem;font-weight:800;color:var(--tx3);text-transform:uppercase;margin-bottom:2px">{{ e.title }}</div>
+                <div style="font-weight:700;font-size:.84rem;color:var(--tx1)">{{ e.title }}</div>
+                <div style="font-size:.74rem;color:var(--tx3);margin-top:2px">🕐 {{ e.time }}</div>
+              </div>
+            }
+          </div>
+        } @else {
+          <p style="text-align:center;padding:16px 0;font-size:.84rem;color:var(--tx3)">Sin eventos este día</p>
+        }
+        <button class="btn btn-outline btn-block" style="margin-top:10px">➕ Agregar evento</button>
+      </div>
+
+      <div class="card card-p">
+        <div class="card-title" style="margin-bottom:10px">Próximos eventos</div>
+        <div style="display:flex;flex-direction:column;gap:8px">
+          <div class="upcoming-item"><span class="up-day">15</span><div><div style="font-weight:700;font-size:.82rem">Junta de maestros</div><div style="font-size:.7rem;color:var(--tx3)">16:00 · Reunión</div></div></div>
+          <div class="upcoming-item"><span class="up-day">20</span><div><div style="font-weight:700;font-size:.82rem">Feria de proyectos</div><div style="font-size:.7rem;color:var(--tx3)">11:00 · Evento institucional</div></div></div>
+          <div class="upcoming-item"><span class="up-day">25</span><div><div style="font-weight:700;font-size:.82rem">Entrega calificaciones</div><div style="font-size:.7rem;color:var(--tx3)">17:00 · Tarea admin.</div></div></div>
+        </div>
+      </div>
+
+      <div class="card card-p" style="background:var(--guinda-lt);border-color:var(--guinda-border)">
+        <div style="font-weight:800;font-size:.84rem;color:var(--guinda);margin-bottom:4px">🤖 Asistente de planeación</div>
+        <div style="font-size:.75rem;color:var(--tx2);margin-bottom:10px">El IA puede sugerirte actividades y fechas de evaluación óptimas para tu salón.</div>
+        <a routerLink="/teacher/ai-assistant" class="btn btn-primary btn-block">Abrir Asistente IA</a>
+      </div>
+    </div>
+  </div>
+</div>

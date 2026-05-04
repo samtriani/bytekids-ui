@@ -1,0 +1,61 @@
+<app-shell role="teacher" userName="Profa. García" userAvatar="MG" [navItems]="navItems" pageTitle="Reportes — Salón 4°A"></app-shell>
+<div class="page-wrap">
+  <div class="ph">
+    <div class="ph-left"><h1>Reportes — Salón 4°A</h1><p>Análisis de rendimiento del período seleccionado</p></div>
+    <div class="ph-right" style="display:flex;gap:8px;align-items:center;flex-wrap:wrap">
+      <select class="select" [(ngModel)]="period" (ngModelChange)="onPeriodChange()" style="width:auto;padding:6px 10px">
+        @for (p of periods; track p) { <option>{{ p }}</option> }
+      </select>
+      <button class="btn btn-outline" (click)="exportPDF()">📄 Exportar PDF</button>
+      <button class="btn btn-ghost" (click)="sendToDirector()">📨 Enviar al Director</button>
+      <a routerLink="/teacher/ai-assistant" class="btn btn-primary">🤖 Análisis IA</a>
+    </div>
+  </div>
+
+  @if (toast) { <div class="alert alert-ok" style="margin-bottom:14px">{{ toast }}</div> }
+
+  <div class="g4 mb14">
+    <div class="kpi"><div class="kpi-ico">👨‍🎓</div><div><div class="kpi-val">22</div><div class="kpi-lbl">Alumnos 4°A</div></div></div>
+    <div class="kpi gold"><div class="kpi-ico">📈</div><div><div class="kpi-val">{{ kpis.avg }}</div><div class="kpi-lbl">Promedio salón</div></div></div>
+    <div class="kpi green"><div class="kpi-ico">✅</div><div><div class="kpi-val">{{ kpis.missions }}</div><div class="kpi-lbl">Misiones totales</div><div class="kpi-dl up">↑ {{ kpis.trend }}</div></div></div>
+    <div class="kpi red"><div class="kpi-ico">⚠️</div><div><div class="kpi-val">3</div><div class="kpi-lbl">Necesitan apoyo</div></div></div>
+  </div>
+
+  <div class="g2 mb14">
+    <div class="card"><div class="card-h"><span class="card-title">Progreso por alumno</span></div><div class="card-p" style="padding-top:10px"><div style="height:190px"><canvas #barC></canvas></div></div></div>
+    <div class="card"><div class="card-h"><span class="card-title">Distribución por materia</span></div><div class="card-p" style="padding-top:10px"><div style="height:190px"><canvas #dntC></canvas></div></div></div>
+  </div>
+
+  <div class="g2">
+    <div class="card" style="overflow:hidden">
+      <div class="card-h"><span class="card-title">Detalle por alumno</span></div>
+      <table class="tbl">
+        <thead><tr><th>Alumno</th><th>Progreso</th><th>Mis.</th><th>XP</th><th>Tend.</th><th>Estado</th></tr></thead>
+        <tbody>
+          @for (r of rows; track r.n) {
+            <tr>
+              <td><div style="display:flex;align-items:center;gap:7px"><div class="av" style="width:27px;height:27px;font-size:.65rem">{{ r.av }}</div>{{ r.n.split(' ')[0] }}</div></td>
+              <td><div style="display:flex;align-items:center;gap:6px"><div class="prog" style="height:5px;width:65px"><div class="prog-bar" [style.width]="r.prog+'%'" [style.background]="pc(r.prog)"></div></div><span style="font-weight:800;font-size:.77rem" [style.color]="pc(r.prog)">{{ r.prog }}%</span></div></td>
+              <td style="text-align:center">{{ r.mis }}</td>
+              <td style="color:var(--guinda);font-weight:700;font-size:.8rem">{{ r.xp }}</td>
+              <td style="text-align:center;font-weight:800;font-size:.9rem" [style.color]="tc(r.tr)">{{ r.tr }}</td>
+              <td><span class="tag" [class]="sc(r.st)">{{ r.st }}</span></td>
+            </tr>
+          }
+        </tbody>
+      </table>
+    </div>
+    <div class="card card-p">
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px">
+        <span class="card-title">Alertas automáticas</span>
+        <a routerLink="/teacher/ai-assistant" class="btn btn-outline btn-sm">🤖 IA</a>
+      </div>
+      <div style="display:flex;flex-direction:column;gap:7px;margin-bottom:14px">
+        @for (a of alerts; track a.txt) {
+          <div class="alert" [class]="a.tp">{{ a.ico }}<span>{{ a.txt }}</span></div>
+        }
+      </div>
+      <a routerLink="/teacher/ai-assistant" class="btn btn-primary btn-block">🤖 Generar reporte completo con IA</a>
+    </div>
+  </div>
+</div>
