@@ -35,8 +35,8 @@ export class AdministratorUsersPageComponent implements OnInit {
   rows: any[] = [];
   selected: any = null;
 
-  createForm = { displayName: '', username: '', password: '' };
-  editForm = { id: '', username: '', displayName: '', initials: '', password: '' };
+  createForm = { displayName: '', username: '', password: '', age: null as number | null, address: '' };
+  editForm   = { id: '', username: '', displayName: '', initials: '', password: '', age: null as number | null, address: '' };
 
   constructor(
     private route: ActivatedRoute,
@@ -103,10 +103,12 @@ export class AdministratorUsersPageComponent implements OnInit {
       username: this.createForm.username.trim().toLowerCase(),
       password: this.createForm.password,
       role: this.role,
-      initials: this.buildInitials(this.createForm.displayName)
+      initials: this.buildInitials(this.createForm.displayName),
+      age: this.createForm.age,
+      address: this.createForm.address || null,
     }).subscribe({
       next: () => {
-        this.createForm = { displayName: '', username: '', password: '' };
+        this.createForm = { displayName: '', username: '', password: '', age: null, address: '' };
         this.showToast(`${this.mode === 'teachers' ? 'Profesor' : 'Alumno'} creado correctamente`);
         this.saving = false;
         this.load();
@@ -126,7 +128,9 @@ export class AdministratorUsersPageComponent implements OnInit {
       displayName: this.editForm.displayName,
       password: this.editForm.password || undefined,
       role: this.role,
-      initials: this.editForm.initials || this.buildInitials(this.editForm.displayName)
+      initials: this.editForm.initials || this.buildInitials(this.editForm.displayName),
+      age: this.editForm.age,
+      address: this.editForm.address || null,
     }).subscribe({
       next: () => {
         this.showToast('Datos actualizados correctamente');
@@ -160,11 +164,13 @@ export class AdministratorUsersPageComponent implements OnInit {
   private syncEditForm() {
     if (!this.selected) return;
     this.editForm = {
-      id: this.selected.id,
-      username: this.selected.username ?? '',
+      id:          this.selected.id,
+      username:    this.selected.username    ?? '',
       displayName: this.selected.displayName ?? '',
-      initials: this.selected.initials ?? '',
-      password: ''
+      initials:    this.selected.initials    ?? '',
+      password:    '',
+      age:         this.selected.age         ?? null,
+      address:     this.selected.address     ?? '',
     };
   }
 

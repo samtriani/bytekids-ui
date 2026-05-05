@@ -1,4 +1,4 @@
-<app-shell role="student" userName="Axel Partida" userAvatar="AP" [navItems]="navItems"></app-shell>
+<app-shell role="student" [userName]="me?.displayName || 'Alumno'" [userAvatar]="me?.initials || 'A'" [navItems]="navItems"></app-shell>
 <div class="community-page fade-in-up">
   <div class="page-header"><h1>👥 Comunidad ByteKids</h1><p>Aprende junto a tus compañeros, comparte y ayuda</p></div>
   <div class="community-layout">

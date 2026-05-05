@@ -40,4 +40,8 @@ export class ClassroomApiService {
   getClassroomsByStudent(studentId: string): Observable<any[]> {
     return this.http.get<any>(`${BASE}/student/${studentId}`).pipe(map(r => r.data ?? []));
   }
+
+  getSubjects(classroomId: string): Observable<any[]> {
+    return this.http.get<any>(`${BASE}/${classroomId}/subjects`).pipe(map(r => r.data ?? []));
+  }
 }

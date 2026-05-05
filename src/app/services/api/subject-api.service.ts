@@ -24,4 +24,8 @@ export class SubjectService {
   update(id: string, payload: any): Observable<any> {
     return this.http.put<any>(`${BASE}/${id}`, payload).pipe(map(r => r.data ?? r));
   }
+
+  deactivate(id: string): Observable<void> {
+    return this.http.delete<any>(`${BASE}/${id}`).pipe(map(() => void 0));
+  }
 }

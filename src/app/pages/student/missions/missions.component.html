@@ -1,4 +1,4 @@
-<app-shell role="student" userName="Axel Partida" userAvatar="AP" [navItems]="navItems"></app-shell>
+<app-shell role="student" [userName]="studentName" [userAvatar]="studentInitials" [navItems]="navItems"></app-shell>
 
 <div class="missions-page fade-in-up">
   <div class="page-header">
@@ -8,10 +8,10 @@
 
   <!-- Stats row -->
   <div class="missions-stats">
-    <div class="ms-card" style="--c:#10B981"><span class="ms-val">14</span><span class="ms-lbl">Total</span></div>
-    <div class="ms-card" style="--c:#2563EB"><span class="ms-val">3</span><span class="ms-lbl">En progreso</span></div>
-    <div class="ms-card" style="--c:#7C3AED"><span class="ms-val">8</span><span class="ms-lbl">Completadas</span></div>
-    <div class="ms-card" style="--c:#F59E0B"><span class="ms-val">3</span><span class="ms-lbl">Disponibles</span></div>
+    <div class="ms-card" style="--c:#10B981"><span class="ms-val">{{ total }}</span><span class="ms-lbl">Total</span></div>
+    <div class="ms-card" style="--c:#2563EB"><span class="ms-val">{{ enProgreso }}</span><span class="ms-lbl">En progreso</span></div>
+    <div class="ms-card" style="--c:#7C3AED"><span class="ms-val">{{ completadas }}</span><span class="ms-lbl">Completadas</span></div>
+    <div class="ms-card" style="--c:#F59E0B"><span class="ms-val">{{ disponibles }}</span><span class="ms-lbl">Disponibles</span></div>
   </div>
 
   <!-- Filters -->

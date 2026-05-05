@@ -39,10 +39,13 @@
       <div class="detail-layout">
         <div class="detail-menu">
           @for (row of filteredSubjects; track row.id) {
-            <button class="detail-menu-item" [class.selected]="selected?.id === row.id" (click)="select(row)">
-              <strong>{{ row.name }}</strong>
-              <small>{{ row.description || 'Sin descripcion' }}</small>
-            </button>
+            <div class="detail-menu-item-wrap">
+              <button class="detail-menu-item" [class.selected]="selected?.id === row.id" (click)="select(row)">
+                <strong>{{ row.icon }} {{ row.name }}</strong>
+                <small>{{ row.description || 'Sin descripcion' }}</small>
+              </button>
+              <button class="btn-baja" title="Dar de baja" (click)="deactivate(row)" [disabled]="saving">✕</button>
+            </div>
           }
         </div>
 

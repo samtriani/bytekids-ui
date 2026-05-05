@@ -3,12 +3,15 @@ import { CommonModule } from '@angular/common';
 import { RouterLink } from '@angular/router';
 import { ShellComponent, NavItem } from '../../../shared/shell/shell.component';
 import { AchievementApiService } from '../../../services/api/achievement-api.service';
+import { AuthService } from '../../../services/auth.service';
 
 @Component({ selector:'app-achievements', standalone:true, imports:[CommonModule, RouterLink, ShellComponent],
   templateUrl:'./achievements.component.html', styleUrls:['./achievements.component.scss']
 })
 export class AchievementsComponent implements OnInit {
-  constructor(private achievementApi: AchievementApiService) {}
+  get studentName(): string     { return this.auth.getUser()?.displayName || 'Alumno'; }
+  get studentInitials(): string { return this.auth.getUser()?.initials || 'A'; }
+  constructor(private achievementApi: AchievementApiService, private auth: AuthService) {}
 
   ngOnInit() {
     // Catálogo completo
@@ -43,7 +46,7 @@ export class AchievementsComponent implements OnInit {
     { label:'Logros',        icon:'🏆', route:'/student/achievements' },
     { label:'Tutor IA',      icon:'🤖', route:'/student/ai-tutor', badge:'✨' },
     { label:'Proyectos',     icon:'💻', route:'/student/projects' },
-    { label:'Roblox Studio', icon:'🎮', route:'/student/roblox' },
+    // { label:'Roblox Studio', icon:'🎮', route:'/student/roblox' },
     { label:'Comunidad',     icon:'👥', route:'/student/community' },
   ];
 

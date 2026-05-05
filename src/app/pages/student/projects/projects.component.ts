@@ -1,53 +1,126 @@
-import { Component } from '@angular/core';
+import { Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { RouterLink, Router } from '@angular/router';
 import { ShellComponent, NavItem } from '../../../shared/shell/shell.component';
+import { ContentApiService } from '../../../services/api/content-api.service';
+import { SubmissionApiService } from '../../../services/api/submission-api.service';
+import { AuthService } from '../../../services/auth.service';
+import { forkJoin } from 'rxjs';
 
-@Component({ selector:'app-projects', standalone:true, imports:[CommonModule, RouterLink, ShellComponent],
-  templateUrl:'./projects.component.html', styleUrls:['./projects.component.scss']
+const SUBJECT_META: Record<string, { icon: string; color: string }> = {
+  'Python':        { icon: '🐍', color: '#06B6D4' },
+  'HTML/CSS/JS':   { icon: '🌐', color: '#7C3AED' },
+  'Scratch':       { icon: '🧩', color: '#2563EB' },
+  'Robótica':      { icon: '🤖', color: '#F59E0B' },
+  'Roblox Studio': { icon: '🎮', color: '#10B981' },
+  'Matemáticas':   { icon: '📐', color: '#EC4899' },
+};
+
+const NAV: NavItem[] = [
+  { label:'Mi Dashboard',  icon:'🏠', route:'/student' },
+  { label:'Mis Misiones',  icon:'🎯', route:'/student/missions' },
+  { label:'Mi Progreso',   icon:'📈', route:'/student/progress' },
+  { label:'Logros',        icon:'🏆', route:'/student/achievements' },
+  { label:'Tutor IA',      icon:'🤖', route:'/student/ai-tutor', badge:'✨' },
+  { label:'Proyectos',     icon:'💻', route:'/student/projects' },
+  // { label:'Roblox Studio', icon:'🎮', route:'/student/roblox' },
+  { label:'Comunidad',     icon:'👥', route:'/student/community' },
+];
+
+@Component({
+  selector: 'app-projects',
+  standalone: true,
+  imports: [CommonModule, RouterLink, ShellComponent],
+  templateUrl: './projects.component.html',
+  styleUrls: ['./projects.component.scss']
 })
-export class ProjectsComponent {
-  constructor(private router: Router) {}
-
-  navItems: NavItem[] = [
-    { label:'Mi Dashboard',  icon:'🏠', route:'/student' }, { label:'Mis Misiones', icon:'🎯', route:'/student/missions', badge:3 },
-    { label:'Mi Progreso',   icon:'📈', route:'/student/progress' }, { label:'Logros', icon:'🏆', route:'/student/achievements' },
-    { label:'Tutor IA',      icon:'🤖', route:'/student/ai-tutor', badge:'✨' }, { label:'Proyectos', icon:'💻', route:'/student/projects' },
-    { label:'Roblox Studio', icon:'🎮', route:'/student/roblox' }, { label:'Comunidad', icon:'👥', route:'/student/community' },
-  ];
-
+export class ProjectsComponent implements OnInit {
+  navItems = NAV;
   selectedProject: any = null;
+  loading = true;
+  myProjects: any[] = [];
+  ideaProjects: any[] = [];
 
-  myProjects = [
-    { title:'Mi Primera Web', subject:'HTML/CSS', icon:'🌐', color:'#7C3AED', status:'Completado', desc:'Una página personal con mi nombre, foto y hobbies. Incluye sección de presentación, lista de hobbies y un formulario de contacto.', xp:120, date:'20 Ene',
-      details: ['✅ Estructura HTML completa', '✅ Estilos CSS aplicados', '✅ Responsive design', '✅ Formulario de contacto'] },
-    { title:'Calculadora Python', subject:'Python', icon:'🐍', color:'#06B6D4', status:'En progreso', desc:'Calculadora que suma, resta, multiplica y divide. Falta agregar el módulo de historial de operaciones.', xp:150, date:'En curso',
-      details: ['✅ Suma y resta', '✅ Multiplicación', '🔄 División (en progreso)', '⏳ Historial de operaciones'] },
-    { title:'Juego de Carreras', subject:'Scratch', icon:'🧩', color:'#2563EB', status:'En progreso', desc:'Un juego donde dos coches compiten en una pista. Falta agregar el sistema de puntuación y efectos de sonido.', xp:200, date:'En curso',
-      details: ['✅ Movimiento de coches', '✅ Pista diseñada', '🔄 Sistema de puntos', '⏳ Efectos de sonido'] },
-  ];
+  get studentName(): string     { return this.auth.getUser()?.displayName || 'Alumno'; }
+  get studentInitials(): string { return this.auth.getUser()?.initials || 'A'; }
 
-  ideaProjects = [
-    { title:'Chatbot de tareas', subject:'Python', icon:'🤖', color:'#EC4899', desc:'Un bot que responde preguntas de matemáticas', xp:300, difficulty:'Difícil' },
-    { title:'Portafolio web', subject:'HTML/CSS/JS', icon:'🌐', color:'#7C3AED', desc:'Muestra todos tus proyectos en una web bonita', xp:250, difficulty:'Medio' },
-    { title:'Simulador de vida', subject:'Roblox Studio', icon:'🎮', color:'#10B981', desc:'Tu propio juego de simulación en Roblox', xp:400, difficulty:'Difícil' },
-    { title:'Sensor de temperatura', subject:'Robótica', icon:'🌡️', color:'#F59E0B', desc:'Mide la temperatura del salón con Arduino', xp:180, difficulty:'Medio' },
-  ];
+  constructor(
+    private router: Router,
+    private contentApi: ContentApiService,
+    private submissionApi: SubmissionApiService,
+    private auth: AuthService
+  ) {}
 
-  openProject(p: any) { this.selectedProject = p; }
-  closeModal() { this.selectedProject = null; }
+  ngOnInit(): void {
+    forkJoin({
+      projects: this.contentApi.getMyFeed(),
+      subs: this.submissionApi.getMySubmissions(),
+    }).subscribe({
+      next: ({ projects, subs }) => {
+        const subMap = new Map(subs.map((s: any) => [s.contentId || s.content?.id, s]));
 
-  continueProject(p: any) {
-    const q = `${p.status === 'Completado' ? 'Quiero ver y mejorar' : 'Continuar'} mi proyecto "${p.title}" de ${p.subject}. ${p.desc}`;
-    this.router.navigate(['/student/ai-tutor'], { queryParams: { q } });
+        this.myProjects = projects
+          .filter((p: any) => subMap.has(p.id || p._id) && p.type === 'proyecto')
+          .map((p: any) => this.mapProject(p, subMap.get(p.id || p._id)));
+
+        this.ideaProjects = projects
+          .filter((p: any) => !subMap.has(p.id || p._id) && p.type === 'proyecto')
+          .slice(0, 6)
+          .map((p: any) => this.mapIdea(p));
+
+        this.loading = false;
+      },
+      error: () => { this.loading = false; }
+    });
   }
 
-  startIdea(p: any) {
-    const q = `Quiero empezar el proyecto "${p.title}" de ${p.subject}. ${p.desc}. ¿Por dónde empiezo?`;
-    this.router.navigate(['/student/ai-tutor'], { queryParams: { q } });
+  private mapProject(p: any, sub: any): any {
+    const meta = SUBJECT_META[p.subjectName] ?? { icon: '💻', color: '#6B7FBB' };
+    const status = sub?.status === 'aprobado' ? 'Completado' : 'En progreso';
+    return {
+      id: p.id || p._id,
+      title: p.title,
+      subject: p.subjectName ?? '',
+      icon: meta.icon,
+      color: meta.color,
+      status,
+      desc: p.description ?? '',
+      xp: p.xpReward ?? 0,
+      date: status === 'Completado'
+        ? new Date(sub?.reviewedAt || sub?.submittedAt).toLocaleDateString('es-MX', { day: 'numeric', month: 'short' })
+        : 'En curso',
+      details: [],
+    };
   }
 
-  newProject() {
-    this.router.navigate(['/student/ai-tutor'], { queryParams: { q: 'Quiero crear un nuevo proyecto de programación. ¿Qué me recomiendas según mi nivel?' } });
+  private mapIdea(p: any): any {
+    const meta = SUBJECT_META[p.subjectName] ?? { icon: '💻', color: '#6B7FBB' };
+    return {
+      id: p.id || p._id,
+      title: p.title,
+      subject: p.subjectName ?? '',
+      icon: meta.icon,
+      color: meta.color,
+      desc: p.description ?? '',
+      xp: p.xpReward ?? 0,
+      difficulty: p.difficulty === 'facil' ? 'Fácil' : p.difficulty === 'dificil' ? 'Difícil' : 'Medio',
+    };
+  }
+
+  openProject(p: any): void { this.selectedProject = p; }
+  closeModal(): void { this.selectedProject = null; }
+
+  continueProject(p: any): void {
+    if (p.id) this.router.navigate(['/student/missions', p.id]);
+  }
+
+  startIdea(p: any): void {
+    if (p.id) this.router.navigate(['/student/missions', p.id]);
+  }
+
+  newProject(): void {
+    this.router.navigate(['/student/ai-tutor'], {
+      queryParams: { q: 'Quiero crear un nuevo proyecto de programación. ¿Qué me recomiendas según mi nivel?' }
+    });
   }
 }

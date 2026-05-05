@@ -121,6 +121,23 @@ export class AdministratorClassroomsPageComponent implements OnInit {
     });
   }
 
+  deactivate(classroom: any) {
+    if (!confirm(`¿Dar de baja "${classroom.name}"? Quedará inactivo.`)) return;
+    this.saving = true;
+    this.administratorApi.deactivateClassroom(classroom.id).subscribe({
+      next: () => {
+        this.showToast(`Salón "${classroom.name}" dado de baja`);
+        this.saving = false;
+        if (this.selected?.id === classroom.id) this.selected = null;
+        this.load();
+      },
+      error: (e: any) => {
+        this.saving = false;
+        this.showToast(e?.error?.message ?? 'No se pudo dar de baja el salón');
+      }
+    });
+  }
+
   private syncEditForm() {
     if (!this.selected) return;
     this.editForm = {

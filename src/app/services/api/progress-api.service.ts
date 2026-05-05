@@ -45,4 +45,8 @@ export class ProgressApiService {
   getStudentActivity(studentId: string): Observable<any[]> {
     return this.http.get<any>(`${BASE}/students/${studentId}/activity`).pipe(map(r => r.data ?? []));
   }
+
+  getLeaderboard(limit = 10): Observable<any[]> {
+    return this.http.get<any>(`${BASE}/leaderboard?limit=${limit}`).pipe(map(r => r.data ?? []));
+  }
 }

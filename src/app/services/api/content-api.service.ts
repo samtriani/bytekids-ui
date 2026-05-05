@@ -29,6 +29,10 @@ export class ContentApiService {
     return this.http.get<any>(`${BASE}/my`).pipe(map(r => r.data ?? []));
   }
 
+  getMyFeed(): Observable<any[]> {
+    return this.http.get<any>(`${BASE}/feed`).pipe(map(r => r.data ?? []));
+  }
+
   create(req: any): Observable<any> {
     return this.http.post<any>(BASE, req).pipe(map(r => r.data));
   }
@@ -43,5 +47,9 @@ export class ContentApiService {
 
   assign(id: string, req: { classroomId?: string; studentId?: string; dueDate?: string }): Observable<void> {
     return this.http.post<any>(`${BASE}/${id}/assign`, req).pipe(map(() => void 0));
+  }
+
+  delete(id: string): Observable<void> {
+    return this.http.delete<any>(`${BASE}/${id}`).pipe(map(() => void 0));
   }
 }
