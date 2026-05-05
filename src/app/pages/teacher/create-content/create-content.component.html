@@ -1,16 +1,30 @@
-<app-shell role="teacher" userName="Profa. García" userAvatar="MG" [navItems]="navItems" pageTitle="Crear Contenido"></app-shell>
+<app-shell role="teacher" [userName]="teacherName" [userAvatar]="teacherInitials"
+  [navItems]="navItems" pageTitle="Crear Contenido"></app-shell>
 <div class="page-wrap">
   <div class="ph">
     <div class="ph-left"><h1>Crear Contenido</h1><p>Diseña misiones, tareas y materiales para tus alumnos</p></div>
     <a routerLink="/teacher/ai-assistant" class="btn btn-outline">🤖 Generar con IA</a>
   </div>
 
-  @if (toast) { <div class="alert alert-ok" style="margin-bottom:14px">{{ toast }}</div> }
-  @if (forStudent) { <div class="alert alert-info" style="margin-bottom:14px">📌 Creando contenido personalizado para <strong>{{ forStudent }}</strong></div> }
+  @if (toast) {
+    <div class="alert" [class]="toastType==='error'?'alert-warn':'alert-ok'" style="margin-bottom:14px">{{ toast }}</div>
+  }
+  @if (forStudent) {
+    <div class="alert alert-info" style="margin-bottom:14px">📌 Creando contenido personalizado para <strong>{{ forStudent }}</strong></div>
+  }
+  @if (editingId) {
+    <div class="alert alert-info" style="margin-bottom:14px;display:flex;align-items:center;justify-content:space-between">
+      <span>✏️ Editando contenido — los cambios sobreescriben el original</span>
+      <button class="btn btn-ghost btn-sm" (click)="cancelEdit()">Cancelar edición</button>
+    </div>
+  }
 
   <div class="cc-layout">
+    <!-- Formulario -->
     <div class="card card-p">
-      <h3 style="font-size:1rem;font-weight:800;margin-bottom:14px">Nuevo contenido</h3>
+      <h3 style="font-size:1rem;font-weight:800;margin-bottom:14px">
+        {{ editingId ? '✏️ Editar contenido' : 'Nuevo contenido' }}
+      </h3>
       <div class="fg">
         <div class="label">Tipo</div>
         <div class="chips">
@@ -23,14 +37,25 @@
       </div>
       <div class="fg">
         <label class="label">Descripción</label>
-        <textarea class="textarea" [(ngModel)]="desc" rows="3" placeholder="¿Qué van a aprender los alumnos con esta actividad?"></textarea>
+        <textarea class="textarea" [(ngModel)]="desc" rows="3" placeholder="¿Qué van a aprender los alumnos?"></textarea>
       </div>
       <div class="fg-row fg">
-        <div><label class="label">Materia</label><select class="select" [(ngModel)]="subject">@for (s of subjects; track s){<option>{{ s }}</option>}</select></div>
-        <div><label class="label">Salón destino</label><select class="select" [(ngModel)]="grade">@for (g of grades; track g){<option>{{ g }}</option>}</select></div>
+        <div>
+          <label class="label">Materia</label>
+          <select class="select" [(ngModel)]="subject">@for (s of subjects; track s){ <option>{{ s }}</option> }</select>
+        </div>
+        <div>
+          <label class="label">Salón destino</label>
+          <select class="select" [(ngModel)]="classroomId">
+            @for (c of classrooms; track c._id || c.id) {
+              <option [value]="c._id || c.id">{{ c.name }}</option>
+            }
+            @if (!classrooms.length) { <option value="">Sin salones</option> }
+          </select>
+        </div>
       </div>
       <div class="fg-row fg">
-        <div><label class="label">Dificultad</label><select class="select" [(ngModel)]="diff">@for (d of diffs; track d){<option>{{ d }}</option>}</select></div>
+        <div><label class="label">Dificultad</label><select class="select" [(ngModel)]="diff">@for (d of diffs; track d){ <option>{{ d }}</option> }</select></div>
         <div><label class="label">XP de recompensa</label><input type="number" class="input" [(ngModel)]="xp" min="10" max="500"></div>
       </div>
       <div class="fg">
@@ -38,12 +63,20 @@
         <input type="number" class="input" [(ngModel)]="mins" min="5" max="240">
       </div>
       <div style="display:flex;gap:8px;margin-top:4px">
-        <button class="btn btn-primary" style="flex:1;justify-content:center" (click)="save()" [disabled]="!title.trim()">✅ Publicar para alumnos</button>
-        <button class="btn btn-ghost" (click)="showPreview=true" [disabled]="!title.trim()">👁️ Vista previa</button>
+        <button class="btn btn-primary" style="flex:1;justify-content:center" (click)="save()" [disabled]="!title.trim()">
+          {{ editingId ? '💾 Guardar cambios' : '✅ Publicar para alumnos' }}
+        </button>
+        @if (!editingId) {
+          <button class="btn btn-ghost" (click)="showPreview=true" [disabled]="!title.trim()">👁️ Vista previa</button>
+        }
+        @if (editingId) {
+          <button class="btn btn-ghost" (click)="cancelEdit()">Cancelar</button>
+        }
       </div>
     </div>
 
     <div style="display:flex;flex-direction:column;gap:12px">
+      <!-- Plantillas -->
       <div class="card card-p">
         <div class="card-title" style="margin-bottom:10px">⚡ Plantillas rápidas</div>
         @for (t of tpls; track t.n) {
@@ -54,23 +87,35 @@
         }
       </div>
 
+      <!-- IA -->
       <div class="card card-p" style="background:var(--guinda-lt);border-color:var(--guinda-border)">
         <div style="font-weight:800;font-size:.86rem;color:var(--guinda);margin-bottom:4px">¿Sin ideas? El IA te ayuda</div>
-        <div style="font-size:.76rem;color:var(--tx2);margin-bottom:10px">El Asistente genera el contenido completo con objetivos, instrucciones y criterios de evaluación.</div>
+        <div style="font-size:.76rem;color:var(--tx2);margin-bottom:10px">Genera el contenido completo con objetivos, instrucciones y criterios de evaluación.</div>
         <a routerLink="/teacher/ai-assistant" class="btn btn-primary btn-block">🤖 Abrir Asistente IA</a>
       </div>
 
+      <!-- Publicados -->
       @if (published.length) {
         <div class="card card-p">
           <div class="card-title" style="margin-bottom:10px">📋 Publicados recientemente</div>
-          <div style="display:flex;flex-direction:column;gap:8px">
-            @for (p of published; track p.title) {
-              <div style="display:flex;align-items:center;gap:8px;padding:7px 0;border-bottom:1px solid var(--border)">
-                <div style="flex:1">
-                  <div style="font-weight:700;font-size:.82rem;color:var(--tx1)">{{ p.title }}</div>
-                  <div style="font-size:.7rem;color:var(--tx3)">{{ p.type }} · {{ p.subject }} · {{ p.grade }} · +{{ p.xp }} XP</div>
+          <div style="display:flex;flex-direction:column;gap:6px">
+            @for (p of published; track p.id) {
+              <div style="padding:8px 0;border-bottom:1px solid var(--border)">
+                <div style="display:flex;align-items:flex-start;gap:8px">
+                  <div style="flex:1">
+                    <div style="font-weight:700;font-size:.82rem;color:var(--tx1)">{{ p.title }}</div>
+                    <div style="font-size:.7rem;color:var(--tx3)">{{ p.type }} · {{ p.subject }} · +{{ p.xp }} XP · {{ p.date }}</div>
+                  </div>
+                  <div style="display:flex;gap:4px;flex-shrink:0">
+                    <button class="btn btn-ghost btn-sm" title="Editar" (click)="startEdit(p)">✏️</button>
+                    @if (confirmDeleteId === p.id) {
+                      <button class="btn btn-sm" style="background:#9B1414;color:#fff;border:none;border-radius:6px;padding:3px 8px;font-size:.72rem" (click)="deleteContent(p.id)">¿Eliminar?</button>
+                      <button class="btn btn-ghost btn-sm" (click)="confirmDeleteId=null">✕</button>
+                    } @else {
+                      <button class="btn btn-ghost btn-sm" title="Eliminar" (click)="confirmDeleteId=p.id">🗑️</button>
+                    }
+                  </div>
                 </div>
-                <span style="font-size:.7rem;color:var(--tx3);flex-shrink:0">{{ p.date }}</span>
               </div>
             }
           </div>
@@ -96,7 +141,7 @@
           <div style="display:flex;gap:10px;font-size:.78rem;color:var(--tx3)">
             <span>⭐ +{{ xp }} XP</span>
             <span>⏱️ {{ mins }} min</span>
-            <span>📚 {{ grade }}</span>
+            <span>📚 {{ classroomLabel }}</span>
           </div>
         </div>
         <div style="display:flex;gap:8px">

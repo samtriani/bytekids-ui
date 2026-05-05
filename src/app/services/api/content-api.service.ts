@@ -44,4 +44,8 @@ export class ContentApiService {
   assign(id: string, req: { classroomId?: string; studentId?: string; dueDate?: string }): Observable<void> {
     return this.http.post<any>(`${BASE}/${id}/assign`, req).pipe(map(() => void 0));
   }
+
+  delete(id: string): Observable<void> {
+    return this.http.delete<any>(`${BASE}/${id}`).pipe(map(() => void 0));
+  }
 }

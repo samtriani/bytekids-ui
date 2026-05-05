@@ -7,6 +7,7 @@ import { AuthService } from '../../../services/auth.service';
 import { UserApiService } from '../../../services/api/user-api.service';
 import { ClassroomApiService } from '../../../services/api/classroom-api.service';
 import { AdministratorApiService } from '../../../services/api/administrator-api.service';
+import { SubjectService } from '../../../services/api/subject-api.service';
 import { ADMINISTRATOR_NAV_ITEMS } from '../shared/administrator-nav';
 
 @Component({
@@ -24,21 +25,25 @@ export class AdministratorAssignmentsPageComponent implements OnInit {
   saving = false;
 
   classrooms: any[] = [];
-  teachers: any[] = [];
-  students: any[] = [];
+  teachers:   any[] = [];
+  students:   any[] = [];
+  subjects:   any[] = [];   // catálogo global
 
-  selectedClassroom: any = null;
-  selectedClassroomStudents: any[] = [];
+  selectedClassroom:         any    = null;
+  selectedClassroomStudents: any[]  = [];
+  selectedClassroomSubjects: any[]  = [];
 
   teacherAssignment = { classroomId: '', teacherId: '' };
   studentAssignment = { classroomId: '', studentId: '' };
-  classroomSearch = '';
+  subjectIdToAdd    = '';
+  classroomSearch   = '';
 
   constructor(
     private auth: AuthService,
     private userApi: UserApiService,
     private classroomApi: ClassroomApiService,
-    private administratorApi: AdministratorApiService
+    private administratorApi: AdministratorApiService,
+    private subjectApi: SubjectService
   ) {
     const u = this.auth.getUser();
     if (u) { this.userName = u.displayName; this.userAvatar = u.initials; }
@@ -50,12 +55,14 @@ export class AdministratorAssignmentsPageComponent implements OnInit {
     forkJoin({
       teachers:   this.userApi.getTeachers(),
       students:   this.userApi.getStudents(),
-      classrooms: this.classroomApi.getAll()
+      classrooms: this.classroomApi.getAll(),
+      subjects:   this.subjectApi.getAll(),
     }).subscribe({
-      next: ({ teachers, students, classrooms }) => {
+      next: ({ teachers, students, classrooms, subjects }) => {
         this.teachers   = teachers;
         this.students   = students;
         this.classrooms = classrooms;
+        this.subjects   = subjects;
         // refresca salón seleccionado si ya había uno
         if (this.selectedClassroom) {
           const refreshed = classrooms.find((c: any) => c.id === this.selectedClassroom.id);
@@ -78,8 +85,15 @@ export class AdministratorAssignmentsPageComponent implements OnInit {
     this.selectedClassroom = classroom;
     this.teacherAssignment.classroomId = classroom.id;
     this.studentAssignment.classroomId = classroom.id;
-    this.classroomApi.getStudents(classroom.id).subscribe({
-      next: s => this.selectedClassroomStudents = s
+    this.subjectIdToAdd = '';
+    forkJoin({
+      students: this.classroomApi.getStudents(classroom.id),
+      subjects: this.classroomApi.getSubjects(classroom.id),
+    }).subscribe({
+      next: ({ students, subjects }) => {
+        this.selectedClassroomStudents = students;
+        this.selectedClassroomSubjects = subjects;
+      }
     });
   }
 
@@ -120,6 +134,27 @@ export class AdministratorAssignmentsPageComponent implements OnInit {
   get availableStudents() {
     const enrolled = new Set(this.selectedClassroomStudents.map(s => s.id));
     return this.students.filter(s => !enrolled.has(s.id));
+  }
+
+  get availableSubjects() {
+    const assigned = new Set(this.selectedClassroomSubjects.map(s => s.id));
+    return this.subjects.filter(s => !assigned.has(s.id));
+  }
+
+  addSubject() {
+    if (!this.subjectIdToAdd || !this.selectedClassroom?.id) return;
+    this.run(
+      this.administratorApi.addSubjectToClassroom(this.selectedClassroom.id, this.subjectIdToAdd),
+      'Materia asignada al salón'
+    );
+  }
+
+  removeSubject(subjectId: string) {
+    if (!this.selectedClassroom?.id) return;
+    this.run(
+      this.administratorApi.removeSubjectFromClassroom(this.selectedClassroom.id, subjectId),
+      'Materia removida del salón'
+    );
   }
 
   private run(obs: any, msg: string) {

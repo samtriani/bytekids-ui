@@ -70,4 +70,14 @@ export class AdministratorApiService {
     return this.http.delete<any>(`${BASE}/classrooms/${classroomId}`)
       .pipe(map(() => void 0));
   }
+
+  addSubjectToClassroom(classroomId: string, subjectId: string): Observable<void> {
+    return this.http.post<any>(`${BASE}/classrooms/${classroomId}/subjects/${subjectId}`, {})
+      .pipe(map(() => void 0));
+  }
+
+  removeSubjectFromClassroom(classroomId: string, subjectId: string): Observable<void> {
+    return this.http.delete<any>(`${BASE}/classrooms/${classroomId}/subjects/${subjectId}`)
+      .pipe(map(() => void 0));
+  }
 }

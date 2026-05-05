@@ -6,6 +6,7 @@ import { ProgressApiService } from '../../services/api/progress-api.service';
 import { ContentApiService } from '../../services/api/content-api.service';
 import { AchievementApiService } from '../../services/api/achievement-api.service';
 import { SubmissionApiService } from '../../services/api/submission-api.service';
+import { AuthService } from '../../services/auth.service';
 import { forkJoin } from 'rxjs';
 import { Chart, registerables } from 'chart.js';
 Chart.register(...registerables);
@@ -39,16 +40,30 @@ export class StudentDashboardComponent implements OnInit, AfterViewInit {
     { icon:'🔥', value:'—', label:'Racha activa',change:'¡Sigue así!', cls:'neutral',color:'#EC4899' },
   ];
 
-  missions:      any[] = [];
-  achievements:  any[] = [];
+  missions:     any[] = [];
+  achievements: any[] = [];
+  totalXpNum  = 0;
   private xpChartInst:     any;
   private skillsChartInst: any;
 
+  readonly XP_PER_LEVEL = 500;
+  private readonly LEVEL_NAMES = ['Iniciado','Explorador','Code Explorer','Programador Jr.',
+    'Programador','Dev Avanzado','Maestro del Código','Elite Coder','Leyenda','ByteKids Pro'];
+
+  get studentName(): string     { return this.auth.getUser()?.displayName || 'Alumno'; }
+  get studentInitials(): string { return this.auth.getUser()?.initials || 'A'; }
+  get level(): number           { return Math.floor(this.totalXpNum / this.XP_PER_LEVEL) + 1; }
+  get levelName(): string       { return this.LEVEL_NAMES[Math.min(this.level - 1, this.LEVEL_NAMES.length - 1)]; }
+  get xpInLevel(): number       { return this.totalXpNum % this.XP_PER_LEVEL; }
+  get levelPct(): number        { return Math.round((this.xpInLevel / this.XP_PER_LEVEL) * 100); }
+  get xpToNext(): number        { return this.XP_PER_LEVEL - this.xpInLevel; }
+
   constructor(
-    private progressApi:     ProgressApiService,
-    private contentApi:      ContentApiService,
-    private achievementApi:  AchievementApiService,
-    private submissionApi:   SubmissionApiService
+    private progressApi:    ProgressApiService,
+    private contentApi:     ContentApiService,
+    private achievementApi: AchievementApiService,
+    private submissionApi:  SubmissionApiService,
+    private auth:           AuthService
   ) {}
 
   ngOnInit() {
@@ -64,6 +79,7 @@ export class StudentDashboardComponent implements OnInit, AfterViewInit {
       next: ({ xp, streak, subjects, missions, subs, earned, defs }) => {
         // Stats
         const approvedIds = new Set(subs.filter((s:any) => s.status === 'aprobado').map((s:any) => s.contentId));
+        this.totalXpNum = xp;
         this.stats[0].value   = xp.toLocaleString();
         this.stats[0].change  = '+XP acumulado';
         this.stats[1].value   = String(missions.length);

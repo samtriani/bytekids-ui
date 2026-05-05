@@ -1,13 +1,13 @@
-<app-shell role="student" userName="Axel Partida" userAvatar="AP" [navItems]="navItems"></app-shell>
+<app-shell role="student" [userName]="studentName" [userAvatar]="studentInitials" [navItems]="navItems"></app-shell>
 <div class="progress-page fade-in-up">
   <div class="page-header"><h1>📈 Mi Progreso</h1><p>Tu evolución de aprendizaje semana a semana</p></div>
 
   <!-- Top stats -->
   <div class="bk-grid-4" style="margin-bottom:22px">
-    <div class="stat-card" style="--card-color:#7C3AED"><div class="stat-icon">⭐</div><div class="stat-info"><span class="stat-value">1,250</span><span class="stat-label">XP Total</span></div><div class="stat-change up">+350 este mes</div></div>
-    <div class="stat-card" style="--card-color:#2563EB"><div class="stat-icon">📚</div><div class="stat-info"><span class="stat-value">8/14</span><span class="stat-label">Misiones completas</span></div><div class="stat-change up">57% completado</div></div>
-    <div class="stat-card" style="--card-color:#F59E0B"><div class="stat-icon">🔥</div><div class="stat-info"><span class="stat-value">12</span><span class="stat-label">Días de racha</span></div><div class="stat-change neutral">¡Sigue así!</div></div>
-    <div class="stat-card" style="--card-color:#10B981"><div class="stat-icon">📅</div><div class="stat-info"><span class="stat-value">5/7</span><span class="stat-label">Días activos</span></div><div class="stat-change up">Esta semana</div></div>
+    <div class="stat-card" style="--card-color:#7C3AED"><div class="stat-icon">⭐</div><div class="stat-info"><span class="stat-value">{{ totalXp | number }}</span><span class="stat-label">XP Total</span></div><div class="stat-change up">+{{ xpThisMonth }} este mes</div></div>
+    <div class="stat-card" style="--card-color:#2563EB"><div class="stat-icon">📚</div><div class="stat-info"><span class="stat-value">{{ completedMissions }}/{{ totalMissions }}</span><span class="stat-label">Misiones completas</span></div><div class="stat-change up">{{ completionPct }}% completado</div></div>
+    <div class="stat-card" style="--card-color:#F59E0B"><div class="stat-icon">🔥</div><div class="stat-info"><span class="stat-value">{{ streak }}</span><span class="stat-label">Días de racha</span></div><div class="stat-change neutral">¡Sigue así!</div></div>
+    <div class="stat-card" style="--card-color:#10B981"><div class="stat-icon">📅</div><div class="stat-info"><span class="stat-value">{{ activeDays }}/7</span><span class="stat-label">Días activos</span></div><div class="stat-change up">Esta semana</div></div>
   </div>
 
   <!-- Charts row -->

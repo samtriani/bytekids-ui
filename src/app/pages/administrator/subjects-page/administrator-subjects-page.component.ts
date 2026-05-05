@@ -106,6 +106,23 @@ export class AdministratorSubjectsPageComponent implements OnInit {
     });
   }
 
+  deactivate(subject: any) {
+    if (!confirm(`¿Dar de baja "${subject.name}"? Quedará inactiva y no aparecerá en listas.`)) return;
+    this.saving = true;
+    this.subjectApi.deactivate(subject.id).subscribe({
+      next: () => {
+        this.showToast(`Materia "${subject.name}" dada de baja`);
+        this.saving = false;
+        if (this.selected?.id === subject.id) this.selected = null;
+        this.load();
+      },
+      error: (error: any) => {
+        this.saving = false;
+        this.showToast(error?.error?.message ?? 'No se pudo dar de baja la materia');
+      }
+    });
+  }
+
   private syncEditForm() {
     if (!this.selected) return;
     this.editForm = {

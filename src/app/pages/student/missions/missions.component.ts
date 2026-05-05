@@ -5,6 +5,7 @@ import { ShellComponent, NavItem } from '../../../shared/shell/shell.component';
 import { MissionStateService } from '../../../services/mission-state.service';
 import { ContentApiService } from '../../../services/api/content-api.service';
 import { SubmissionApiService } from '../../../services/api/submission-api.service';
+import { AuthService } from '../../../services/auth.service';
 
 const SUBJECT_META: Record<string, { icon: string; color: string }> = {
   'Python':        { icon: '🐍', color: '#06B6D4' },
@@ -18,11 +19,15 @@ const SUBJECT_META: Record<string, { icon: string; color: string }> = {
 @Component({ selector: 'app-missions', standalone: true, imports: [CommonModule, RouterLink, ShellComponent],
   templateUrl: './missions.component.html', styleUrls: ['./missions.component.scss'] })
 export class MissionsComponent implements OnInit {
+  get studentName(): string    { return this.auth.getUser()?.displayName || 'Alumno'; }
+  get studentInitials(): string { return this.auth.getUser()?.initials || 'A'; }
+
   constructor(
     private router: Router,
     private missionState: MissionStateService,
     private contentApi: ContentApiService,
-    private submissionApi: SubmissionApiService
+    private submissionApi: SubmissionApiService,
+    private auth: AuthService
   ) {}
 
   navItems: NavItem[] = [
@@ -40,6 +45,11 @@ export class MissionsComponent implements OnInit {
   filters = ['Todas', 'Python', 'HTML/CSS', 'Scratch', 'Robótica', 'Roblox'];
   loading = true;
   missions: any[] = [];
+
+  get total(): number        { return this.missions.length; }
+  get enProgreso(): number   { return this.missions.filter(m => m.status === 'En progreso').length; }
+  get completadas(): number  { return this.missions.filter(m => m.status === 'Completado').length; }
+  get disponibles(): number  { return this.missions.filter(m => m.status === 'Disponible').length; }
   // Mapa contentId → submission más reciente del alumno
   private submissionMap: Record<string, any> = {};
 
@@ -93,9 +103,7 @@ export class MissionsComponent implements OnInit {
   setFilter(f: string) { this.activeFilter = f; }
 
   startMission(m: any) {
-    if (m.locked) return;
-    const action = m.status === 'En progreso' ? 'Continuar' : m.status === 'Completado' ? 'Repasar' : 'Empezar';
-    const q = `${action} misión: "${m.title}" de ${m.subject}. Ayúdame con esta misión.`;
-    this.router.navigate(['/student/ai-tutor'], { queryParams: { q } });
+    if (m.locked || !m.id) return;
+    this.router.navigate(['/student/missions', m.id]);
   }
 }

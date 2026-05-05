@@ -1,4 +1,4 @@
-<app-shell role="student" userName="Axel Partida" userAvatar="AP" [navItems]="navItems">
+<app-shell role="student" [userName]="studentName" [userAvatar]="studentInitials" [navItems]="navItems">
 </app-shell>
 
 <!-- This page renders INSIDE the shell via router-outlet when on /student -->
@@ -17,12 +17,12 @@
   <!-- Level strip -->
   <div class="level-strip fade-in-up" style="animation-delay:.06s; margin-bottom:20px">
     <div class="lv-left">
-      <div class="lv-badge">Nivel 5</div>
-      <div><div class="lv-title">Code Explorer 🌟</div><div class="lv-sub">1,250 / 2,000 XP para Nivel 6</div></div>
+      <div class="lv-badge">Nivel {{ level }}</div>
+      <div><div class="lv-title">{{ levelName }} 🌟</div><div class="lv-sub">{{ xpInLevel }} / {{ XP_PER_LEVEL }} XP para Nivel {{ level + 1 }}</div></div>
     </div>
     <div class="lv-right">
-      <div class="bk-progress" style="height:10px; flex:1"><div class="bar gradient" style="width:62.5%"></div></div>
-      <span class="lv-pct">62.5%</span>
+      <div class="bk-progress" style="height:10px; flex:1"><div class="bar gradient" [style.width]="levelPct + '%'"></div></div>
+      <span class="lv-pct">{{ levelPct }}%</span>
     </div>
   </div>
 

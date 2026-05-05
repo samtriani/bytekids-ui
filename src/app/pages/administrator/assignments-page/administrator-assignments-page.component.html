@@ -4,7 +4,7 @@
   <div class="ph">
     <div class="ph-left">
       <h1>Asignaciones</h1>
-      <p>Asigna o elimina relaciones entre salones, profesores, alumnos y materias desde una sola vista lateral.</p>
+      <p>Gestiona las relaciones entre salones, profesores, alumnos y materias.</p>
     </div>
   </div>
 
@@ -13,14 +13,16 @@
   }
 
   <div class="layout">
+
+    <!-- ── Columna izquierda: lista de salones ── -->
     <div class="card card-p">
       <div class="section-head">
         <h3>Salones</h3>
         <span class="tag tag-green">{{ classrooms.length }} activos</span>
       </div>
       <div class="fg">
-        <label class="label">Buscar salon</label>
-        <input class="input" [(ngModel)]="classroomSearch" placeholder="Busca por nombre o seccion">
+        <label class="label">Buscar salón</label>
+        <input class="input" [(ngModel)]="classroomSearch" placeholder="Nombre o sección…">
       </div>
       <div class="detail-menu">
         @for (classroom of filteredClassrooms; track classroom.id) {
@@ -31,87 +33,126 @@
               <strong>{{ classroom.name }}</strong>
               <small>{{ classroom.schoolYear }}</small>
             </button>
-            <button class="btn-baja"
-                    title="Dar de baja salón"
+            <button class="btn-baja" title="Dar de baja salón"
                     (click)="deactivateClassroom(classroom.id, classroom.name)">✕</button>
           </div>
         }
       </div>
     </div>
 
+    <!-- ── Panel derecho: gestión del salón seleccionado ── -->
     <div class="card card-p">
-      @if (selectedClassroom) {
-        <div class="section-head">
-          <h3>Gestion de {{ selectedClassroom.name }}</h3>
+      @if (!selectedClassroom) {
+        <div class="empty-box" style="padding:48px;text-align:center">Selecciona un salón para comenzar.</div>
+      } @else {
+
+        <!-- Cabecera del salón -->
+        <div class="section-head" style="margin-bottom:20px">
+          <h3>{{ selectedClassroom.name }}</h3>
           <span class="tag tag-blue">{{ selectedClassroom.schoolYear }}</span>
         </div>
 
-        <div class="g2 mb16">
-          <div class="assignment-box">
-            <div class="subcard-title">Profesor asignado</div>
+        <!-- 3 columnas: Profesor | Alumnos | Materias -->
+        <div class="assign-grid">
 
-            @if (selectedClassroom.teacherId) {
-              <!-- Profesor ya asignado: mostrar y permitir cambio o baja -->
-              <div class="linked-row mb8">
-                <div>
-                  <strong>{{ selectedClassroom.teacherName }}</strong>
-                  <small>Profesor titular</small>
-                </div>
-                <button class="btn btn-outline btn-sm" (click)="removeTeacher()" [disabled]="saving">Quitar</button>
-              </div>
-              <div class="subcard-title" style="font-size:11px;margin-top:8px">Cambiar profesor</div>
-            }
+          <!-- ── Profesor ── -->
+          <div class="assign-col">
+            <div class="assign-col-head">👩‍🏫 Profesor <span class="assign-count">{{ selectedClassroom.teacherId ? 1 : 0 }}</span></div>
 
-            <div class="fg">
-              <label class="label">{{ selectedClassroom.teacherId ? 'Nuevo profesor' : 'Selecciona un profesor' }}</label>
-              <select class="select" [(ngModel)]="teacherAssignment.teacherId">
-                <option value="">-- Selecciona --</option>
-                @for (teacher of teachers; track teacher.id) {
-                  <option [value]="teacher.id">{{ teacher.displayName }}</option>
-                }
-              </select>
-            </div>
-            <button class="btn btn-primary btn-block"
+            <select class="select" [(ngModel)]="teacherAssignment.teacherId">
+              <option value="">-- Selecciona profesor --</option>
+              @for (t of teachers; track t.id) {
+                <option [value]="t.id">{{ t.displayName }}</option>
+              }
+            </select>
+            <button class="btn btn-primary btn-block mt8"
                     (click)="assignTeacher()"
                     [disabled]="saving || !teacherAssignment.teacherId">
               {{ selectedClassroom.teacherId ? 'Cambiar profesor' : 'Asignar profesor' }}
             </button>
-          </div>
 
-          <div class="assignment-box">
-            <div class="subcard-title">Inscribir alumno</div>
-            <div class="fg">
-              <label class="label">Alumno</label>
-              <select class="select" [(ngModel)]="studentAssignment.studentId">
-                <option value="">Selecciona un alumno</option>
-                @for (student of availableStudents; track student.id) {
-                  <option [value]="student.id">{{ student.displayName }}</option>
-                }
-              </select>
-            </div>
-            <button class="btn btn-primary btn-block" (click)="assignStudent()" [disabled]="saving">Inscribir</button>
-          </div>
-        </div>
-
-        <div class="detail-subcard">
-          <div class="subcard-title">Alumnos inscritos</div>
-          @if (selectedClassroomStudents.length) {
-            @for (student of selectedClassroomStudents; track student.id) {
-              <div class="linked-row">
-                <div>
-                  <strong>{{ student.displayName }}</strong>
-                  <small>{{ student.username }}</small>
+            <div class="assign-list">
+              @if (selectedClassroom.teacherId) {
+                <div class="assign-item">
+                  <div>
+                    <div class="assign-name">{{ selectedClassroom.teacherName }}</div>
+                    <div class="assign-sub">Titular</div>
+                  </div>
+                  <button class="btn btn-outline btn-sm" (click)="removeTeacher()" [disabled]="saving">Quitar</button>
                 </div>
-                <button class="btn btn-outline btn-sm" (click)="removeStudent(student.id)" [disabled]="saving">Quitar</button>
-              </div>
-            }
-          } @else {
-            <div class="empty-box">Este salón aún no tiene alumnos inscritos.</div>
-          }
-        </div>
-      } @else {
-        <div class="empty-box">Selecciona un salon para comenzar.</div>
+              } @else {
+                <div class="assign-empty">Sin profesor asignado</div>
+              }
+            </div>
+          </div>
+
+          <!-- ── Alumnos ── -->
+          <div class="assign-col">
+            <div class="assign-col-head">👨‍🎓 Alumnos <span class="assign-count">{{ selectedClassroomStudents.length }}</span></div>
+
+            <select class="select" [(ngModel)]="studentAssignment.studentId">
+              <option value="">-- Selecciona alumno --</option>
+              @for (s of availableStudents; track s.id) {
+                <option [value]="s.id">{{ s.displayName }}</option>
+              }
+            </select>
+            <button class="btn btn-primary btn-block mt8"
+                    (click)="assignStudent()"
+                    [disabled]="saving || !studentAssignment.studentId">
+              Inscribir
+            </button>
+
+            <div class="assign-list">
+              @for (s of selectedClassroomStudents; track s.id) {
+                <div class="assign-item">
+                  <div>
+                    <div class="assign-name">{{ s.displayName }}</div>
+                    <div class="assign-sub">{{ s.username }}</div>
+                  </div>
+                  <button class="btn btn-outline btn-sm" (click)="removeStudent(s.id)" [disabled]="saving">Quitar</button>
+                </div>
+              }
+              @if (!selectedClassroomStudents.length) {
+                <div class="assign-empty">Sin alumnos inscritos</div>
+              }
+            </div>
+          </div>
+
+          <!-- ── Materias ── -->
+          <div class="assign-col">
+            <div class="assign-col-head">📚 Materias <span class="assign-count">{{ selectedClassroomSubjects.length }}</span></div>
+
+            <select class="select" [(ngModel)]="subjectIdToAdd">
+              <option value="">-- Selecciona materia --</option>
+              @for (s of availableSubjects; track s.id) {
+                <option [value]="s.id">{{ s.icon ?? '📚' }} {{ s.name }}</option>
+              }
+            </select>
+            <button class="btn btn-primary btn-block mt8"
+                    (click)="addSubject()"
+                    [disabled]="saving || !subjectIdToAdd">
+              Asignar materia
+            </button>
+
+            <div class="assign-list">
+              @for (s of selectedClassroomSubjects; track s.id) {
+                <div class="assign-item">
+                  <div>
+                    <div class="assign-name">{{ s.icon ?? '📚' }} {{ s.name }}</div>
+                    <div class="assign-sub">{{ s.description ?? '' }}</div>
+                  </div>
+                  <button class="btn btn-outline btn-sm" (click)="removeSubject(s.id)" [disabled]="saving">Quitar</button>
+                </div>
+              }
+              @if (!selectedClassroomSubjects.length) {
+                <div class="assign-empty">Sin materias asignadas</div>
+              }
+            </div>
+          </div>
+
+        </div><!-- /assign-grid -->
       }
     </div>
+
   </div>
 </div>

@@ -1,17 +1,112 @@
 @import '../users-page/administrator-users-page.component.scss';
 
-.btn-row {
+/* ── 3-column assignment grid ── */
+.assign-grid {
   display: grid;
-  grid-template-columns: 1fr 1fr;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 16px;
+  align-items: start;
+
+  @media (max-width: 900px) { grid-template-columns: 1fr; }
+}
+
+.assign-col {
+  background: var(--bg2, #F8F8FA);
+  border: 1px solid var(--border, #E8E8EE);
+  border-radius: 12px;
+  padding: 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 0;
+}
+
+.assign-col-head {
+  font-size: .8rem;
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: .04em;
+  color: var(--guinda, #7A1535);
+  margin-bottom: 12px;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.assign-count {
+  background: var(--guinda, #7A1535);
+  color: #fff;
+  font-size: .68rem;
+  font-weight: 800;
+  border-radius: 999px;
+  padding: 1px 7px;
+  letter-spacing: 0;
+  text-transform: none;
+}
+
+.assign-current {
+  background: var(--bg1, #fff);
+  border: 1px solid var(--border, #E8E8EE);
+  border-radius: 8px;
+  padding: 10px 12px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
   gap: 8px;
+  margin-bottom: 8px;
 }
 
-.linked-row small {
-  display: block;
+.assign-divider {
+  font-size: .7rem;
+  font-weight: 700;
   color: var(--tx3);
-  margin-top: 2px;
+  text-transform: uppercase;
+  letter-spacing: .04em;
+  margin-bottom: 8px;
 }
 
+.assign-name {
+  font-weight: 700;
+  font-size: .85rem;
+  color: var(--tx1);
+}
+
+.assign-sub {
+  font-size: .72rem;
+  color: var(--tx3);
+  margin-top: 1px;
+}
+
+.assign-list {
+  margin-top: 12px;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  max-height: 260px;
+  overflow-y: auto;
+}
+
+.assign-item {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  padding: 8px 10px;
+  background: var(--bg1, #fff);
+  border: 1px solid var(--border, #E8E8EE);
+  border-radius: 8px;
+}
+
+.assign-empty {
+  font-size: .8rem;
+  color: var(--tx3);
+  text-align: center;
+  padding: 16px 0;
+  font-style: italic;
+}
+
+.mt8 { margin-top: 8px; }
+
+/* ── Sidebar list ── */
 .detail-menu-item-wrap {
   display: flex;
   align-items: stretch;

@@ -1,1 +1,22 @@
 @import '../users-page/administrator-users-page.component.scss';
+
+.detail-menu-item-wrap {
+  display: flex;
+  align-items: stretch;
+  gap: 4px;
+  .detail-menu-item { flex: 1; }
+}
+
+.btn-baja {
+  background: none;
+  border: 1px solid var(--danger, #c0392b);
+  color: var(--danger, #c0392b);
+  border-radius: 6px;
+  padding: 0 8px;
+  cursor: pointer;
+  font-size: 12px;
+  opacity: 0.6;
+  transition: opacity .2s;
+  &:hover { opacity: 1; }
+  &:disabled { opacity: 0.3; cursor: not-allowed; }
+}

@@ -5,6 +5,7 @@ import { RouterLink, ActivatedRoute, Router } from '@angular/router';
 import { ShellComponent, NavItem } from '../../../shared/shell/shell.component';
 import { AiTutorService, ChatMessage } from '../../../services/ai-tutor.service';
 import { MissionStateService } from '../../../services/mission-state.service';
+import { AuthService } from '../../../services/auth.service';
 
 @Component({
   selector: 'app-ai-tutor',
@@ -136,9 +137,13 @@ export class AiTutorComponent implements AfterViewChecked, OnInit {
     '¿Cómo programo un Arduino? 🤖',
   ];
 
+  get studentName(): string     { return this.auth.getUser()?.displayName || 'Alumno'; }
+  get studentInitials(): string { return this.auth.getUser()?.initials || 'A'; }
+
   constructor(
     private aiService: AiTutorService,
     private missionState: MissionStateService,
+    private auth: AuthService,
     private route: ActivatedRoute,
     private router: Router
   ) {}

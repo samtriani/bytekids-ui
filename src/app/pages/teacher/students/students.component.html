@@ -1,16 +1,19 @@
-<app-shell role="teacher" userName="Profa. García" userAvatar="MG"
-  [navItems]="navItems" pageTitle="Alumnos — 4°A"></app-shell>
+<app-shell role="teacher" [userName]="teacherName" [userAvatar]="teacherInitials"
+  [navItems]="navItems" [pageTitle]="'Alumnos — ' + classroomName"></app-shell>
 <div class="page-wrap">
   <div class="ph">
-    <div class="ph-left"><h1>Alumnos — Salón 4°A</h1><p>Seguimiento individual de los 22 estudiantes activos</p></div>
+    <div class="ph-left">
+      <h1>Alumnos — {{ classroomName }}</h1>
+      <p>Seguimiento individual de los {{ all.length }} estudiantes activos</p>
+    </div>
     <a routerLink="/teacher/ai-assistant" class="btn btn-primary">🤖 Análisis IA</a>
   </div>
 
   <div class="g4 mb14">
-    <div class="kpi green"><div class="kpi-ico">⭐</div><div><div class="kpi-val">2</div><div class="kpi-lbl">Excelentes</div></div></div>
-    <div class="kpi"><div class="kpi-ico">📊</div><div><div class="kpi-val">3</div><div class="kpi-lbl">En progreso</div></div></div>
-    <div class="kpi red"><div class="kpi-ico">⚠️</div><div><div class="kpi-val">1</div><div class="kpi-lbl">Necesitan apoyo</div></div></div>
-    <div class="kpi gold"><div class="kpi-ico">🔥</div><div><div class="kpi-val">22d</div><div class="kpi-lbl">Racha máx.</div></div></div>
+    <div class="kpi green"><div class="kpi-ico">⭐</div><div><div class="kpi-val">{{ excelentes }}</div><div class="kpi-lbl">Excelentes</div></div></div>
+    <div class="kpi"><div class="kpi-ico">📊</div><div><div class="kpi-val">{{ enProgreso }}</div><div class="kpi-lbl">En progreso</div></div></div>
+    <div class="kpi red"><div class="kpi-ico">⚠️</div><div><div class="kpi-val">{{ needSupport }}</div><div class="kpi-lbl">Necesitan apoyo</div></div></div>
+    <div class="kpi gold"><div class="kpi-ico">🔥</div><div><div class="kpi-val">{{ maxStreak }}d</div><div class="kpi-lbl">Racha máx.</div></div></div>
   </div>
 
   <div class="toolbar mb14">
@@ -24,18 +27,22 @@
     </div>
   </div>
 
-  @if (view==='table') {
+  @if (loading) {
+    <div style="text-align:center;padding:40px;color:var(--tx2)">Cargando alumnos...</div>
+  } @else if (view==='table') {
     <div class="card" style="overflow:hidden">
       <table class="tbl">
         <thead>
           <tr><th>Alumno</th><th>Progreso</th><th>XP</th><th>Racha</th><th>Estado</th><th>Último acceso</th><th>Siguiente misión</th><th></th></tr>
         </thead>
         <tbody>
-          @for (s of rows; track s.n) {
+          @for (s of rows; track s.id) {
             <tr [class.row-warn]="s.status==='Necesita apoyo'" style="cursor:pointer" (click)="openStudent(s)">
               <td>
                 <div style="display:flex;align-items:center;gap:8px">
-                  <div class="av" style="width:32px;height:32px;font-size:.72rem" [style.background]="s.status==='Excelente'?'var(--oro-lt)':s.status==='Necesita apoyo'?'var(--danger-lt)':'var(--guinda-lt)'" [style.color]="s.status==='Excelente'?'#7A4F00':s.status==='Necesita apoyo'?'var(--danger)':'var(--guinda)'">{{ s.av }}</div>
+                  <div class="av" style="width:32px;height:32px;font-size:.72rem"
+                    [style.background]="s.status==='Excelente'?'var(--oro-lt)':s.status==='Necesita apoyo'?'var(--danger-lt)':'var(--guinda-lt)'"
+                    [style.color]="s.status==='Excelente'?'#7A4F00':s.status==='Necesita apoyo'?'var(--danger)':'var(--guinda)'">{{ s.av }}</div>
                   <div><div style="font-weight:700;font-size:.85rem">{{ s.n }}</div><div style="font-size:.68rem;color:var(--tx3)">{{ s.cls }}</div></div>
                 </div>
               </td>
@@ -61,14 +68,14 @@
         </tbody>
       </table>
     </div>
-  }
-
-  @if (view==='cards') {
+  } @else if (view==='cards') {
     <div class="gauto">
-      @for (s of rows; track s.n) {
+      @for (s of rows; track s.id) {
         <div class="stu-card card card-p" (click)="openStudent(s)">
           <div class="sc-top">
-            <div class="av" style="width:42px;height:42px;font-size:.82rem" [style.background]="s.status==='Excelente'?'var(--oro-lt)':s.status==='Necesita apoyo'?'var(--danger-lt)':'var(--guinda-lt)'" [style.color]="s.status==='Excelente'?'#7A4F00':s.status==='Necesita apoyo'?'var(--danger)':'var(--guinda)'">{{ s.av }}</div>
+            <div class="av" style="width:42px;height:42px;font-size:.82rem"
+              [style.background]="s.status==='Excelente'?'var(--oro-lt)':s.status==='Necesita apoyo'?'var(--danger-lt)':'var(--guinda-lt)'"
+              [style.color]="s.status==='Excelente'?'#7A4F00':s.status==='Necesita apoyo'?'var(--danger)':'var(--guinda)'">{{ s.av }}</div>
             <div style="flex:1">
               <div style="font-weight:800;font-size:.9rem">{{ s.n }}</div>
               <div style="font-size:.72rem;color:var(--tx3)">{{ s.cls }} · {{ s.last }}</div>
@@ -93,13 +100,14 @@
   }
 </div>
 
-<!-- Modal detalle alumno -->
 @if (selected) {
   <div class="modal-bg" (click)="closeModal()">
     <div class="modal" (click)="$event.stopPropagation()">
       <div class="modal-header">
         <div style="display:flex;align-items:center;gap:12px">
-          <div class="av" style="width:48px;height:48px;font-size:.9rem" [style.background]="selected.status==='Excelente'?'var(--oro-lt)':selected.status==='Necesita apoyo'?'var(--danger-lt)':'var(--guinda-lt)'" [style.color]="selected.status==='Excelente'?'#7A4F00':selected.status==='Necesita apoyo'?'var(--danger)':'var(--guinda)'">{{ selected.av }}</div>
+          <div class="av" style="width:48px;height:48px;font-size:.9rem"
+            [style.background]="selected.status==='Excelente'?'var(--oro-lt)':selected.status==='Necesita apoyo'?'var(--danger-lt)':'var(--guinda-lt)'"
+            [style.color]="selected.status==='Excelente'?'#7A4F00':selected.status==='Necesita apoyo'?'var(--danger)':'var(--guinda)'">{{ selected.av }}</div>
           <div>
             <div style="font-weight:900;font-size:1rem">{{ selected.n }}</div>
             <div style="font-size:.75rem;color:var(--tx3)">{{ selected.cls }} · Último acceso: {{ selected.last }}</div>
@@ -115,13 +123,17 @@
           <div class="kpi" style="padding:10px 12px"><div class="kpi-ico" style="font-size:1.1rem">🔥</div><div><div class="kpi-val" style="font-size:1.1rem">{{ selected.streak }}d</div><div class="kpi-lbl">Racha</div></div></div>
         </div>
 
-        <div style="margin-bottom:10px">
-          <div style="font-size:.72rem;font-weight:800;color:var(--tx3);text-transform:uppercase;margin-bottom:6px">Nota del maestro</div>
-          <div style="font-size:.84rem;color:var(--tx2);background:var(--bg2);border-radius:8px;padding:10px 12px">{{ selected.note }}</div>
-        </div>
+        @if (selected.subjects.length) {
+          <div style="margin-bottom:10px">
+            <div style="font-size:.72rem;font-weight:800;color:var(--tx3);text-transform:uppercase;margin-bottom:6px">Materias</div>
+            <div class="chips">
+              @for (sub of selected.subjects; track sub) { <span class="chip on" style="font-size:.72rem">{{ sub }}</span> }
+            </div>
+          </div>
+        }
 
         <div style="margin-bottom:14px">
-          <div style="font-size:.72rem;font-weight:800;color:var(--tx3);text-transform:uppercase;margin-bottom:6px">Misiones completadas</div>
+          <div style="font-size:.72rem;font-weight:800;color:var(--tx3);text-transform:uppercase;margin-bottom:6px">Actividad reciente</div>
           @if (selected.missions.length) {
             <div style="display:flex;flex-direction:column;gap:4px">
               @for (m of selected.missions; track m) {
@@ -129,7 +141,7 @@
               }
             </div>
           } @else {
-            <div style="font-size:.82rem;color:var(--tx3)">Sin misiones completadas aún.</div>
+            <div style="font-size:.82rem;color:var(--tx3)">Sin actividad registrada aún.</div>
           }
         </div>
 
