@@ -36,6 +36,16 @@
         <label class="label">Contrasena</label>
         <input class="input" type="password" [(ngModel)]="createForm.password" placeholder="Minimo 6 caracteres">
       </div>
+      @if (mode === 'students') {
+        <div class="fg">
+          <label class="label">Edad</label>
+          <input class="input" type="number" [(ngModel)]="createForm.age" placeholder="Ej: 10" min="3" max="25">
+        </div>
+        <div class="fg">
+          <label class="label">Dirección</label>
+          <input class="input" [(ngModel)]="createForm.address" placeholder="Calle, número, colonia">
+        </div>
+      }
       <button class="btn btn-primary btn-block" (click)="create()" [disabled]="saving">{{ createLabel }}</button>
     </div>
 
@@ -78,7 +88,10 @@
               <div class="entity-card"><span>Rol</span><strong>{{ selected.role | role }}</strong></div>
               <div class="entity-card"><span>Estatus</span><strong>{{ selected.isActive ? 'Activo' : 'Inactivo' }}</strong></div>
               <div class="entity-card"><span>Iniciales</span><strong>{{ selected.initials || '--' }}</strong></div>
-              <div class="entity-card"><span>ID</span><strong>{{ selected.id }}</strong></div>
+              @if (mode === 'students') {
+                <div class="entity-card"><span>Edad</span><strong>{{ selected.age ?? '--' }} años</strong></div>
+                <div class="entity-card" style="grid-column: span 2"><span>Dirección</span><strong>{{ selected.address || '--' }}</strong></div>
+              }
             </div>
 
             <div class="editor-card">
@@ -101,6 +114,16 @@
                 <label class="label">Nueva contrasena</label>
                 <input class="input" type="password" [(ngModel)]="editForm.password" placeholder="Opcional">
               </div>
+              @if (mode === 'students') {
+                <div class="fg">
+                  <label class="label">Edad</label>
+                  <input class="input" type="number" [(ngModel)]="editForm.age" min="3" max="25">
+                </div>
+                <div class="fg">
+                  <label class="label">Dirección</label>
+                  <input class="input" [(ngModel)]="editForm.address">
+                </div>
+              }
               <div class="btn-stack">
                 <button class="btn btn-outline btn-block" (click)="update()" [disabled]="saving">Guardar cambios</button>
                 <button class="btn btn-ghost btn-block" (click)="deactivate()" [disabled]="saving">Desactivar usuario</button>

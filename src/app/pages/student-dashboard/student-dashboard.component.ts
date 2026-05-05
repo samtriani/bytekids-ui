@@ -29,7 +29,7 @@ export class StudentDashboardComponent implements OnInit, AfterViewInit {
     { label: 'Logros',        icon: '🏆', route: '/student/achievements' },
     { label: 'Tutor IA',      icon: '🤖', route: '/student/ai-tutor', badge: '✨' },
     { label: 'Proyectos',     icon: '💻', route: '/student/projects' },
-    { label: 'Roblox Studio', icon: '🎮', route: '/student/roblox' },
+    // { label: 'Roblox Studio', icon: '🎮', route: '/student/roblox' },
     { label: 'Comunidad',     icon: '👥', route: '/student/community' },
   ];
 
@@ -71,7 +71,7 @@ export class StudentDashboardComponent implements OnInit, AfterViewInit {
       xp:       this.progressApi.getMyXp(),
       streak:   this.progressApi.getMyStreak(),
       subjects: this.progressApi.getMySubjects(),
-      missions: this.contentApi.getMissions(),
+      missions: this.contentApi.getMyFeed(),
       subs:     this.submissionApi.getMySubmissions(),
       earned:   this.achievementApi.getMyAchievements(),
       defs:     this.achievementApi.getAll(),

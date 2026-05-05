@@ -25,7 +25,7 @@ export class AiTutorComponent implements AfterViewChecked, OnInit {
     { label: 'Logros',        icon: '🏆', route: '/student/achievements' },
     { label: 'Tutor IA',      icon: '🤖', route: '/student/ai-tutor', badge: '✨' },
     { label: 'Proyectos',     icon: '💻', route: '/student/projects' },
-    { label: 'Roblox Studio', icon: '🎮', route: '/student/roblox' },
+    // { label: 'Roblox Studio', icon: '🎮', route: '/student/roblox' },
     { label: 'Comunidad',     icon: '👥', route: '/student/community' },
   ];
 

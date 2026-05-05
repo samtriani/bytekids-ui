@@ -23,7 +23,7 @@ const NAV: NavItem[] = [
   { label:'Logros',        icon:'🏆', route:'/student/achievements' },
   { label:'Tutor IA',      icon:'🤖', route:'/student/ai-tutor', badge:'✨' },
   { label:'Proyectos',     icon:'💻', route:'/student/projects' },
-  { label:'Roblox Studio', icon:'🎮', route:'/student/roblox' },
+  // { label:'Roblox Studio', icon:'🎮', route:'/student/roblox' },
   { label:'Comunidad',     icon:'👥', route:'/student/community' },
 ];
 
@@ -53,18 +53,18 @@ export class ProjectsComponent implements OnInit {
 
   ngOnInit(): void {
     forkJoin({
-      projects: this.contentApi.getProjects(),
+      projects: this.contentApi.getMyFeed(),
       subs: this.submissionApi.getMySubmissions(),
     }).subscribe({
       next: ({ projects, subs }) => {
         const subMap = new Map(subs.map((s: any) => [s.contentId || s.content?.id, s]));
 
         this.myProjects = projects
-          .filter((p: any) => subMap.has(p.id || p._id))
+          .filter((p: any) => subMap.has(p.id || p._id) && p.type === 'proyecto')
           .map((p: any) => this.mapProject(p, subMap.get(p.id || p._id)));
 
         this.ideaProjects = projects
-          .filter((p: any) => !subMap.has(p.id || p._id))
+          .filter((p: any) => !subMap.has(p.id || p._id) && p.type === 'proyecto')
           .slice(0, 6)
           .map((p: any) => this.mapIdea(p));
 

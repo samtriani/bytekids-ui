@@ -37,7 +37,7 @@ export class MissionsComponent implements OnInit {
     { label:'Logros',       icon:'🏆', route:'/student/achievements' },
     { label:'Tutor IA',     icon:'🤖', route:'/student/ai-tutor', badge:'✨' },
     { label:'Proyectos',    icon:'💻', route:'/student/projects' },
-    { label:'Roblox Studio',icon:'🎮', route:'/student/roblox' },
+    // { label:'Roblox Studio',icon:'🎮', route:'/student/roblox' },
     { label:'Comunidad',    icon:'👥', route:'/student/community' },
   ];
 
@@ -61,9 +61,11 @@ export class MissionsComponent implements OnInit {
       }
     });
 
-    this.contentApi.getMissions().subscribe({
+    this.contentApi.getMyFeed().subscribe({
       next: (data) => {
-        this.missions = data.map(c => this.mapContent(c));
+        this.missions = data
+          .filter((c: any) => c.type === 'mision' || c.type === 'tarea' || c.type === 'quiz' || c.type === 'proyecto' || c.type === 'material')
+          .map((c: any) => this.mapContent(c));
         this.loading = false;
       },
       error: () => { this.loading = false; }

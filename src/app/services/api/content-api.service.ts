@@ -29,6 +29,10 @@ export class ContentApiService {
     return this.http.get<any>(`${BASE}/my`).pipe(map(r => r.data ?? []));
   }
 
+  getMyFeed(): Observable<any[]> {
+    return this.http.get<any>(`${BASE}/feed`).pipe(map(r => r.data ?? []));
+  }
+
   create(req: any): Observable<any> {
     return this.http.post<any>(BASE, req).pipe(map(r => r.data));
   }

@@ -11,6 +11,8 @@ export interface CreateUserPayload {
   displayName: string;
   role: 'student' | 'teacher' | 'parent' | 'admin' | 'director';
   initials?: string;
+  age?: number | null;
+  address?: string | null;
 }
 
 @Injectable({ providedIn: 'root' })

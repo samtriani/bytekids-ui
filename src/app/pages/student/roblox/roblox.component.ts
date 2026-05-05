@@ -14,7 +14,7 @@ const NAV: NavItem[] = [
   { label:'Logros',        icon:'🏆', route:'/student/achievements' },
   { label:'Tutor IA',      icon:'🤖', route:'/student/ai-tutor', badge:'✨' },
   { label:'Proyectos',     icon:'💻', route:'/student/projects' },
-  { label:'Roblox Studio', icon:'🎮', route:'/student/roblox' },
+  // { label:'Roblox Studio', icon:'🎮', route:'/student/roblox' },
   { label:'Comunidad',     icon:'👥', route:'/student/community' },
 ];
 
@@ -49,7 +49,7 @@ export class RobloxComponent implements OnInit {
 
   ngOnInit(): void {
     forkJoin({
-      all:  this.contentApi.getAll(),
+      all:  this.contentApi.getMyFeed(),
       subs: this.submissionApi.getMySubmissions(),
     }).subscribe({
       next: ({ all, subs }) => {

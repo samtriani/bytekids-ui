@@ -12,6 +12,8 @@ export interface AdministratorUserPayload {
   role: 'teacher' | 'student' | 'parent' | 'director' | 'admin';
   initials?: string;
   avatarUrl?: string;
+  age?: number | null;
+  address?: string | null;
 }
 
 export interface AdministratorClassroomPayload {
