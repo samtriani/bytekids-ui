@@ -1,14 +1,20 @@
 <app-shell role="admin" [userName]="userName" [userAvatar]="userAvatar"
   [navItems]="navItems" pageTitle="Materias"></app-shell>
 <div class="page-wrap">
-  <div class="ph"><div class="ph-left"><h1>Catálogo de Materias</h1><p>{{ subjects.length }} materias activas en la institución</p></div></div>
+  <div class="ph">
+    <div class="ph-left"><h1>Catálogo de Materias</h1><p>{{ subjects.length }} materias activas en la institución</p></div>
+  </div>
 
   <div class="g4 mb14">
     <div class="kpi"><div class="kpi-ico">📚</div><div><div class="kpi-val">{{ subjects.length }}</div><div class="kpi-lbl">Materias activas</div></div></div>
-    <div class="kpi gold"><div class="kpi-ico">🎯</div><div><div class="kpi-val">—</div><div class="kpi-lbl">Misiones creadas</div></div></div>
-    <div class="kpi green"><div class="kpi-ico">📊</div><div><div class="kpi-val">—</div><div class="kpi-lbl">Engagement prom.</div></div></div>
-    <div class="kpi"><div class="kpi-ico">🏆</div><div><div class="kpi-val">{{ subjects[0]?.name ?? '—' }}</div><div class="kpi-lbl">Primera materia</div></div></div>
+    <div class="kpi gold"><div class="kpi-ico">🎯</div><div><div class="kpi-val">{{ loading ? '—' : totalMissions }}</div><div class="kpi-lbl">Misiones creadas</div></div></div>
+    <div class="kpi green"><div class="kpi-ico">📊</div><div><div class="kpi-val">{{ loading ? '—' : avgEng + '%' }}</div><div class="kpi-lbl">Engagement prom.</div></div></div>
+    <div class="kpi"><div class="kpi-ico">🏆</div><div><div class="kpi-val" style="font-size:.85rem">{{ loading ? '—' : topSubject }}</div><div class="kpi-lbl">Mayor alcance</div></div></div>
   </div>
+
+  @if (loading) {
+    <div style="text-align:center;padding:48px;color:var(--tx3)">Cargando datos de materias…</div>
+  }
 
   <div class="gauto">
     @for (s of subjects; track s.name) {
@@ -17,11 +23,10 @@
           <div class="sj-ico">{{ s.icon }}</div>
           <div style="flex:1">
             <div style="font-weight:800;font-size:.92rem">{{ s.name }}</div>
-            <span class="tag" [style.color]="dc(s.diff)" [style.background]="dc(s.diff)+'15'" [style.border-color]="dc(s.diff)+'30'" style="font-size:.62rem">{{ s.diff }}</span>
+            <div style="font-size:.7rem;color:var(--tx3);margin-top:2px">{{ s.desc || 'Sin descripción' }}</div>
           </div>
           <div style="font-weight:900;font-size:1rem" [style.color]="ec(s.eng)">{{ s.eng }}%</div>
         </div>
-        <p style="font-size:.76rem;color:var(--tx3);margin-bottom:10px;line-height:1.4">{{ s.desc }}</p>
         <div class="prog" style="height:6px;margin-bottom:10px">
           <div class="prog-bar" [style.width]="s.eng+'%'" [style.background]="ec(s.eng)"></div>
         </div>
@@ -30,9 +35,13 @@
           <div class="rs"><span class="rv">{{ s.missions }}</span><span class="rl">Misiones</span></div>
           <div class="rs"><span class="rv">{{ s.cls.length }}</span><span class="rl">Salones</span></div>
         </div>
-        <div class="chips" style="margin-top:8px">
-          @for (c of s.cls; track c) { <span class="chip" style="font-size:.63rem;padding:2px 7px">{{ c }}</span> }
-        </div>
+        @if (s.cls.length) {
+          <div class="chips" style="margin-top:8px">
+            @for (c of s.cls; track c) {
+              <span class="chip" style="font-size:.63rem;padding:2px 7px">{{ c }}</span>
+            }
+          </div>
+        }
       </div>
     }
   </div>

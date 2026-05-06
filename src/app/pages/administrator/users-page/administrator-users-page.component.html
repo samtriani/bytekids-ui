@@ -112,7 +112,7 @@
                           <div class="tcs-schedule">
                             @for (s of schedulesForClassroom(cls.id); track s.id) {
                               <div class="tcs-slot">
-                                <span class="tcs-day">{{ DAY_ABBR[s.dayOfWeek] ?? s.dayOfWeek }}</span>
+                                <span class="tcs-day">{{ DAY_ABBR[s.dayOfWeek] || s.dayOfWeek }}</span>
                                 <span class="tcs-time">{{ s.startTime }} – {{ s.endTime }}</span>
                                 <span class="tcs-subj">{{ s.subjectIcon ?? '📚' }} {{ s.subjectName }}</span>
                               </div>

@@ -8,13 +8,16 @@
 
   <div class="g4 mb14">
     <div class="kpi green"><div class="kpi-ico">👩‍🏫</div><div><div class="kpi-val">{{ teachers.length }}</div><div class="kpi-lbl">Maestros activos</div></div></div>
-    <div class="kpi gold"><div class="kpi-ico">⭐</div><div><div class="kpi-val">{{ teachers.length }}</div><div class="kpi-lbl">Con salón asignado</div></div></div>
-    <div class="kpi"><div class="kpi-ico">📊</div><div><div class="kpi-val">—</div><div class="kpi-lbl">Satisfacción prom.</div></div></div>
-    <div class="kpi red"><div class="kpi-ico">🆘</div><div><div class="kpi-val">0</div><div class="kpi-lbl">Requiere apoyo</div></div></div>
+    <div class="kpi gold"><div class="kpi-ico">🏫</div><div><div class="kpi-val">{{ withClassroom }}</div><div class="kpi-lbl">Con salón asignado</div></div></div>
+    <div class="kpi"><div class="kpi-ico">📈</div><div><div class="kpi-val">{{ loading ? '—' : globalAvg + '%' }}</div><div class="kpi-lbl">Promedio general</div></div></div>
+    <div class="kpi red"><div class="kpi-ico">⚠️</div><div><div class="kpi-val">{{ needsSupport }}</div><div class="kpi-lbl">Requieren apoyo</div></div></div>
   </div>
 
   <div class="gauto">
-    @for (t of teachers; track t.name) {
+    @if (loading) {
+    <div style="text-align:center;padding:48px;color:var(--tx3)">Cargando datos del equipo docente…</div>
+  }
+  @for (t of teachers; track t.name) {
       <div class="teacher-card card card-p">
         <div class="tc-top">
           <div class="av" style="width:44px;height:44px;font-size:.82rem">{{ t.av }}</div>
@@ -26,12 +29,12 @@
         </div>
         <div class="divider"></div>
         <div class="tc-kpis">
-          <div class="tk"><span class="tkv" [style.color]="satC(t.sat)">{{ t.sat }}%</span><span class="tkl">Satisfacción</span></div>
-          <div class="tk"><span class="tkv" [style.color]="avgC(t.avg)">{{ t.avg }}%</span><span class="tkl">Prom. salón</span></div>
-          <div class="tk"><span class="tkv">{{ t.missions }}</span><span class="tkl">Misiones</span></div>
+          <div class="tk"><span class="tkv" [style.color]="avgC(t.avg)">{{ t.avg }}%</span><span class="tkl">Rendimiento</span></div>
+          <div class="tk"><span class="tkv">{{ t.students }}</span><span class="tkl">Alumnos</span></div>
+          <div class="tk"><span class="tkv">{{ t.missions }}</span><span class="tkl">Con actividad</span></div>
         </div>
         <div class="prog" style="height:6px;margin:10px 0">
-          <div class="prog-bar" [style.width]="t.sat+'%'" [style.background]="satC(t.sat)"></div>
+          <div class="prog-bar" [style.width]="t.avg+'%'" [style.background]="avgC(t.avg)"></div>
         </div>
         <div class="chips mb10">
           @for (s of t.subjects; track s) { <span class="chip" style="font-size:.63rem;padding:2px 7px">{{ s }}</span> }

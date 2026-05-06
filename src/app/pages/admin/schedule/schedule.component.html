@@ -1,0 +1,124 @@
+<app-shell role="admin" [userName]="userName" [userAvatar]="userAvatar"
+  [navItems]="navItems" pageTitle="Horarios Institucionales"></app-shell>
+
+<div class="page-wrap">
+  <div class="ph">
+    <div class="ph-left">
+      <h1>🕐 Horarios Institucionales</h1>
+      <p>Vista completa de todos los salones, maestros y alumnos por período</p>
+    </div>
+    <div class="ph-right" style="display:flex;gap:8px">
+      <button class="btn btn-ghost btn-sm" [class.btn-primary]="view==='grid'" (click)="view='grid'">⊞ Semanal</button>
+      <button class="btn btn-ghost btn-sm" [class.btn-primary]="view==='list'" (click)="view='list'">☰ Lista</button>
+    </div>
+  </div>
+
+  <!-- KPIs -->
+  <div class="g4 mb14">
+    <div class="kpi green"><div class="kpi-ico">🕐</div><div><div class="kpi-val">{{ loading ? '—' : totalClasses }}</div><div class="kpi-lbl">Clases programadas</div></div></div>
+    <div class="kpi"><div class="kpi-ico">🏫</div><div><div class="kpi-val">{{ loading ? '—' : classroomsWithSchedule }}</div><div class="kpi-lbl">Salones con horario</div></div></div>
+    <div class="kpi gold"><div class="kpi-ico">📅</div><div><div class="kpi-val">{{ loading ? '—' : activeDays }}</div><div class="kpi-lbl">Días con actividad</div></div></div>
+    <div class="kpi"><div class="kpi-ico">🏫</div><div><div class="kpi-val">{{ classrooms.length }}</div><div class="kpi-lbl">Total salones</div></div></div>
+  </div>
+
+  <!-- Filtros -->
+  <div class="filter-bar mb14">
+    <select class="select" [(ngModel)]="filterClassroom" style="max-width:200px">
+      <option value="">Todos los salones</option>
+      @for (c of classrooms; track c.id) {
+        <option [value]="c.id">{{ c.name }}</option>
+      }
+    </select>
+    <select class="select" [(ngModel)]="filterTeacher" style="max-width:200px">
+      <option value="">Todos los maestros</option>
+      @for (t of teachers; track t) {
+        <option [value]="t">{{ t }}</option>
+      }
+    </select>
+    <select class="select" [(ngModel)]="filterDay" style="max-width:160px">
+      <option value="">Todos los días</option>
+      @for (d of DAYS; track d) {
+        <option [value]="d">{{ DAY_LABEL[d] }}</option>
+      }
+    </select>
+    @if (filterClassroom || filterTeacher || filterDay) {
+      <button class="btn btn-ghost btn-sm" (click)="clearFilters()">✕ Limpiar</button>
+    }
+    <span style="margin-left:auto;font-size:.8rem;color:var(--tx3)">{{ filtered.length }} clase(s)</span>
+  </div>
+
+  @if (loading) {
+    <div style="text-align:center;padding:60px;color:var(--tx3)">Cargando horarios institucionales…</div>
+  } @else if (!allSchedules.length) {
+    <div class="empty-state">
+      <div style="font-size:3rem">📅</div>
+      <p>No hay horarios registrados aún.</p>
+      <p style="font-size:.82rem;color:var(--tx3)">Ve a <strong>Asignaciones</strong> en el módulo Coordinador para agregar horarios.</p>
+    </div>
+  } @else {
+
+    <!-- Vista semanal en grid -->
+    @if (view === 'grid') {
+      <div class="week-grid">
+        @for (day of DAYS; track day) {
+          @if (schedulesByDay(day).length) {
+            <div class="week-col">
+              <div class="week-col-head">{{ DAY_LABEL[day] }}</div>
+              @for (slot of schedulesByDay(day); track slot.id) {
+                <div class="slot-card">
+                  <div class="slot-time">{{ slot.startTime }} – {{ slot.endTime }}</div>
+                  <div class="slot-subject">{{ slot.subjectIcon || '📚' }} {{ slot.subjectName }}</div>
+                  <div class="slot-classroom">🏫 {{ slot.classroomName }}</div>
+                  <div class="slot-teacher">👩‍🏫 {{ slot.teacherName }}</div>
+                  @if (studentsForClassroom(slot.classroomId).length) {
+                    <div class="slot-students-head">
+                      👨‍🎓 {{ studentsForClassroom(slot.classroomId).length }} alumno(s)
+                    </div>
+                    <div class="slot-students">
+                      @for (s of studentsForClassroom(slot.classroomId); track s.id) {
+                        <span class="slot-student-chip">{{ s.displayName }}</span>
+                      }
+                    </div>
+                  }
+                </div>
+              }
+            </div>
+          }
+        }
+      </div>
+    }
+
+    <!-- Vista lista agrupada por salón -->
+    @if (view === 'list') {
+      <div style="display:flex;flex-direction:column;gap:14px">
+        @for (cls of classrooms; track cls.id) {
+          @if (filteredByClassroom(cls.id); as slots) {
+            @if (slots.length) {
+              <div class="card card-p">
+                <div class="list-classroom-head">
+                  <span class="list-cls-name">🏫 {{ cls.name }}</span>
+                  <span style="font-size:.75rem;color:var(--tx3)">{{ cls.schoolYear }}</span>
+                  <span class="tag tag-guinda" style="font-size:.65rem;margin-left:auto">{{ slots.length }} clases</span>
+                </div>
+                <table class="tbl" style="margin-top:10px">
+                  <thead><tr><th>Día</th><th>Horario</th><th>Materia</th><th>Maestro</th><th>Alumnos</th></tr></thead>
+                  <tbody>
+                    @for (s of slots; track s.id) {
+                      <tr>
+                        <td><span class="day-pill">{{ DAY_LABEL[s.dayOfWeek] }}</span></td>
+                        <td style="font-weight:700;font-size:.8rem;color:var(--guinda)">{{ s.startTime }} – {{ s.endTime }}</td>
+                        <td>{{ s.subjectIcon || '📚' }} {{ s.subjectName }}</td>
+                        <td style="font-size:.8rem">{{ s.teacherName }}</td>
+                        <td style="font-size:.78rem;color:var(--tx3)">{{ studentsForClassroom(s.classroomId).length }}</td>
+                      </tr>
+                    }
+                  </tbody>
+                </table>
+              </div>
+            }
+          }
+        }
+      </div>
+    }
+  }
+</div>

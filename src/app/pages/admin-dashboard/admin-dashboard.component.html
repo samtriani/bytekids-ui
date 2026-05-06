@@ -3,7 +3,7 @@
   <div class="ph">
     <div class="ph-left">
       <h1>Panel Ejecutivo — ByteKids Academy</h1>
-      <p>Visión institucional completa · Ciclo 2025-2026</p>
+      <p>Visión institucional completa · Ciclo {{ schoolYear }}</p>
     </div>
     <a routerLink="/admin/ai-reports" class="btn btn-primary">🤖 Reporte IA</a>
   </div>
@@ -19,7 +19,7 @@
   <!-- 3 gráficas -->
   <div class="g3 mb22">
     <div class="card"><div class="card-h"><span class="card-title">Inscripciones 2026</span></div><div class="card-p" style="padding-top:8px"><div style="height:170px"><canvas #enrollChart></canvas></div></div></div>
-    <div class="card"><div class="card-h"><span class="card-title">Rendimiento por salón</span></div><div class="card-p" style="padding-top:8px"><div style="height:170px"><canvas #perfChart></canvas></div></div></div>
+    <div class="card"><div class="card-h"><span class="card-title">Visión institucional</span></div><div class="card-p" style="padding-top:8px"><div style="height:170px"><canvas #perfChart></canvas></div></div></div>
     <div class="card"><div class="card-h"><span class="card-title">Engagement por materia</span></div><div class="card-p" style="padding-top:8px"><div style="height:170px"><canvas #subjectsChart></canvas></div></div></div>
   </div>
 
@@ -60,7 +60,8 @@
             <div style="display:flex;align-items:center;gap:10px">
               <span style="font-size:1.1rem;width:22px;text-align:center">{{ s.icon }}</span>
               <span style="font-weight:700;font-size:.82rem;min-width:110px">{{ s.name }}</span>
-              <div class="prog" style="height:7px;flex:1"><div class="prog-bar" style="width:80%" [style.background]="s.color"></div></div>
+              <div class="prog" style="height:7px;flex:1"><div class="prog-bar" [style.width]="s.pct+'%'" [style.background]="s.color"></div></div>
+              <span style="font-size:.7rem;font-weight:700;color:var(--tx3);min-width:28px;text-align:right">{{ s.pct }}%</span>
             </div>
           }
         </div>
@@ -80,11 +81,11 @@
               <div class="av" style="width:36px;height:36px;font-size:.7rem" [style.background]="t.color+'15'" [style.color]="t.color">{{ t.avatar }}</div>
               <div style="flex:1">
                 <div style="font-weight:700;font-size:.85rem">{{ t.name }}</div>
-                <div style="font-size:.71rem;color:var(--tx3)">{{ t.classroom }} · {{ t.students }} alumnos</div>
+                <div style="font-size:.71rem;color:var(--tx3)">{{ t.classroom }}</div>
               </div>
               <div style="text-align:right">
-                <div style="font-weight:900;font-size:.92rem" [style.color]="t.satisfaction>=95?'var(--ok)':'var(--guinda)'">{{ t.satisfaction }}%</div>
-                <div style="font-size:.6rem;color:var(--tx3)">satisfacción</div>
+                <div style="font-weight:900;font-size:.92rem;color:var(--guinda)">{{ t.students }}</div>
+                <div style="font-size:.6rem;color:var(--tx3)">alumnos</div>
               </div>
             </div>
           }

@@ -39,6 +39,7 @@ import { StudentsComponent as AStudents } from './pages/admin/students/students.
 import { AiReportsComponent } from './pages/admin/ai-reports/ai-reports.component';
 import { SubjectsComponent } from './pages/admin/subjects/subjects.component';
 import { MetricsComponent } from './pages/admin/metrics/metrics.component';
+import { AdminScheduleComponent } from './pages/admin/schedule/schedule.component';
 import { AdministratorDashboardComponent } from './pages/administrator-dashboard/administrator-dashboard.component';
 import { AdministratorUsersPageComponent } from './pages/administrator/users-page/administrator-users-page.component';
 import { AdministratorClassroomsPageComponent } from './pages/administrator/classrooms-page/administrator-classrooms-page.component';
@@ -93,6 +94,7 @@ export const routes: Routes = [
   { path: 'admin/ai-reports', component: AiReportsComponent, canActivate: DIRECTOR },
   { path: 'admin/subjects', component: SubjectsComponent, canActivate: DIRECTOR },
   { path: 'admin/metrics', component: MetricsComponent, canActivate: DIRECTOR },
+  { path: 'admin/schedule', component: AdminScheduleComponent, canActivate: DIRECTOR },
 
   { path: 'administrator', redirectTo: 'administrator/operations', pathMatch: 'full' },
   { path: 'administrator/operations', component: AdministratorDashboardComponent, canActivate: ADMINISTRATOR },

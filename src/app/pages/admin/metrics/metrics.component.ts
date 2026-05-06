@@ -12,7 +12,7 @@ import { Chart, registerables } from 'chart.js';
 Chart.register(...registerables);
 
 const COLORS = ['#7A1535','#1A6B3C','#C4992A','#0A4D7A','#9B1A42','#5C0F27','#2E6B8A','#8A4B00'];
-const NAV: NavItem[] = [{label:"Panel Ejecutivo",icon:"🏫",route:"/admin"},{label:"Salones",icon:"🎓",route:"/admin/classrooms"},{label:"Maestros",icon:"👩‍🏫",route:"/admin/teachers"},{label:"Estudiantes",icon:"👨‍🎓",route:"/admin/students"},{label:"Reportes IA",icon:"🤖",route:"/admin/ai-reports",badge:"IA"},{label:"Materias",icon:"📚",route:"/admin/subjects"},{label:"Métricas",icon:"📊",route:"/admin/metrics"}];
+const NAV: NavItem[] = [{label:"Panel Ejecutivo",icon:"🏫",route:"/admin"},{label:"Salones",icon:"🎓",route:"/admin/classrooms"},{label:"Maestros",icon:"👩‍🏫",route:"/admin/teachers"},{label:"Estudiantes",icon:"👨‍🎓",route:"/admin/students"},{label:"Horarios",icon:"🕐",route:"/admin/schedule"},{label:"Reportes IA",icon:"🤖",route:"/admin/ai-reports",badge:"IA"},{label:"Materias",icon:"📚",route:"/admin/subjects"},{label:"Métricas",icon:"📊",route:"/admin/metrics"}];
 
 @Component({ selector:'app-admin-metrics', standalone:true, imports:[CommonModule,RouterLink,ShellComponent],
   templateUrl:'./metrics.component.html', styleUrls:['./metrics.component.scss']

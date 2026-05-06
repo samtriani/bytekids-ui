@@ -1,0 +1,131 @@
+.filter-bar {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-wrap: wrap;
+  background: var(--bg1);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  padding: 12px 16px;
+}
+
+/* ── Vista semanal ── */
+.week-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
+  gap: 14px;
+}
+
+.week-col-head {
+  background: var(--guinda, #7A1535);
+  color: #fff;
+  font-size: .78rem;
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: .06em;
+  padding: 8px 14px;
+  border-radius: 10px 10px 0 0;
+}
+
+.week-col {
+  border-radius: 12px;
+  border: 1px solid var(--border);
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+}
+
+.slot-card {
+  background: var(--bg1);
+  padding: 12px 14px;
+  border-bottom: 1px solid var(--border);
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  &:last-child { border-bottom: none; }
+  &:hover { background: var(--guinda-lt, #fdf2f5); }
+  transition: background .12s;
+}
+
+.slot-time {
+  font-size: .8rem;
+  font-weight: 900;
+  color: var(--guinda, #7A1535);
+}
+
+.slot-subject {
+  font-size: .88rem;
+  font-weight: 800;
+  color: var(--tx1);
+}
+
+.slot-classroom {
+  font-size: .74rem;
+  color: var(--tx2);
+}
+
+.slot-teacher {
+  font-size: .74rem;
+  color: var(--tx3);
+}
+
+.slot-students-head {
+  font-size: .68rem;
+  font-weight: 700;
+  color: var(--tx3);
+  margin-top: 4px;
+  text-transform: uppercase;
+  letter-spacing: .04em;
+}
+
+.slot-students {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 3px;
+  margin-top: 3px;
+}
+
+.slot-student-chip {
+  background: var(--bg2);
+  border: 1px solid var(--border);
+  border-radius: 999px;
+  font-size: .64rem;
+  font-weight: 600;
+  color: var(--tx2);
+  padding: 1px 7px;
+}
+
+/* ── Vista lista ── */
+.list-classroom-head {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding-bottom: 8px;
+  border-bottom: 1px solid var(--border);
+}
+
+.list-cls-name {
+  font-weight: 800;
+  font-size: .92rem;
+  color: var(--tx1);
+}
+
+.day-pill {
+  background: var(--guinda, #7A1535);
+  color: #fff;
+  font-size: .68rem;
+  font-weight: 800;
+  padding: 2px 9px;
+  border-radius: 999px;
+}
+
+/* ── Empty state ── */
+.empty-state {
+  text-align: center;
+  padding: 60px 24px;
+  color: var(--tx3);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 10px;
+}

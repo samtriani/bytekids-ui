@@ -153,7 +153,7 @@
                       <div class="sched-mini">
                         @for (s of teacherSchedulesByRoom(room.id); track s.id) {
                           <div class="sched-mini-row">
-                            <span class="sched-mini-day">{{ DAY_ABBR[s.dayOfWeek] ?? s.dayOfWeek }}</span>
+                            <span class="sched-mini-day">{{ DAY_ABBR[s.dayOfWeek] || s.dayOfWeek }}</span>
                             <span class="sched-mini-time">{{ s.startTime }}–{{ s.endTime }}</span>
                             <span class="sched-mini-sub">{{ s.subjectIcon ?? '📚' }} {{ s.subjectName }}</span>
                           </div>
@@ -215,7 +215,7 @@
                       <div class="sched-mini">
                         @for (s of schedulesForClassroom(cls.id); track s.id) {
                           <div class="sched-mini-row">
-                            <span class="sched-mini-day">{{ DAY_ABBR[s.dayOfWeek] ?? s.dayOfWeek }}</span>
+                            <span class="sched-mini-day">{{ DAY_ABBR[s.dayOfWeek] || s.dayOfWeek }}</span>
                             <span class="sched-mini-time">{{ s.startTime }}–{{ s.endTime }}</span>
                             <span class="sched-mini-sub">{{ s.subjectIcon ?? '📚' }} {{ s.subjectName }}</span>
                           </div>
