@@ -1,5 +1,229 @@
 .mb16 { margin-bottom: 16px; }
 
+/* ── Info section (salones del profesor / alumno) ── */
+.info-section {
+  border-radius: 12px;
+  border: 1px solid var(--border2);
+  overflow: hidden;
+}
+
+.info-section-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  background: var(--guinda, #7A1535);
+  color: #fff;
+  padding: 9px 14px;
+  font-size: .8rem;
+  font-weight: 800;
+}
+
+.info-count {
+  background: rgba(255,255,255,.25);
+  border-radius: 999px;
+  padding: 1px 9px;
+  font-size: .72rem;
+  font-weight: 900;
+}
+
+.info-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 10px 14px;
+  background: var(--bg1, #fff);
+  border-bottom: 1px solid var(--border);
+  &:last-child { border-bottom: none; }
+}
+
+/* ── Mini horario dentro de salón ── */
+.sched-mini {
+  background: var(--bg2, #F8F8FA);
+  border-radius: 8px;
+  padding: 6px 10px;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.sched-mini-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: .74rem;
+}
+
+.sched-mini-day {
+  background: var(--guinda, #7A1535);
+  color: #fff;
+  font-weight: 800;
+  font-size: .65rem;
+  padding: 1px 6px;
+  border-radius: 999px;
+  min-width: 30px;
+  text-align: center;
+  flex-shrink: 0;
+}
+
+.sched-mini-time {
+  color: var(--tx2);
+  font-weight: 700;
+  flex-shrink: 0;
+}
+
+.sched-mini-sub {
+  color: var(--tx3);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+/* ── Editor card (reutiliza los estilos de users-page via import) ── */
+.editor-card {
+  border-radius: 12px;
+  border: 1px solid var(--border2);
+  background: var(--bg2, #F8F8FA);
+  overflow: hidden;
+}
+.editor-card-header {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 10px 16px;
+  border-bottom: 1px solid var(--border);
+  background: var(--bg1, #fff);
+  font-size: .76rem;
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: .06em;
+  color: var(--guinda, #7A1535);
+  &::before {
+    content: '';
+    display: inline-block;
+    width: 3px;
+    height: 14px;
+    background: var(--guinda, #7A1535);
+    border-radius: 2px;
+    flex-shrink: 0;
+  }
+}
+.editor-card-body {
+  padding: 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+/* ── Buscador global ── */
+.global-search-wrap {
+  position: relative;
+  margin-bottom: 20px;
+}
+
+.global-search-box {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  background: var(--bg1, #fff);
+  border: 1.5px solid var(--border, #E8E8EE);
+  border-radius: 12px;
+  padding: 10px 14px;
+  transition: border-color .15s;
+
+  &:focus-within {
+    border-color: var(--guinda, #7A1535);
+    box-shadow: 0 0 0 3px rgba(122,21,53,.08);
+  }
+}
+
+.gs-icon { font-size: 1rem; flex-shrink: 0; color: var(--tx3); }
+
+.gs-input {
+  flex: 1;
+  border: none;
+  outline: none;
+  background: transparent;
+  font-size: .92rem;
+  color: var(--tx1);
+  font-family: 'Nunito', sans-serif;
+  &::placeholder { color: var(--tx3); }
+}
+
+.gs-clear {
+  background: none;
+  border: none;
+  color: var(--tx3);
+  cursor: pointer;
+  font-size: .8rem;
+  padding: 2px 4px;
+  border-radius: 4px;
+  &:hover { color: var(--danger); }
+}
+
+.gs-results {
+  position: absolute;
+  top: calc(100% + 4px);
+  left: 0; right: 0;
+  background: var(--bg1, #fff);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  box-shadow: 0 8px 24px rgba(0,0,0,.10);
+  z-index: 100;
+  overflow: hidden;
+  max-height: 420px;
+  overflow-y: auto;
+}
+
+.gs-item {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 10px 14px;
+  cursor: pointer;
+  transition: background .12s;
+  border-bottom: 1px solid var(--border);
+
+  &:last-child { border-bottom: none; }
+  &:hover { background: var(--guinda-lt, #fdf2f5); }
+}
+
+.gs-item-icon { font-size: 1.2rem; flex-shrink: 0; }
+
+.gs-item-body { flex: 1; min-width: 0; }
+
+.gs-item-title {
+  font-size: .88rem;
+  font-weight: 700;
+  color: var(--tx1);
+}
+
+.gs-item-ctx {
+  font-size: .72rem;
+  color: var(--tx3);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.gs-item-badge {
+  flex-shrink: 0;
+  background: var(--guinda-lt, #fdf2f5);
+  color: var(--guinda, #7A1535);
+  border: 1px solid var(--guinda-border, #f0c0cc);
+  font-size: .65rem;
+  font-weight: 800;
+  text-transform: uppercase;
+  border-radius: 999px;
+  padding: 2px 8px;
+}
+
+.gs-empty {
+  padding: 16px;
+  text-align: center;
+  font-size: .82rem;
+  color: var(--tx3);
+}
+
 .section-head {
   display: flex;
   align-items: center;

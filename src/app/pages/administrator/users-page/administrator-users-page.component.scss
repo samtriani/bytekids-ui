@@ -88,8 +88,7 @@
   gap: 12px;
 }
 
-.entity-card,
-.editor-card {
+.entity-card {
   padding: 14px;
   border-radius: 12px;
   border: 1px solid var(--border2);
@@ -106,9 +105,151 @@
 }
 
 .entity-card strong { color: var(--tx1); font-size: .9rem; }
+
+.editor-card {
+  border-radius: 12px;
+  border: 1px solid var(--border2);
+  background: var(--bg2, #F8F8FA);
+  overflow: hidden;
+}
+
+.editor-card-header {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 10px 16px;
+  border-bottom: 1px solid var(--border);
+  background: var(--bg1, #fff);
+
+  &::before {
+    content: '';
+    display: inline-block;
+    width: 3px;
+    height: 14px;
+    background: var(--guinda, #7A1535);
+    border-radius: 2px;
+    flex-shrink: 0;
+  }
+
+  font-size: .76rem;
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: .06em;
+  color: var(--guinda, #7A1535);
+}
+
+.editor-card-body {
+  padding: 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
 .subcard-title { font-size: .76rem; font-weight: 800; color: var(--tx3); text-transform: uppercase; letter-spacing: .08em; margin-bottom: 12px; }
 .empty-box { padding: 18px; border-radius: 12px; background: var(--guinda-lt); border: 1px dashed var(--guinda-border); color: var(--tx3); }
 .btn-stack { display: flex; flex-direction: column; gap: 8px; }
+
+/* ── Salones del maestro ── */
+.teacher-classrooms-section {
+  border-radius: 12px;
+  border: 1px solid var(--border2);
+  overflow: hidden;
+  margin-bottom: 14px;
+}
+
+.tcs-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  background: var(--guinda, #7A1535);
+  color: #fff;
+  padding: 10px 16px;
+  font-size: .82rem;
+  font-weight: 800;
+}
+
+.tcs-count {
+  background: rgba(255,255,255,.25);
+  border-radius: 999px;
+  padding: 1px 10px;
+  font-size: .75rem;
+  font-weight: 900;
+}
+
+.tcs-list {
+  display: flex;
+  flex-direction: column;
+}
+
+.tcs-card {
+  padding: 12px 16px;
+  border-bottom: 1px solid var(--border);
+  background: var(--bg1, #fff);
+  &:last-child { border-bottom: none; }
+}
+
+.tcs-card-head { margin-bottom: 8px; }
+
+.tcs-name {
+  font-size: .9rem;
+  font-weight: 800;
+  color: var(--tx1);
+}
+
+.tcs-meta {
+  font-size: .74rem;
+  color: var(--tx3);
+  margin-top: 2px;
+}
+
+.tcs-schedule {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  padding: 8px 10px;
+  background: var(--bg2, #F8F8FA);
+  border-radius: 8px;
+}
+
+.tcs-slot {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: .76rem;
+}
+
+.tcs-day {
+  background: var(--guinda, #7A1535);
+  color: #fff;
+  font-weight: 800;
+  font-size: .68rem;
+  padding: 2px 7px;
+  border-radius: 999px;
+  min-width: 32px;
+  text-align: center;
+  flex-shrink: 0;
+}
+
+.tcs-time {
+  color: var(--tx2);
+  font-weight: 700;
+  flex-shrink: 0;
+}
+
+.tcs-subj {
+  color: var(--tx3);
+  flex: 1;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.tcs-no-schedule {
+  font-size: .74rem;
+  color: var(--tx3);
+  font-style: italic;
+  padding: 4px 0 2px;
+}
 
 @media (max-width: 1100px) {
   .layout,

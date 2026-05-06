@@ -7,6 +7,8 @@ import { ShellComponent } from '../../../shared/shell/shell.component';
 import { AuthService } from '../../../services/auth.service';
 import { UserApiService } from '../../../services/api/user-api.service';
 import { AdministratorApiService } from '../../../services/api/administrator-api.service';
+import { ClassroomApiService } from '../../../services/api/classroom-api.service';
+import { ScheduleApiService } from '../../../services/api/schedule-api.service';
 import { ADMINISTRATOR_NAV_ITEMS } from '../shared/administrator-nav';
 
 @Component({
@@ -18,9 +20,10 @@ import { ADMINISTRATOR_NAV_ITEMS } from '../shared/administrator-nav';
 })
 export class AdministratorUsersPageComponent implements OnInit {
   navItems = ADMINISTRATOR_NAV_ITEMS;
-  userName = 'Administrador';
+  userName = 'Coordinador';
   userAvatar = 'AD';
   toast = '';
+  toastType = 'default';
   saving = false;
   loading = true;
   search = '';
@@ -34,6 +37,8 @@ export class AdministratorUsersPageComponent implements OnInit {
 
   rows: any[] = [];
   selected: any = null;
+  selectedTeacherClassrooms: any[] = [];
+  teacherSchedules: any[] = [];
 
   createForm = { displayName: '', username: '', password: '', age: null as number | null, address: '' };
   editForm   = { id: '', username: '', displayName: '', initials: '', password: '', age: null as number | null, address: '' };
@@ -42,7 +47,9 @@ export class AdministratorUsersPageComponent implements OnInit {
     private route: ActivatedRoute,
     private auth: AuthService,
     private userApi: UserApiService,
-    private administratorApi: AdministratorApiService
+    private administratorApi: AdministratorApiService,
+    private classroomApi: ClassroomApiService,
+    private scheduleApi: ScheduleApiService
   ) {
     const currentUser = this.auth.getUser();
     if (currentUser) {
@@ -71,9 +78,8 @@ export class AdministratorUsersPageComponent implements OnInit {
     this.userApi.getByRole(this.role).subscribe({
       next: (rows) => {
         this.rows = rows;
-        this.selected = this.rows[0] ?? null;
-        this.syncEditForm();
         this.loading = false;
+        this.select(this.rows[0] ?? null);
       },
       error: () => {
         this.loading = false;
@@ -90,9 +96,29 @@ export class AdministratorUsersPageComponent implements OnInit {
     );
   }
 
+  schedulesForClassroom(classroomId: string): any[] {
+    return this.teacherSchedules.filter(s => s.classroomId === classroomId);
+  }
+
+  readonly DAY_ABBR: Record<string, string> = {
+    lunes:'Lun', martes:'Mar', miercoles:'Mié', jueves:'Jue', viernes:'Vie', sabado:'Sáb'
+  };
+
   select(row: any) {
     this.selected = row;
     this.syncEditForm();
+    this.selectedTeacherClassrooms = [];
+    this.teacherSchedules = [];
+    if (this.mode === 'teachers' && row?.id) {
+      this.classroomApi.getByTeacher(row.id).subscribe({
+        next: cls => this.selectedTeacherClassrooms = cls,
+        error: () => {}
+      });
+      this.scheduleApi.getByTeacher(row.id).subscribe({
+        next: s => this.teacherSchedules = s,
+        error: () => {}
+      });
+    }
   }
 
   create() {
@@ -180,6 +206,15 @@ export class AdministratorUsersPageComponent implements OnInit {
 
   private showToast(message: string) {
     this.toast = message;
+    this.toastType = resolveToastType(message);
     setTimeout(() => this.toast = '', 3500);
   }
+}
+
+function resolveToastType(msg: string): string {
+  const m = msg.toLowerCase();
+  if (m.includes('actualiz') || m.includes('cambiad') || m.includes('guardad') || m.includes('editad')) return 'warn';
+  if (m.includes('eliminad') || m.includes('removid') || m.includes('baja') || m.includes('quitad') || m.includes('desactivad') || m.includes('error')) return 'error';
+  if (m.includes('cread') || m.includes('agregad') || m.includes('inscrit') || m.includes('asignad') || m.includes('alta')) return 'ok';
+  return 'default';
 }

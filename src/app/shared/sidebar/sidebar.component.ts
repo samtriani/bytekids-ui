@@ -27,7 +27,7 @@ export class SidebarComponent {
     teacher: { color: '#9B59B6', label: 'Maestro', icon: '🎓' },
     parent: { color: '#FF6B2B', label: 'Padre / Madre', icon: '💙' },
     admin: { color: '#FFD93D', label: 'Director', icon: '🏫' },
-    administrator: { color: '#7A1535', label: 'Administrador', icon: '🧩' }
+    administrator: { color: '#7A1535', label: 'Coordinador', icon: '🧩' }
   };
 
   get config() {

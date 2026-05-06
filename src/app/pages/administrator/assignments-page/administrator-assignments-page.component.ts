@@ -1,5 +1,5 @@
 import { Component, OnInit } from '@angular/core';
-import { CommonModule } from '@angular/common';
+import { CommonModule, TitleCasePipe } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { forkJoin } from 'rxjs';
 import { ShellComponent } from '../../../shared/shell/shell.component';
@@ -8,20 +8,22 @@ import { UserApiService } from '../../../services/api/user-api.service';
 import { ClassroomApiService } from '../../../services/api/classroom-api.service';
 import { AdministratorApiService } from '../../../services/api/administrator-api.service';
 import { SubjectService } from '../../../services/api/subject-api.service';
+import { ScheduleApiService } from '../../../services/api/schedule-api.service';
 import { ADMINISTRATOR_NAV_ITEMS } from '../shared/administrator-nav';
 
 @Component({
   selector: 'app-administrator-assignments-page',
   standalone: true,
-  imports: [CommonModule, FormsModule, ShellComponent],
+  imports: [CommonModule, FormsModule, ShellComponent, TitleCasePipe],
   templateUrl: './administrator-assignments-page.component.html',
   styleUrls: ['./administrator-assignments-page.component.scss']
 })
 export class AdministratorAssignmentsPageComponent implements OnInit {
   navItems = ADMINISTRATOR_NAV_ITEMS;
-  userName = 'Administrador';
+  userName = 'Coordinador';
   userAvatar = 'AD';
   toast = '';
+  toastType = 'default';
   saving = false;
 
   classrooms: any[] = [];
@@ -38,12 +40,18 @@ export class AdministratorAssignmentsPageComponent implements OnInit {
   subjectIdToAdd    = '';
   classroomSearch   = '';
 
+  // Horario
+  schedules: any[] = [];
+  readonly DAYS = ['lunes','martes','miercoles','jueves','viernes','sabado'];
+  scheduleForm = { subjectId: '', teacherId: '', dayOfWeek: 'lunes', startTime: '08:00', endTime: '09:00' };
+
   constructor(
     private auth: AuthService,
     private userApi: UserApiService,
     private classroomApi: ClassroomApiService,
     private administratorApi: AdministratorApiService,
-    private subjectApi: SubjectService
+    private subjectApi: SubjectService,
+    private scheduleApi: ScheduleApiService
   ) {
     const u = this.auth.getUser();
     if (u) { this.userName = u.displayName; this.userAvatar = u.initials; }
@@ -87,12 +95,14 @@ export class AdministratorAssignmentsPageComponent implements OnInit {
     this.studentAssignment.classroomId = classroom.id;
     this.subjectIdToAdd = '';
     forkJoin({
-      students: this.classroomApi.getStudents(classroom.id),
-      subjects: this.classroomApi.getSubjects(classroom.id),
+      students:  this.classroomApi.getStudents(classroom.id),
+      subjects:  this.classroomApi.getSubjects(classroom.id),
+      schedules: this.scheduleApi.getByClassroom(classroom.id),
     }).subscribe({
-      next: ({ students, subjects }) => {
+      next: ({ students, subjects, schedules }) => {
         this.selectedClassroomStudents = students;
         this.selectedClassroomSubjects = subjects;
+        this.schedules = schedules;
       }
     });
   }
@@ -149,6 +159,47 @@ export class AdministratorAssignmentsPageComponent implements OnInit {
     );
   }
 
+  addSchedule() {
+    const f = this.scheduleForm;
+    if (!f.subjectId || !f.teacherId || !f.dayOfWeek || !f.startTime || !f.endTime) return;
+    this.saving = true;
+    this.scheduleApi.create({
+      classroomId: this.selectedClassroom.id,
+      subjectId:   f.subjectId,
+      teacherId:   f.teacherId,
+      dayOfWeek:   f.dayOfWeek,
+      startTime:   f.startTime,
+      endTime:     f.endTime,
+    }).subscribe({
+      next: entry => {
+        this.schedules = [...this.schedules, entry];
+        this.scheduleForm = { subjectId: '', teacherId: '', dayOfWeek: 'lunes', startTime: '08:00', endTime: '09:00' };
+        this.saving = false;
+        this.showToast('Horario agregado');
+      },
+      error: (e: any) => {
+        this.saving = false;
+        this.showToast(e?.error?.message ?? 'Error al guardar el horario');
+      }
+    });
+  }
+
+  removeSchedule(id: string) {
+    this.saving = true;
+    this.scheduleApi.remove(id).subscribe({
+      next: () => {
+        this.schedules = this.schedules.filter(s => s.id !== id);
+        this.saving = false;
+        this.showToast('Horario eliminado');
+      },
+      error: () => { this.saving = false; }
+    });
+  }
+
+  schedulesByDay(day: string): any[] {
+    return this.schedules.filter(s => s.dayOfWeek === day);
+  }
+
   removeSubject(subjectId: string) {
     if (!this.selectedClassroom?.id) return;
     this.run(
@@ -175,6 +226,15 @@ export class AdministratorAssignmentsPageComponent implements OnInit {
 
   private showToast(msg: string) {
     this.toast = msg;
+    this.toastType = resolveToastType(msg);
     setTimeout(() => this.toast = '', 3500);
   }
+}
+
+function resolveToastType(msg: string): string {
+  const m = msg.toLowerCase();
+  if (m.includes('actualiz') || m.includes('cambiad') || m.includes('guardad') || m.includes('editad')) return 'warn';
+  if (m.includes('eliminad') || m.includes('removid') || m.includes('baja') || m.includes('quitad') || m.includes('desactivad') || m.includes('error')) return 'error';
+  if (m.includes('cread') || m.includes('agregad') || m.includes('inscrit') || m.includes('asignad') || m.includes('alta')) return 'ok';
+  return 'default';
 }

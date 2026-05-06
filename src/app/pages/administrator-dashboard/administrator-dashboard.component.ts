@@ -9,6 +9,9 @@ import { UserApiService } from '../../services/api/user-api.service';
 import { ClassroomApiService } from '../../services/api/classroom-api.service';
 import { SubjectService } from '../../services/api/subject-api.service';
 import { AdministratorApiService } from '../../services/api/administrator-api.service';
+import { ScheduleApiService } from '../../services/api/schedule-api.service';
+import { catchError } from 'rxjs/operators';
+import { of } from 'rxjs';
 import { ADMINISTRATOR_NAV_ITEMS } from '../administrator/shared/administrator-nav';
 
 type DetailSection = 'teachers' | 'students' | 'classrooms' | 'subjects';
@@ -22,11 +25,12 @@ type DetailSection = 'teachers' | 'students' | 'classrooms' | 'subjects';
 })
 export class AdministratorDashboardComponent implements OnInit {
   navItems: NavItem[] = ADMINISTRATOR_NAV_ITEMS;
-  userName = 'Administrador';
+  userName = 'Coordinador';
   userAvatar = 'AD';
   loading = true;
   saving = false;
   toast = '';
+  toastType = 'default';
 
   activeDetail: DetailSection = 'teachers';
 
@@ -36,6 +40,8 @@ export class AdministratorDashboardComponent implements OnInit {
   subjects:  any[] = [];
   selectedClassroomStudents: any[] = [];
   selectedStudentClassrooms: any[] = [];
+  teacherSchedules: any[] = [];
+  studentClassroomSchedules: Record<string, any[]> = {};
 
   selectedTeacher:  any = null;
   selectedStudent:  any = null;
@@ -50,12 +56,79 @@ export class AdministratorDashboardComponent implements OnInit {
   teacherAssignment = { classroomId: '', teacherId: '' };
   studentAssignment = { classroomId: '', studentId: '' };
 
+  // Buscador global
+  globalSearch = '';
+  searchFocused = false;
+
+  get searchResults(): any[] {
+    const q = this.globalSearch.trim().toLowerCase();
+    if (q.length < 2) return [];
+    const results: any[] = [];
+
+    this.teachers.forEach(t => {
+      if (`${t.displayName} ${t.username}`.toLowerCase().includes(q)) {
+        const cls = this.classrooms.filter(c => c.teacherId === t.id).map(c => c.name).join(', ') || 'Sin salones';
+        results.push({ type: 'teacher', icon: '👩‍🏫', title: t.displayName, sub: t.username, ctx: `Salones: ${cls}`, data: t });
+      }
+    });
+
+    this.students.forEach(s => {
+      if (`${s.displayName} ${s.username}`.toLowerCase().includes(q)) {
+        results.push({ type: 'student', icon: '👨‍🎓', title: s.displayName, sub: s.username, ctx: 'Alumno', data: s });
+      }
+    });
+
+    this.classrooms.forEach(c => {
+      if (`${c.name} ${c.section} ${c.schoolYear} ${c.teacherName ?? ''}`.toLowerCase().includes(q)) {
+        results.push({ type: 'classroom', icon: '🏫', title: c.name, sub: c.schoolYear, ctx: `Maestro: ${c.teacherName || 'Sin asignar'} · Sección ${c.section}`, data: c });
+      }
+    });
+
+    this.subjects.forEach(s => {
+      if (`${s.name} ${s.description ?? ''}`.toLowerCase().includes(q)) {
+        results.push({ type: 'subject', icon: s.icon ?? '📚', title: s.name, sub: 'Materia', ctx: s.description || '', data: s });
+      }
+    });
+
+    return results.slice(0, 12);
+  }
+
+  selectSearchResult(r: any) {
+    this.globalSearch = '';
+    this.searchFocused = false;
+    switch (r.type) {
+      case 'teacher':   this.selectTeacher(r.data);   break;
+      case 'student':   this.selectStudent(r.data);   break;
+      case 'classroom': this.selectClassroom(r.data); break;
+      case 'subject':   this.selectSubject(r.data);   break;
+    }
+  }
+
+  readonly TYPE_LABEL: Record<string, string> = {
+    teacher: 'Maestro', student: 'Alumno', classroom: 'Salón', subject: 'Materia'
+  };
+
+  onSearchBlur() { setTimeout(() => this.searchFocused = false, 180); }
+
+  readonly DAY_ABBR: Record<string, string> = {
+    lunes:'Lun', martes:'Mar', miercoles:'Mié', jueves:'Jue', viernes:'Vie', sabado:'Sáb'
+  };
+
+  schedulesForClassroom(classroomId: string): any[] {
+    return this.studentClassroomSchedules[classroomId] ?? [];
+  }
+
+  teacherSchedulesByRoom(classroomId: string): any[] {
+    return this.teacherSchedules.filter(s => s.classroomId === classroomId);
+  }
+
   constructor(
     private auth: AuthService,
     private userApi: UserApiService,
     private classroomApi: ClassroomApiService,
     private subjectApi: SubjectService,
-    private administratorApi: AdministratorApiService
+    private administratorApi: AdministratorApiService,
+    private scheduleApi: ScheduleApiService
   ) {
     const u = this.auth.getUser();
     if (u) { this.userName = u.displayName; this.userAvatar = u.initials; }
@@ -76,19 +149,14 @@ export class AdministratorDashboardComponent implements OnInit {
         this.students   = students;
         this.classrooms = classrooms;
         this.subjects   = subjects;
-        this.selectedTeacher   = teachers[0]   ?? null;
-        this.selectedStudent   = students[0]   ?? null;
-        this.selectedClassroom = classrooms[0] ?? null;
-        this.selectedSubject   = subjects[0]   ?? null;
-        this.syncEditForms();
         this.loading = false;
-        if (this.selectedClassroom) this.loadClassroomStudents(this.selectedClassroom.id);
-        if (this.selectedStudent) {
-          this.classroomApi.getClassroomsByStudent(this.selectedStudent.id).subscribe({
-            next: cls => this.selectedStudentClassrooms = cls,
-            error: () => {}
-          });
-        }
+        // Pre-carga el primer registro de cada sección sin cambiar activeDetail
+        const currentTab = this.activeDetail;
+        if (teachers[0])   this.selectTeacher(teachers[0]);
+        if (students[0])   this.selectStudent(students[0]);
+        if (classrooms[0]) this.selectClassroom(classrooms[0]);
+        if (subjects[0])   this.selectSubject(subjects[0]);
+        this.activeDetail = currentTab;
       },
       error: () => { this.loading = false; this.showToast('Error al cargar datos'); }
     });
@@ -101,7 +169,15 @@ export class AdministratorDashboardComponent implements OnInit {
     if (s === 'classrooms' && this.selectedClassroom) this.selectClassroom(this.selectedClassroom);
   }
 
-  selectTeacher(t: any)   { this.selectedTeacher   = t; this.syncEditForms(); this.activeDetail = 'teachers'; }
+  selectTeacher(t: any) {
+    this.selectedTeacher = t;
+    this.syncEditForms();
+    this.activeDetail = 'teachers';
+    this.teacherSchedules = [];
+    if (t?.id) {
+      this.scheduleApi.getByTeacher(t.id).pipe(catchError(() => of([]))).subscribe(s => this.teacherSchedules = s);
+    }
+  }
   selectStudent(s: any) {
     this.selectedStudent = s;
     this.syncEditForms();
@@ -109,7 +185,16 @@ export class AdministratorDashboardComponent implements OnInit {
     this.selectedStudentClassrooms = [];
     if (s?.id) {
       this.classroomApi.getClassroomsByStudent(s.id).subscribe({
-        next: cls => this.selectedStudentClassrooms = cls,
+        next: cls => {
+          this.selectedStudentClassrooms = cls;
+          this.studentClassroomSchedules = {};
+          cls.forEach((c: any) => {
+            const cid = c.id || c._id;
+            this.scheduleApi.getByClassroom(cid).pipe(catchError(() => of([]))).subscribe(sch => {
+              this.studentClassroomSchedules = { ...this.studentClassroomSchedules, [cid]: sch };
+            });
+          });
+        },
         error: () => this.selectedStudentClassrooms = []
       });
     }
@@ -276,5 +361,17 @@ export class AdministratorDashboardComponent implements OnInit {
       this.subjectEditForm = { name: this.selectedSubject.name ?? '', icon: this.selectedSubject.icon ?? '📘', color: this.selectedSubject.color ?? '#06B6D4', description: this.selectedSubject.description ?? '' };
   }
 
-  private showToast(msg: string) { this.toast = msg; setTimeout(() => this.toast = '', 3500); }
+  private showToast(msg: string) {
+    this.toast = msg;
+    this.toastType = resolveToastType(msg);
+    setTimeout(() => this.toast = '', 3500);
+  }
+}
+
+function resolveToastType(msg: string): string {
+  const m = msg.toLowerCase();
+  if (m.includes('actualiz') || m.includes('cambiad') || m.includes('guardad') || m.includes('editad')) return 'warn';
+  if (m.includes('eliminad') || m.includes('removid') || m.includes('baja') || m.includes('quitad') || m.includes('desactivad') || m.includes('error')) return 'error';
+  if (m.includes('cread') || m.includes('agregad') || m.includes('inscrit') || m.includes('asignad') || m.includes('alta')) return 'ok';
+  return 'default';
 }

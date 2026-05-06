@@ -50,7 +50,7 @@ const STUDENT = [authGuard, roleGuard(['alumno'])];
 const TEACHER = [authGuard, roleGuard(['maestro'])];
 const PARENT = [authGuard, roleGuard(['padre'])];
 const DIRECTOR = [authGuard, roleGuard(['director'])];
-const ADMINISTRATOR = [authGuard, roleGuard(['administrador'])];
+const ADMINISTRATOR = [authGuard, roleGuard(['coordinador'])];
 
 export const routes: Routes = [
   { path: 'login', component: LoginComponent },

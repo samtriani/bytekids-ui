@@ -1,7 +1,7 @@
 import { Pipe, PipeTransform } from '@angular/core';
 
 const ROLES: Record<string, string> = {
-  admin:    'Administrador',
+  admin:    'Coordinador',
   teacher:  'Profesor',
   student:  'Alumno',
   parent:   'Padre',
