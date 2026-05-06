@@ -1,4 +1,4 @@
-<app-shell role="administrator" [userName]="userName" [userAvatar]="userAvatar" [navItems]="navItems" pageTitle="Modulo Administrador"></app-shell>
+<app-shell role="administrator" [userName]="userName" [userAvatar]="userAvatar" [navItems]="navItems" pageTitle="Modulo Coordinador"></app-shell>
 
 <div class="page-wrap">
   <div class="ph">
@@ -9,7 +9,7 @@
   </div>
 
   @if (toast) {
-    <div class="alert alert-info mb16">{{ toast }}</div>
+    <div [class]="'bk-toast bk-toast-' + toastType">{{ toast }}</div>
   }
 
   <div class="layout">
@@ -58,14 +58,16 @@
               <div class="entity-card"><span>Estatus</span><strong>{{ selected.isActive ? 'Activa' : 'Inactiva' }}</strong></div>
             </div>
             <div class="editor-card">
-              <div class="subcard-title">Editar materia</div>
-              <div class="fg"><label class="label">Nombre</label><input class="input" [(ngModel)]="editForm.name"></div>
-              <div class="fg-row">
-                <div class="fg"><label class="label">Icono</label><input class="input" [(ngModel)]="editForm.icon"></div>
-                <div class="fg"><label class="label">Color</label><input class="input" type="color" [(ngModel)]="editForm.color"></div>
+              <div class="editor-card-header">✏️ Editar materia</div>
+              <div class="editor-card-body">
+                <div class="fg"><label class="label">Nombre</label><input class="input" [(ngModel)]="editForm.name"></div>
+                <div class="fg-row">
+                  <div class="fg"><label class="label">Icono</label><input class="input" [(ngModel)]="editForm.icon"></div>
+                  <div class="fg"><label class="label">Color</label><input class="input" type="color" [(ngModel)]="editForm.color"></div>
+                </div>
+                <div class="fg"><label class="label">Descripcion</label><textarea class="textarea" rows="3" [(ngModel)]="editForm.description"></textarea></div>
+                <button class="btn btn-primary btn-block" (click)="update()" [disabled]="saving">Guardar cambios</button>
               </div>
-              <div class="fg"><label class="label">Descripcion</label><textarea class="textarea" rows="3" [(ngModel)]="editForm.description"></textarea></div>
-              <button class="btn btn-outline btn-block" (click)="update()" [disabled]="saving">Guardar cambios</button>
             </div>
           } @else {
             <div class="empty-box">Selecciona una materia para editarla.</div>

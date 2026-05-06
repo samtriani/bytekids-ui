@@ -29,7 +29,7 @@ function roleToPanels(role: string): string[] {
     case 'director':
       return ['director'];
     case 'admin':
-      return ['alumno', 'maestro', 'padre', 'director', 'administrador'];
+      return ['alumno', 'maestro', 'padre', 'director', 'coordinador'];
     default:
       return [];
   }

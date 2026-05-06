@@ -1,4 +1,4 @@
-<app-shell role="administrator" [userName]="userName" [userAvatar]="userAvatar" [navItems]="navItems" pageTitle="Modulo Administrador"></app-shell>
+<app-shell role="administrator" [userName]="userName" [userAvatar]="userAvatar" [navItems]="navItems" pageTitle="Modulo Coordinador"></app-shell>
 
 <div class="page-wrap">
   <div class="ph">
@@ -9,7 +9,7 @@
   </div>
 
   @if (toast) {
-    <div class="alert alert-info mb16">{{ toast }}</div>
+    <div [class]="'bk-toast bk-toast-' + toastType">{{ toast }}</div>
   }
 
   <div class="layout">
@@ -151,6 +151,72 @@
           </div>
 
         </div><!-- /assign-grid -->
+
+        <!-- ── Horario ── -->
+        <div class="schedule-section">
+          <div class="section-head" style="margin-bottom:14px">
+            <h3>🕐 Horario del salón</h3>
+            <span class="tag tag-guinda">{{ schedules.length }} clases</span>
+          </div>
+
+          <div class="schedule-form">
+            <select class="select" [(ngModel)]="scheduleForm.subjectId">
+              <option value="">Materia…</option>
+              @for (s of selectedClassroomSubjects; track s.id) {
+                <option [value]="s.id">{{ s.icon ?? '📚' }} {{ s.name }}</option>
+              }
+            </select>
+            <select class="select" [(ngModel)]="scheduleForm.teacherId">
+              <option value="">Maestro…</option>
+              @for (t of teachers; track t.id) {
+                <option [value]="t.id">{{ t.displayName }}</option>
+              }
+            </select>
+            <select class="select" [(ngModel)]="scheduleForm.dayOfWeek">
+              @for (d of DAYS; track d) { <option [value]="d">{{ d | titlecase }}</option> }
+            </select>
+            <input class="input" type="time" [(ngModel)]="scheduleForm.startTime">
+            <input class="input" type="time" [(ngModel)]="scheduleForm.endTime">
+            <button class="btn btn-primary"
+                    (click)="addSchedule()"
+                    [disabled]="saving || !scheduleForm.subjectId || !scheduleForm.teacherId">
+              + Agregar
+            </button>
+          </div>
+
+          @if (schedules.length) {
+            <div class="schedule-grid">
+              @for (day of DAYS; track day) {
+                @if (schedulesByDay(day).length) {
+                  <div class="schedule-day">
+                    <div class="sched-day-head">{{ day | titlecase }}</div>
+                    @for (e of schedulesByDay(day); track e.id) {
+                      <div class="sched-entry">
+                        <div class="sched-entry-header">
+                          <div class="sched-time">{{ e.startTime }} – {{ e.endTime }}</div>
+                          <button class="btn-baja" (click)="removeSchedule(e.id)" [disabled]="saving">✕</button>
+                        </div>
+                        <div class="sched-subject">{{ e.subjectIcon ?? '📚' }} {{ e.subjectName }}</div>
+                        <div class="sched-teacher">👩‍🏫 {{ e.teacherName }}</div>
+                        @if (selectedClassroomStudents.length) {
+                          <div class="sched-students-head">👨‍🎓 Alumnos ({{ selectedClassroomStudents.length }})</div>
+                          <div class="sched-students">
+                            @for (s of selectedClassroomStudents; track s.id) {
+                              <span class="sched-student-chip">{{ s.displayName }}</span>
+                            }
+                          </div>
+                        }
+                      </div>
+                    }
+                  </div>
+                }
+              }
+            </div>
+          } @else {
+            <div class="empty-box" style="margin-top:8px">Sin clases programadas aún.</div>
+          }
+        </div>
+
       }
     </div>
 

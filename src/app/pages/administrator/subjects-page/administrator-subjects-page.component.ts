@@ -16,9 +16,10 @@ import { ADMINISTRATOR_NAV_ITEMS } from '../shared/administrator-nav';
 })
 export class AdministratorSubjectsPageComponent implements OnInit {
   navItems = ADMINISTRATOR_NAV_ITEMS;
-  userName = 'Administrador';
+  userName = 'Coordinador';
   userAvatar = 'AD';
   toast = '';
+  toastType = 'default';
   saving = false;
   loading = true;
   search = '';
@@ -136,6 +137,15 @@ export class AdministratorSubjectsPageComponent implements OnInit {
 
   private showToast(message: string) {
     this.toast = message;
+    this.toastType = resolveToastType(message);
     setTimeout(() => this.toast = '', 3500);
   }
+}
+
+function resolveToastType(msg: string): string {
+  const m = msg.toLowerCase();
+  if (m.includes('actualiz') || m.includes('cambiad') || m.includes('guardad') || m.includes('editad')) return 'warn';
+  if (m.includes('eliminad') || m.includes('removid') || m.includes('baja') || m.includes('quitad') || m.includes('desactivad') || m.includes('error')) return 'error';
+  if (m.includes('cread') || m.includes('agregad') || m.includes('inscrit') || m.includes('asignad') || m.includes('alta')) return 'ok';
+  return 'default';
 }

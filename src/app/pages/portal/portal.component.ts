@@ -38,7 +38,7 @@ export class PortalComponent {
   }
 
   get roleSummary(): string {
-    if (this.user.role === 'admin') return 'Administrador del sistema';
+    if (this.user.role === 'admin') return 'Coordinador del sistema';
     if (this.user.role === 'director') return 'Director institucional';
     if (this.user.role === 'teacher') return 'Profesor';
     if (this.user.role === 'parent') return 'Padre de familia';
@@ -47,7 +47,7 @@ export class PortalComponent {
 
   get welcomeMessage(): string {
     if (this.user.role === 'admin') {
-      return 'Selecciona el modulo que deseas abrir. Desde aqui puedes entrar al administrador operativo o al panel director.';
+      return 'Selecciona el modulo que deseas abrir. Desde aqui puedes entrar al coordinador operativo o al panel director.';
     }
     if (this.user.role === 'director') {
       return 'Selecciona el panel ejecutivo para revisar el estado general de profesores, alumnos, salones y materias.';
@@ -66,8 +66,8 @@ export class PortalComponent {
 
 const ALL_PANELS = [
   {
-    id: 'administrador',
-    label: 'Modulo Administrador',
+    id: 'coordinador',
+    label: 'Modulo Coordinador',
     icon: '🧩',
     desc: 'Altas de maestros, alumnos, salones, materias y asignaciones operativas',
     route: '/administrator/operations',

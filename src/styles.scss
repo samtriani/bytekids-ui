@@ -435,6 +435,36 @@ input,select,textarea { font-family:inherit; }
 .alert-info    { background:var(--info-lt);   border:1px solid rgba(10,77,122,.2);  color:#063759; }
 .alert-danger  { background:var(--danger-lt); border:1px solid rgba(155,20,20,.2);  color:#6B0A0A; }
 
+/* ── TOAST FLOTANTE ─────────────────────────────────────────────── */
+.bk-toast {
+  position: fixed;
+  top: 20px;
+  right: 24px;
+  z-index: 9999;
+  min-width: 260px;
+  max-width: 400px;
+  padding: 12px 18px;
+  border-radius: 12px;
+  font-size: .84rem;
+  font-weight: 700;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  box-shadow: 0 4px 20px rgba(0,0,0,.13);
+  animation: toastIn .25s ease;
+  pointer-events: none;
+}
+.bk-toast-ok      { background: #0F4F22; color: #fff; border-left: 4px solid #1A6B3C; }
+.bk-toast-error   { background: #6B0A0A; color: #fff; border-left: 4px solid #9B1414; }
+.bk-toast-warn    { background: #7A4A00; color: #fff; border-left: 4px solid #C47A00; }
+.bk-toast-info    { background: #063759; color: #fff; border-left: 4px solid #0A4D7A; }
+.bk-toast-default { background: var(--guinda, #7A1535); color: #fff; border-left: 4px solid #5C0F27; }
+
+@keyframes toastIn {
+  from { opacity: 0; transform: translateY(-12px) scale(.97); }
+  to   { opacity: 1; transform: translateY(0)     scale(1);   }
+}
+
 /* ── AVATAR ──────────────────────────────────────────────────────── */
 .av {
   border-radius:7px; background:var(--guinda-lt);

@@ -92,7 +92,7 @@ export class ShellComponent {
       teacher: 'Maestro',
       parent: 'Padre de Familia',
       admin: 'Director',
-      administrator: 'Administrador'
+      administrator: 'Coordinador'
     }[this.role] ?? 'Usuario';
   }
 

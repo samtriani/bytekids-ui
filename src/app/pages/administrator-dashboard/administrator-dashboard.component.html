@@ -3,7 +3,7 @@
   [userName]="userName"
   [userAvatar]="userAvatar"
   [navItems]="navItems"
-  pageTitle="Modulo Administrador">
+  pageTitle="Modulo Coordinador">
 </app-shell>
 
 <div class="page-wrap">
@@ -14,8 +14,45 @@
     </div>
   </div>
 
+  <!-- ── Buscador global ── -->
+  <div class="global-search-wrap">
+    <div class="global-search-box">
+      <span class="gs-icon">🔍</span>
+      <input class="gs-input"
+             [(ngModel)]="globalSearch"
+             (focus)="searchFocused=true"
+             (blur)="onSearchBlur()"
+             placeholder="Buscar maestro, alumno, salón o materia…"
+             autocomplete="off">
+      @if (globalSearch) {
+        <button class="gs-clear" (click)="globalSearch=''; searchFocused=false">✕</button>
+      }
+    </div>
+
+    @if (searchFocused && searchResults.length) {
+      <div class="gs-results">
+        @for (r of searchResults; track r.title + r.type) {
+          <div class="gs-item" (click)="selectSearchResult(r)">
+            <span class="gs-item-icon">{{ r.icon }}</span>
+            <div class="gs-item-body">
+              <div class="gs-item-title">{{ r.title }}</div>
+              <div class="gs-item-ctx">{{ r.ctx }}</div>
+            </div>
+            <span class="gs-item-badge">{{ TYPE_LABEL[r.type] }}</span>
+          </div>
+        }
+      </div>
+    }
+
+    @if (searchFocused && globalSearch.length >= 2 && !searchResults.length) {
+      <div class="gs-results">
+        <div class="gs-empty">Sin resultados para "{{ globalSearch }}"</div>
+      </div>
+    }
+  </div>
+
   @if (toast) {
-    <div class="alert alert-info mb16">{{ toast }}</div>
+    <div [class]="'bk-toast bk-toast-' + toastType">{{ toast }}</div>
   }
 
   <div class="g4 mb16">
@@ -98,33 +135,49 @@
             <div class="entity-card"><span>Iniciales</span><strong>{{ selectedTeacher.initials || '--' }}</strong></div>
           </div>
           <div class="detail-columns">
-            <div class="detail-subcard">
-              <div class="subcard-title">Salones del profesor</div>
+            <!-- Salones del profesor -->
+            <div class="info-section">
+              <div class="info-section-head">🏫 Salones del profesor <span class="info-count">{{ selectedTeacherClassrooms.length }}</span></div>
               @if (selectedTeacherClassrooms.length) {
                 @for (room of selectedTeacherClassrooms; track room.id) {
-                  <div class="linked-row">
-                    <div>
-                      <strong>{{ room.name }}</strong>
-                      <small>{{ room.schoolYear }}</small>
+                  <div class="info-row" style="flex-direction:column;align-items:stretch;gap:6px">
+                    <div style="display:flex;align-items:flex-start;justify-content:space-between;gap:8px">
+                      <div style="display:flex;flex-direction:column;gap:2px">
+                        <strong style="font-size:.86rem;color:var(--tx1)">{{ room.name }}</strong>
+                        <span style="font-size:.72rem;color:var(--tx3)">{{ room.schoolYear }}</span>
+                        <span style="font-size:.74rem;font-weight:800;color:var(--guinda)">{{ room.gradeLevel }}° {{ room.section }}</span>
+                      </div>
+                      <button class="btn btn-outline btn-sm" style="flex-shrink:0" (click)="removeTeacherFromClassroom(room.id)" [disabled]="saving">Quitar</button>
                     </div>
-                    <button class="btn btn-outline btn-sm"
-                            (click)="removeTeacherFromClassroom(room.id)"
-                            [disabled]="saving">Quitar</button>
+                    @if (teacherSchedulesByRoom(room.id).length) {
+                      <div class="sched-mini">
+                        @for (s of teacherSchedulesByRoom(room.id); track s.id) {
+                          <div class="sched-mini-row">
+                            <span class="sched-mini-day">{{ DAY_ABBR[s.dayOfWeek] ?? s.dayOfWeek }}</span>
+                            <span class="sched-mini-time">{{ s.startTime }}–{{ s.endTime }}</span>
+                            <span class="sched-mini-sub">{{ s.subjectIcon ?? '📚' }} {{ s.subjectName }}</span>
+                          </div>
+                        }
+                      </div>
+                    }
                   </div>
                 }
               } @else {
-                <div class="empty-box">Este profesor todavía no tiene salones asignados.</div>
+                <div class="empty-box">Sin salones asignados.</div>
               }
             </div>
-            <div class="detail-subcard">
-              <div class="subcard-title">Editar profesor</div>
-              <div class="fg"><label class="label">Nombre completo</label><input class="input" [(ngModel)]="teacherEditForm.displayName"></div>
-              <div class="fg-row">
-                <div class="fg"><label class="label">Usuario</label><input class="input" [(ngModel)]="teacherEditForm.username"></div>
-                <div class="fg"><label class="label">Iniciales</label><input class="input" [(ngModel)]="teacherEditForm.initials"></div>
+            <!-- Editar profesor -->
+            <div class="editor-card">
+              <div class="editor-card-header">✏️ Editar profesor</div>
+              <div class="editor-card-body">
+                <div class="fg"><label class="label">Nombre completo</label><input class="input" [(ngModel)]="teacherEditForm.displayName"></div>
+                <div class="fg-row">
+                  <div class="fg"><label class="label">Usuario</label><input class="input" [(ngModel)]="teacherEditForm.username"></div>
+                  <div class="fg"><label class="label">Iniciales</label><input class="input" [(ngModel)]="teacherEditForm.initials"></div>
+                </div>
+                <div class="fg"><label class="label">Nueva contraseña</label><input class="input" type="password" [(ngModel)]="teacherEditForm.password" placeholder="Opcional"></div>
+                <button class="btn btn-primary btn-block" (click)="updateTeacher()" [disabled]="saving">Guardar cambios</button>
               </div>
-              <div class="fg"><label class="label">Nueva contrasena</label><input class="input" type="password" [(ngModel)]="teacherEditForm.password" placeholder="Opcional"></div>
-              <button class="btn btn-outline btn-block" (click)="updateTeacher()" [disabled]="saving">Guardar cambios</button>
             </div>
           </div>
         }
@@ -144,33 +197,49 @@
             <div class="entity-card"><span>Iniciales</span><strong>{{ selectedStudent.initials || '--' }}</strong></div>
           </div>
           <div class="detail-columns">
-            <div class="detail-subcard">
-              <div class="subcard-title">Salones en los que está inscrito</div>
+            <!-- Salones del alumno -->
+            <div class="info-section">
+              <div class="info-section-head">🏫 Salones inscritos <span class="info-count">{{ selectedStudentClassrooms.length }}</span></div>
               @if (selectedStudentClassrooms.length) {
                 @for (cls of selectedStudentClassrooms; track cls.id) {
-                  <div class="linked-row">
-                    <div>
-                      <strong>{{ cls.name }}</strong>
-                      <small>{{ cls.teacherName || 'Sin profesor' }} · {{ cls.schoolYear }}</small>
+                  <div class="info-row" style="flex-direction:column;align-items:stretch;gap:6px">
+                    <div style="display:flex;align-items:flex-start;justify-content:space-between;gap:8px">
+                      <div style="display:flex;flex-direction:column;gap:2px">
+                        <strong style="font-size:.86rem;color:var(--tx1)">{{ cls.name }}</strong>
+                        <span style="font-size:.72rem;color:var(--tx3)">{{ cls.schoolYear }}</span>
+                        <span style="font-size:.74rem;font-weight:700;color:var(--tx2)">👩‍🏫 {{ cls.teacherName || 'Sin profesor' }}</span>
+                      </div>
+                      <button class="btn btn-outline btn-sm" style="flex-shrink:0" (click)="removeStudentFromClassroom(cls.id)" [disabled]="saving">Quitar</button>
                     </div>
-                    <button class="btn btn-outline btn-sm"
-                            (click)="removeStudentFromClassroom(cls.id)"
-                            [disabled]="saving">Quitar</button>
+                    @if (schedulesForClassroom(cls.id).length) {
+                      <div class="sched-mini">
+                        @for (s of schedulesForClassroom(cls.id); track s.id) {
+                          <div class="sched-mini-row">
+                            <span class="sched-mini-day">{{ DAY_ABBR[s.dayOfWeek] ?? s.dayOfWeek }}</span>
+                            <span class="sched-mini-time">{{ s.startTime }}–{{ s.endTime }}</span>
+                            <span class="sched-mini-sub">{{ s.subjectIcon ?? '📚' }} {{ s.subjectName }}</span>
+                          </div>
+                        }
+                      </div>
+                    }
                   </div>
                 }
               } @else {
-                <div class="empty-box">Este alumno aún no está inscrito en ningún salón.</div>
+                <div class="empty-box">Sin salones inscritos.</div>
               }
             </div>
-            <div class="detail-subcard">
-              <div class="subcard-title">Editar alumno</div>
-              <div class="fg"><label class="label">Nombre completo</label><input class="input" [(ngModel)]="studentEditForm.displayName"></div>
-              <div class="fg-row">
-                <div class="fg"><label class="label">Usuario</label><input class="input" [(ngModel)]="studentEditForm.username"></div>
-                <div class="fg"><label class="label">Iniciales</label><input class="input" [(ngModel)]="studentEditForm.initials"></div>
+            <!-- Editar alumno -->
+            <div class="editor-card">
+              <div class="editor-card-header">✏️ Editar alumno</div>
+              <div class="editor-card-body">
+                <div class="fg"><label class="label">Nombre completo</label><input class="input" [(ngModel)]="studentEditForm.displayName"></div>
+                <div class="fg-row">
+                  <div class="fg"><label class="label">Usuario</label><input class="input" [(ngModel)]="studentEditForm.username"></div>
+                  <div class="fg"><label class="label">Iniciales</label><input class="input" [(ngModel)]="studentEditForm.initials"></div>
+                </div>
+                <div class="fg"><label class="label">Nueva contraseña</label><input class="input" type="password" [(ngModel)]="studentEditForm.password" placeholder="Opcional"></div>
+                <button class="btn btn-primary btn-block" (click)="updateStudent()" [disabled]="saving">Guardar cambios</button>
               </div>
-              <div class="fg"><label class="label">Nueva contrasena</label><input class="input" type="password" [(ngModel)]="studentEditForm.password" placeholder="Opcional"></div>
-              <button class="btn btn-outline btn-block" (click)="updateStudent()" [disabled]="saving">Guardar cambios</button>
             </div>
           </div>
         }

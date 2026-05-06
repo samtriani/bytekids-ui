@@ -3,7 +3,7 @@
   [userName]="userName"
   [userAvatar]="userAvatar"
   [navItems]="navItems"
-  pageTitle="Modulo Administrador">
+  pageTitle="Modulo Coordinador">
 </app-shell>
 
 <div class="page-wrap">
@@ -15,7 +15,7 @@
   </div>
 
   @if (toast) {
-    <div class="alert alert-info mb16">{{ toast }}</div>
+    <div [class]="'bk-toast bk-toast-' + toastType">{{ toast }}</div>
   }
 
   <div class="layout">
@@ -36,16 +36,14 @@
         <label class="label">Contrasena</label>
         <input class="input" type="password" [(ngModel)]="createForm.password" placeholder="Minimo 6 caracteres">
       </div>
-      @if (mode === 'students') {
-        <div class="fg">
-          <label class="label">Edad</label>
-          <input class="input" type="number" [(ngModel)]="createForm.age" placeholder="Ej: 10" min="3" max="25">
-        </div>
-        <div class="fg">
-          <label class="label">Dirección</label>
-          <input class="input" [(ngModel)]="createForm.address" placeholder="Calle, número, colonia">
-        </div>
-      }
+      <div class="fg">
+        <label class="label">Edad</label>
+        <input class="input" type="number" [(ngModel)]="createForm.age" placeholder="Ej: 28" min="1" max="99">
+      </div>
+      <div class="fg">
+        <label class="label">Dirección</label>
+        <input class="input" [(ngModel)]="createForm.address" placeholder="Calle, número, colonia">
+      </div>
       <button class="btn btn-primary btn-block" (click)="create()" [disabled]="saving">{{ createLabel }}</button>
     </div>
 
@@ -88,45 +86,87 @@
               <div class="entity-card"><span>Rol</span><strong>{{ selected.role | role }}</strong></div>
               <div class="entity-card"><span>Estatus</span><strong>{{ selected.isActive ? 'Activo' : 'Inactivo' }}</strong></div>
               <div class="entity-card"><span>Iniciales</span><strong>{{ selected.initials || '--' }}</strong></div>
-              @if (mode === 'students') {
-                <div class="entity-card"><span>Edad</span><strong>{{ selected.age ?? '--' }} años</strong></div>
-                <div class="entity-card" style="grid-column: span 2"><span>Dirección</span><strong>{{ selected.address || '--' }}</strong></div>
-              }
+              <div class="entity-card"><span>Edad</span><strong>{{ selected.age ?? '--' }}{{ selected.age ? ' años' : '' }}</strong></div>
+              <div class="entity-card" style="grid-column: span 2"><span>Dirección</span><strong>{{ selected.address || '--' }}</strong></div>
             </div>
 
+            @if (mode === 'teachers') {
+              <div class="teacher-classrooms-section">
+                <div class="tcs-header">
+                  <span>🏫 Salones asignados</span>
+                  <span class="tcs-count">{{ selectedTeacherClassrooms.length }}</span>
+                </div>
+
+                @if (selectedTeacherClassrooms.length) {
+                  <div class="tcs-list">
+                    @for (cls of selectedTeacherClassrooms; track cls.id) {
+                      <div class="tcs-card">
+                        <div class="tcs-card-head">
+                          <div>
+                            <div class="tcs-name">{{ cls.name }}</div>
+                            <div class="tcs-meta">{{ cls.schoolYear }} &nbsp;·&nbsp; {{ cls.gradeLevel }}° {{ cls.section }}</div>
+                          </div>
+                        </div>
+
+                        @if (schedulesForClassroom(cls.id).length) {
+                          <div class="tcs-schedule">
+                            @for (s of schedulesForClassroom(cls.id); track s.id) {
+                              <div class="tcs-slot">
+                                <span class="tcs-day">{{ DAY_ABBR[s.dayOfWeek] ?? s.dayOfWeek }}</span>
+                                <span class="tcs-time">{{ s.startTime }} – {{ s.endTime }}</span>
+                                <span class="tcs-subj">{{ s.subjectIcon ?? '📚' }} {{ s.subjectName }}</span>
+                              </div>
+                            }
+                          </div>
+                        } @else {
+                          <div class="tcs-no-schedule">Sin horario registrado</div>
+                        }
+                      </div>
+                    }
+                  </div>
+                } @else {
+                  <div class="empty-box">Sin salones asignados aún.</div>
+                }
+              </div>
+            }
+
             <div class="editor-card">
-              <div class="subcard-title">Editar {{ mode === 'teachers' ? 'profesor' : 'alumno' }}</div>
-              <div class="fg">
-                <label class="label">Nombre completo</label>
-                <input class="input" [(ngModel)]="editForm.displayName">
+              <div class="editor-card-header">
+                ✏️ Editar {{ mode === 'teachers' ? 'profesor' : 'alumno' }}
               </div>
-              <div class="fg-row">
+              <div class="editor-card-body">
                 <div class="fg">
-                  <label class="label">Usuario</label>
-                  <input class="input" [(ngModel)]="editForm.username">
+                  <label class="label">Nombre completo</label>
+                  <input class="input" [(ngModel)]="editForm.displayName">
+                </div>
+                <div class="fg-row">
+                  <div class="fg">
+                    <label class="label">Usuario</label>
+                    <input class="input" [(ngModel)]="editForm.username">
+                  </div>
+                  <div class="fg">
+                    <label class="label">Iniciales</label>
+                    <input class="input" [(ngModel)]="editForm.initials">
+                  </div>
                 </div>
                 <div class="fg">
-                  <label class="label">Iniciales</label>
-                  <input class="input" [(ngModel)]="editForm.initials">
+                  <label class="label">Nueva contraseña</label>
+                  <input class="input" type="password" [(ngModel)]="editForm.password" placeholder="Opcional">
                 </div>
-              </div>
-              <div class="fg">
-                <label class="label">Nueva contrasena</label>
-                <input class="input" type="password" [(ngModel)]="editForm.password" placeholder="Opcional">
-              </div>
-              @if (mode === 'students') {
-                <div class="fg">
-                  <label class="label">Edad</label>
-                  <input class="input" type="number" [(ngModel)]="editForm.age" min="3" max="25">
+                <div class="fg-row">
+                  <div class="fg">
+                    <label class="label">Edad</label>
+                    <input class="input" type="number" [(ngModel)]="editForm.age" min="1" max="99">
+                  </div>
+                  <div class="fg" style="flex:2">
+                    <label class="label">Dirección</label>
+                    <input class="input" [(ngModel)]="editForm.address">
+                  </div>
                 </div>
-                <div class="fg">
-                  <label class="label">Dirección</label>
-                  <input class="input" [(ngModel)]="editForm.address">
+                <div class="btn-stack">
+                  <button class="btn btn-primary btn-block" (click)="update()" [disabled]="saving">Guardar cambios</button>
+                  <button class="btn btn-ghost btn-block" (click)="deactivate()" [disabled]="saving">Desactivar usuario</button>
                 </div>
-              }
-              <div class="btn-stack">
-                <button class="btn btn-outline btn-block" (click)="update()" [disabled]="saving">Guardar cambios</button>
-                <button class="btn btn-ghost btn-block" (click)="deactivate()" [disabled]="saving">Desactivar usuario</button>
               </div>
             </div>
           } @else {

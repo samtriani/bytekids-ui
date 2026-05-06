@@ -1,4 +1,4 @@
-<app-shell role="administrator" [userName]="userName" [userAvatar]="userAvatar" [navItems]="navItems" pageTitle="Modulo Administrador"></app-shell>
+<app-shell role="administrator" [userName]="userName" [userAvatar]="userAvatar" [navItems]="navItems" pageTitle="Modulo Coordinador"></app-shell>
 
 <div class="page-wrap">
   <div class="ph">
@@ -9,7 +9,7 @@
   </div>
 
   @if (toast) {
-    <div class="alert alert-info mb16">{{ toast }}</div>
+    <div [class]="'bk-toast bk-toast-' + toastType">{{ toast }}</div>
   }
 
   <div class="layout">
@@ -18,13 +18,11 @@
         <h3>Alta de salon</h3>
         <span class="tag tag-green">Nuevo</span>
       </div>
+      <div class="fg"><label class="label">Nombre</label><input class="input" [(ngModel)]="createForm.name"></div>
       <div class="fg-row">
-        <div class="fg"><label class="label">Nombre</label><input class="input" [(ngModel)]="createForm.name"></div>
         <div class="fg"><label class="label">Ciclo escolar</label><input class="input" [(ngModel)]="createForm.schoolYear"></div>
-      </div>
-      <div class="fg-row">
         <div class="fg"><label class="label">Grado</label><input class="input" type="number" [(ngModel)]="createForm.gradeLevel"></div>
-        <div class="fg"><label class="label">Seccion</label><input class="input" [(ngModel)]="createForm.section"></div>
+        <div class="fg"><label class="label">Sección</label><input class="input" [(ngModel)]="createForm.section"></div>
       </div>
       <div class="fg">
         <label class="label">Profesor titular</label>
@@ -72,14 +70,13 @@
               <div class="entity-card"><span>Ciclo</span><strong>{{ selected.schoolYear }}</strong></div>
             </div>
             <div class="editor-card">
-              <div class="subcard-title">Editar salon</div>
+              <div class="editor-card-header">✏️ Editar salón</div>
+              <div class="editor-card-body">
+              <div class="fg"><label class="label">Nombre</label><input class="input" [(ngModel)]="editForm.name"></div>
               <div class="fg-row">
-                <div class="fg"><label class="label">Nombre</label><input class="input" [(ngModel)]="editForm.name"></div>
                 <div class="fg"><label class="label">Ciclo escolar</label><input class="input" [(ngModel)]="editForm.schoolYear"></div>
-              </div>
-              <div class="fg-row">
                 <div class="fg"><label class="label">Grado</label><input class="input" type="number" [(ngModel)]="editForm.gradeLevel"></div>
-                <div class="fg"><label class="label">Seccion</label><input class="input" [(ngModel)]="editForm.section"></div>
+                <div class="fg"><label class="label">Sección</label><input class="input" [(ngModel)]="editForm.section"></div>
               </div>
               <div class="fg">
                 <label class="label">Profesor titular</label>
@@ -91,8 +88,10 @@
                 </select>
               </div>
               <div class="fg"><label class="label">Descripcion</label><textarea class="textarea" rows="3" [(ngModel)]="editForm.description"></textarea></div>
-              <button class="btn btn-outline btn-block" (click)="update()" [disabled]="saving">Guardar cambios</button>
-            </div>
+              <button class="btn btn-primary btn-block" (click)="update()" [disabled]="saving">Guardar cambios</button>
+              <button class="btn btn-ghost btn-block" (click)="deactivate(selected)" [disabled]="saving">Dar de baja salón</button>
+              </div><!-- /editor-card-body -->
+            </div><!-- /editor-card -->
           } @else {
             <div class="empty-box">Selecciona un salon para editarlo.</div>
           }
