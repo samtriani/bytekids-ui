@@ -1,4 +1,4 @@
-import { Component, OnInit } from '@angular/core';
+﻿import { Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { RouterLink, Router } from '@angular/router';
 import { ShellComponent, NavItem } from '../../../shared/shell/shell.component';
@@ -6,6 +6,7 @@ import { MissionStateService } from '../../../services/mission-state.service';
 import { ContentApiService } from '../../../services/api/content-api.service';
 import { SubmissionApiService } from '../../../services/api/submission-api.service';
 import { AuthService } from '../../../services/auth.service';
+import { forkJoin } from 'rxjs';
 
 const SUBJECT_META: Record<string, { icon: string; color: string }> = {
   'Python':        { icon: '🐍', color: '#06B6D4' },
@@ -32,17 +33,18 @@ export class MissionsComponent implements OnInit {
 
   navItems: NavItem[] = [
     { label:'Mi Dashboard', icon:'🏠', route:'/student' },
-    { label:'Mis Misiones', icon:'🎯', route:'/student/missions', badge:3 },
+    { label:'Mis Misiones', icon:'🎯', route:'/student/missions' },
     { label:'Mi Progreso',  icon:'📈', route:'/student/progress' },
     { label:'Logros',       icon:'🏆', route:'/student/achievements' },
     { label:'Tutor IA',     icon:'🤖', route:'/student/ai-tutor', badge:'✨' },
     { label:'Proyectos',    icon:'💻', route:'/student/projects' },
     // { label:'Roblox Studio',icon:'🎮', route:'/student/roblox' },
-    { label:'Comunidad',    icon:'👥', route:'/student/community' },
+    { label:'Horario',       icon:'📅', route:'/student/calendar' },
+    { label:'Comunidad',     icon:'👥', route:'/student/community' },
   ];
 
   activeFilter = 'Todas';
-  filters = ['Todas', 'Python', 'HTML/CSS', 'Scratch', 'Robótica', 'Roblox'];
+  filters: string[] = ['Todas'];
   loading = true;
   missions: any[] = [];
 
@@ -50,22 +52,22 @@ export class MissionsComponent implements OnInit {
   get enProgreso(): number   { return this.missions.filter(m => m.status === 'En progreso').length; }
   get completadas(): number  { return this.missions.filter(m => m.status === 'Completado').length; }
   get disponibles(): number  { return this.missions.filter(m => m.status === 'Disponible').length; }
-  // Mapa contentId → submission más reciente del alumno
+
   private submissionMap: Record<string, any> = {};
 
   ngOnInit() {
-    // Carga misiones y entregas en paralelo
-    this.submissionApi.getMySubmissions().subscribe({
-      next: (subs) => {
-        subs.forEach(s => { this.submissionMap[s.contentId] = s; });
-      }
-    });
+    forkJoin({
+      feed: this.contentApi.getMyFeed(),
+      subs: this.submissionApi.getMySubmissions(),
+    }).subscribe({
+      next: ({ feed, subs }) => {
+        subs.forEach((s: any) => { this.submissionMap[s.contentId] = s; });
+        this.missions = feed.map((c: any) => this.mapContent(c));
 
-    this.contentApi.getMyFeed().subscribe({
-      next: (data) => {
-        this.missions = data
-          .filter((c: any) => c.type === 'mision' || c.type === 'tarea' || c.type === 'quiz' || c.type === 'proyecto' || c.type === 'material')
-          .map((c: any) => this.mapContent(c));
+        // Filtros derivados de las materias reales del alumno
+        const subjectSet = new Set(this.missions.map(m => m.subject).filter(Boolean));
+        this.filters = ['Todas', ...Array.from(subjectSet)];
+
         this.loading = false;
       },
       error: () => { this.loading = false; }
@@ -109,3 +111,4 @@ export class MissionsComponent implements OnInit {
     this.router.navigate(['/student/missions', m.id]);
   }
 }
+

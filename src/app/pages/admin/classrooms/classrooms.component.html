@@ -9,10 +9,13 @@
   <div class="g4 mb14">
     <div class="kpi green"><div class="kpi-ico">🏫</div><div><div class="kpi-val">{{ rooms.length }}</div><div class="kpi-lbl">Salones activos</div></div></div>
     <div class="kpi"><div class="kpi-ico">👨‍🎓</div><div><div class="kpi-val">{{ totalStudents }}</div><div class="kpi-lbl">Total alumnos</div></div></div>
-    <div class="kpi gold"><div class="kpi-ico">📈</div><div><div class="kpi-val">—</div><div class="kpi-lbl">Promedio general</div></div></div>
+    <div class="kpi gold"><div class="kpi-ico">📈</div><div><div class="kpi-val">{{ loading ? '—' : globalAvg + '%' }}</div><div class="kpi-lbl">Promedio general</div></div></div>
     <div class="kpi red"><div class="kpi-ico">⚠️</div><div><div class="kpi-val">{{ alertCount }}</div><div class="kpi-lbl">Salón en alerta</div></div></div>
   </div>
 
+  @if (loading) {
+    <div style="text-align:center;padding:48px;color:var(--tx3)">Cargando datos de salones…</div>
+  }
   <div class="gauto">
     @for (r of rooms; track r.name) {
       <div class="room-card card card-p" [class.warn-card]="r.status==='warn'" [class.top-card]="r.status==='excellent'">

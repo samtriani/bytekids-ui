@@ -14,6 +14,9 @@ import { ProjectsComponent } from './pages/student/projects/projects.component';
 import { RobloxComponent } from './pages/student/roblox/roblox.component';
 import { CommunityComponent } from './pages/student/community/community.component';
 import { WorkspaceComponent } from './pages/student/workspace/workspace.component';
+import { StudentCalendarComponent } from './pages/student/calendar/calendar.component';
+import { StudentClassroomComponent } from './pages/student/classroom/classroom.component';
+import { TeacherClassroomComponent } from './pages/teacher/classroom/classroom.component';
 
 import { TeacherDashboardComponent } from './pages/teacher-dashboard/teacher-dashboard.component';
 import { ClassroomsComponent as TClassrooms } from './pages/teacher/classrooms/classrooms.component';
@@ -39,6 +42,7 @@ import { StudentsComponent as AStudents } from './pages/admin/students/students.
 import { AiReportsComponent } from './pages/admin/ai-reports/ai-reports.component';
 import { SubjectsComponent } from './pages/admin/subjects/subjects.component';
 import { MetricsComponent } from './pages/admin/metrics/metrics.component';
+import { AdminScheduleComponent } from './pages/admin/schedule/schedule.component';
 import { AdministratorDashboardComponent } from './pages/administrator-dashboard/administrator-dashboard.component';
 import { AdministratorUsersPageComponent } from './pages/administrator/users-page/administrator-users-page.component';
 import { AdministratorClassroomsPageComponent } from './pages/administrator/classrooms-page/administrator-classrooms-page.component';
@@ -68,6 +72,8 @@ export const routes: Routes = [
   { path: 'student/projects', component: ProjectsComponent, canActivate: STUDENT },
   { path: 'student/roblox', component: RobloxComponent, canActivate: STUDENT },
   { path: 'student/community', component: CommunityComponent, canActivate: STUDENT },
+  { path: 'student/calendar',            component: StudentCalendarComponent,  canActivate: STUDENT },
+  { path: 'student/classroom/:scheduleId', component: StudentClassroomComponent, canActivate: STUDENT },
 
   { path: 'teacher', component: TeacherDashboardComponent, canActivate: TEACHER },
   { path: 'teacher/classrooms', component: TClassrooms, canActivate: TEACHER },
@@ -75,7 +81,8 @@ export const routes: Routes = [
   { path: 'teacher/create', component: CreateContentComponent, canActivate: TEACHER },
   { path: 'teacher/ai-assistant', component: TAiAssist, canActivate: TEACHER },
   { path: 'teacher/reports', component: ReportsComponent, canActivate: TEACHER },
-  { path: 'teacher/calendar', component: TCalendar, canActivate: TEACHER },
+  { path: 'teacher/calendar',              component: TCalendar,              canActivate: TEACHER },
+  { path: 'teacher/classroom/:scheduleId', component: TeacherClassroomComponent, canActivate: TEACHER },
   { path: 'teacher/messages', component: TMessages, canActivate: TEACHER },
 
   { path: 'parent', component: ParentDashboardComponent, canActivate: PARENT },
@@ -93,6 +100,7 @@ export const routes: Routes = [
   { path: 'admin/ai-reports', component: AiReportsComponent, canActivate: DIRECTOR },
   { path: 'admin/subjects', component: SubjectsComponent, canActivate: DIRECTOR },
   { path: 'admin/metrics', component: MetricsComponent, canActivate: DIRECTOR },
+  { path: 'admin/schedule', component: AdminScheduleComponent, canActivate: DIRECTOR },
 
   { path: 'administrator', redirectTo: 'administrator/operations', pathMatch: 'full' },
   { path: 'administrator/operations', component: AdministratorDashboardComponent, canActivate: ADMINISTRATOR },

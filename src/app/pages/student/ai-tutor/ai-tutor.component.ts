@@ -20,12 +20,13 @@ export class AiTutorComponent implements AfterViewChecked, OnInit {
 
   navItems: NavItem[] = [
     { label: 'Mi Dashboard',  icon: '🏠', route: '/student' },
-    { label: 'Mis Misiones',  icon: '🎯', route: '/student/missions', badge: 3 },
+    { label: 'Mis Misiones',  icon: '🎯', route: '/student/missions' },
     { label: 'Mi Progreso',   icon: '📈', route: '/student/progress' },
     { label: 'Logros',        icon: '🏆', route: '/student/achievements' },
     { label: 'Tutor IA',      icon: '🤖', route: '/student/ai-tutor', badge: '✨' },
     { label: 'Proyectos',     icon: '💻', route: '/student/projects' },
     // { label: 'Roblox Studio', icon: '🎮', route: '/student/roblox' },
+    { label: 'Horario',       icon: '📅', route: '/student/calendar' },
     { label: 'Comunidad',     icon: '👥', route: '/student/community' },
   ];
 

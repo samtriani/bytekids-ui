@@ -10,6 +10,8 @@ import { AdministratorApiService } from '../../../services/api/administrator-api
 import { ClassroomApiService } from '../../../services/api/classroom-api.service';
 import { ScheduleApiService } from '../../../services/api/schedule-api.service';
 import { ADMINISTRATOR_NAV_ITEMS } from '../shared/administrator-nav';
+import { forkJoin, of } from 'rxjs';
+import { catchError } from 'rxjs/operators';
 
 @Component({
   selector: 'app-administrator-users-page',
@@ -39,6 +41,7 @@ export class AdministratorUsersPageComponent implements OnInit {
   selected: any = null;
   selectedTeacherClassrooms: any[] = [];
   teacherSchedules: any[] = [];
+  classroomStudents: Record<string, any[]> = {};
 
   createForm = { displayName: '', username: '', password: '', age: null as number | null, address: '' };
   editForm   = { id: '', username: '', displayName: '', initials: '', password: '', age: null as number | null, address: '' };
@@ -109,16 +112,33 @@ export class AdministratorUsersPageComponent implements OnInit {
     this.syncEditForm();
     this.selectedTeacherClassrooms = [];
     this.teacherSchedules = [];
+    this.classroomStudents = {};
     if (this.mode === 'teachers' && row?.id) {
-      this.classroomApi.getByTeacher(row.id).subscribe({
-        next: cls => this.selectedTeacherClassrooms = cls,
-        error: () => {}
-      });
-      this.scheduleApi.getByTeacher(row.id).subscribe({
-        next: s => this.teacherSchedules = s,
-        error: () => {}
+      forkJoin({
+        classrooms: this.classroomApi.getByTeacher(row.id).pipe(catchError(() => of([]))),
+        schedules:  this.scheduleApi.getByTeacher(row.id).pipe(catchError(() => of([]))),
+      }).subscribe(({ classrooms, schedules }) => {
+        this.selectedTeacherClassrooms = classrooms;
+        this.teacherSchedules = schedules;
+        if (classrooms.length) {
+          forkJoin(
+            (classrooms as any[]).map((c: any) =>
+              this.classroomApi.getStudents(c.id).pipe(catchError(() => of([])))
+            )
+          ).subscribe(studentLists => {
+            const map: Record<string, any[]> = {};
+            (classrooms as any[]).forEach((c: any, i: number) => {
+              map[c.id] = (studentLists as any[][])[i];
+            });
+            this.classroomStudents = map;
+          });
+        }
       });
     }
+  }
+
+  studentsForClassroom(classroomId: string): any[] {
+    return this.classroomStudents[classroomId] ?? [];
   }
 
   create() {

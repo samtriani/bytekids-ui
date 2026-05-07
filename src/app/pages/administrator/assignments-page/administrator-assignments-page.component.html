@@ -177,9 +177,11 @@
             </select>
             <input class="input" type="time" [(ngModel)]="scheduleForm.startTime">
             <input class="input" type="time" [(ngModel)]="scheduleForm.endTime">
+            <input class="input" type="date" [(ngModel)]="scheduleForm.startDate" [min]="today" placeholder="Fecha inicio">
+            <input class="input" type="date" [(ngModel)]="scheduleForm.endDate"   [min]="scheduleForm.startDate || today" placeholder="Fecha fin">
             <button class="btn btn-primary"
                     (click)="addSchedule()"
-                    [disabled]="saving || !scheduleForm.subjectId || !scheduleForm.teacherId">
+                    [disabled]="saving || !scheduleForm.subjectId || !scheduleForm.teacherId || !scheduleForm.startDate || !scheduleForm.endDate">
               + Agregar
             </button>
           </div>
@@ -198,6 +200,7 @@
                         </div>
                         <div class="sched-subject">{{ e.subjectIcon ?? '📚' }} {{ e.subjectName }}</div>
                         <div class="sched-teacher">👩‍🏫 {{ e.teacherName }}</div>
+                        <div class="sched-dates">📅 {{ e.startDate }} → {{ e.endDate }}</div>
                         @if (selectedClassroomStudents.length) {
                           <div class="sched-students-head">👨‍🎓 Alumnos ({{ selectedClassroomStudents.length }})</div>
                           <div class="sched-students">
@@ -222,3 +225,19 @@
 
   </div>
 </div>
+
+@if (confirmModal.open) {
+  <div class="confirm-overlay" (click)="closeConfirm()">
+    <div class="confirm-card" (click)="$event.stopPropagation()">
+      <div class="confirm-icon">⚠️</div>
+      <div class="confirm-title">{{ confirmModal.title }}</div>
+      <div class="confirm-body" [innerHTML]="confirmModal.body"></div>
+      <div class="confirm-actions">
+        <button class="btn btn-ghost" (click)="closeConfirm()">Cancelar</button>
+        <button class="btn btn-danger" (click)="runConfirm()" [disabled]="saving">
+          Confirmar
+        </button>
+      </div>
+    </div>
+  </div>
+}

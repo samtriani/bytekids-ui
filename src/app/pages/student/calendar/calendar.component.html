@@ -1,0 +1,195 @@
+<app-shell role="student" [userName]="studentName" [userAvatar]="studentInitials"
+  [navItems]="navItems" pageTitle="Mi Horario"></app-shell>
+
+<div class="page-wrap">
+  <div class="ph">
+    <div class="ph-left">
+      <h1>📅 Mi Horario</h1>
+      <p>Tus clases, horarios y profesores del ciclo escolar</p>
+    </div>
+  </div>
+
+  @if (loading) {
+    <div class="sc-loading">
+      <div class="sc-loading-spinner">📅</div>
+      <p>Cargando tu horario…</p>
+    </div>
+  } @else if (!allSchedules.length) {
+    <div class="sc-empty">
+      <div class="sc-empty-icon">📭</div>
+      <h3>Sin clases programadas</h3>
+      <p>Aún no tienes clases asignadas. Cuando el coordinador configure tu horario, aparecerá aquí.</p>
+    </div>
+  } @else {
+
+  <!-- KPIs -->
+  <div class="sc-kpis">
+    <div class="sc-kpi">
+      <span class="sc-kpi-val">{{ classSummary.length }}</span>
+      <span class="sc-kpi-lbl">Materias</span>
+    </div>
+    <div class="sc-kpi-sep"></div>
+    <div class="sc-kpi">
+      <span class="sc-kpi-val">{{ classrooms.length }}</span>
+      <span class="sc-kpi-lbl">Salones</span>
+    </div>
+    <div class="sc-kpi-sep"></div>
+    <div class="sc-kpi">
+      <span class="sc-kpi-val">{{ allSchedules.length }}</span>
+      <span class="sc-kpi-lbl">Clases / semana</span>
+    </div>
+    <div class="sc-kpi-sep"></div>
+    <div class="sc-kpi">
+      <span class="sc-kpi-val">{{ countClasses(todayDay) || '—' }}</span>
+      <span class="sc-kpi-lbl">Clases hoy</span>
+    </div>
+  </div>
+
+  <div class="sc-layout">
+
+    <!-- Calendario -->
+    <div class="card card-p sc-calendar-card">
+      <div class="sc-cal-nav">
+        <button class="sc-nav-btn" (click)="prevMonth()" [disabled]="monthIdx === 0">‹</button>
+        <span class="sc-cal-title">{{ monthName }}</span>
+        <button class="sc-nav-btn" (click)="nextMonth()" [disabled]="monthIdx === months.length - 1">›</button>
+      </div>
+
+      <div class="sc-day-names">
+        @for (d of days; track d) { <div>{{ d }}</div> }
+      </div>
+
+      <div class="sc-grid">
+        @for (week of weeks; track $index) {
+          @for (d of week; track $index) {
+            <div class="sc-cell"
+              [class.today]="d === todayDay && isToday"
+              [class.selected]="d === selectedDay"
+              [class.has-class]="hasClass(d)"
+              [class.empty]="!d"
+              (click)="d && (selectedDay = d)">
+              @if (d) {
+                <span class="sc-num">{{ d }}</span>
+                @if (hasClass(d)) {
+                  <div class="sc-dots">
+                    @for (color of dayColors(d); track color) {
+                      <span class="sc-dot" [style.background]="color"></span>
+                    }
+                  </div>
+                }
+              }
+            </div>
+          }
+        }
+      </div>
+
+      <!-- Leyenda de salones -->
+      <div class="sc-legend">
+        @for (c of classrooms; track c.id) {
+          <div class="sc-legend-item">
+            <span class="sc-legend-dot" [style.background]="classroomColorMap[c.id]"></span>
+            <span>{{ c.name }}</span>
+          </div>
+        }
+      </div>
+    </div>
+
+    <!-- Panel derecho -->
+    <div class="sc-side">
+
+      <!-- Clases del día seleccionado -->
+      <div class="card card-p">
+        <div class="sc-day-header">
+          <span class="sc-day-title">{{ selectedDay }} de {{ monthName.split(' ')[0] }}</span>
+          @if (selectedEvents.length) {
+            <span class="sc-day-badge">{{ selectedEvents.length }} clase{{ selectedEvents.length > 1 ? 's' : '' }}</span>
+          }
+        </div>
+
+        @if (selectedEvents.length) {
+          <div class="sc-event-list">
+            @for (e of selectedEvents; track e.id) {
+              <div class="sc-event" [style.border-left-color]="e.classroomColor"
+                   [class.sc-event--active]="scheduleStatus(e) === 'active'"
+                   [class.sc-event--soon]="scheduleStatus(e) === 'soon'">
+
+                <!-- Estado de la clase -->
+                <div class="sc-event-status">
+                  @switch (scheduleStatus(e)) {
+                    @case ('active') { <span class="sc-status-pill sc-status-pill--active"><span class="sc-status-dot"></span>En curso</span> }
+                    @case ('soon')   { <span class="sc-status-pill sc-status-pill--soon">⏰ Próximamente</span> }
+                    @case ('past')   { <span class="sc-status-pill sc-status-pill--past">✓ Finalizada</span> }
+                  }
+                </div>
+
+                <div class="sc-event-time">
+                  🕐 {{ e.startTime?.substring(0,5) }} – {{ e.endTime?.substring(0,5) }}
+                </div>
+                <div class="sc-event-subject">
+                  {{ e.subjectIcon ?? '📚' }} {{ e.subjectName }}
+                </div>
+                <div class="sc-event-meta">
+                  <span>🏫 {{ e.classroomName }}</span>
+                  <span>👩‍🏫 {{ e.teacherName }}</span>
+                </div>
+                @if (e.startDate && e.endDate) {
+                  <div class="sc-event-range">📆 {{ e.startDate }} → {{ e.endDate }}</div>
+                }
+
+                @if (isScheduleActiveNow(e)) {
+                  <button class="sc-enter-btn" (click)="enterClass(e.id)">
+                    🚀 Entrar a clase
+                  </button>
+                }
+              </div>
+            }
+          </div>
+        } @else {
+          <div class="sc-no-class">
+            <span>😴</span>
+            <p>Sin clases este día</p>
+          </div>
+        }
+      </div>
+
+      <!-- Próximas clases -->
+      @if (upcoming.length) {
+        <div class="card card-p">
+          <div class="sc-section-title">Próximas clases</div>
+          <div class="sc-upcoming-list">
+            @for (u of upcoming; track u.day) {
+              <div class="sc-upcoming" (click)="selectedDay = u.day">
+                <div class="sc-upcoming-day" [style.background]="u.ev.classroomColor + '20'" [style.color]="u.ev.classroomColor">
+                  {{ u.day }}
+                </div>
+                <div class="sc-upcoming-info">
+                  <div class="sc-upcoming-subj">{{ u.ev.subjectIcon ?? '📚' }} {{ u.ev.subjectName }}</div>
+                  <div class="sc-upcoming-meta">{{ u.ev.startTime?.substring(0,5) }} · {{ u.ev.classroomName }}</div>
+                </div>
+              </div>
+            }
+          </div>
+        </div>
+      }
+
+      <!-- Resumen semanal -->
+      <div class="card card-p">
+        <div class="sc-section-title">Mis materias</div>
+        <div class="sc-subjects-list">
+          @for (s of classSummary; track s.subjectName) {
+            <div class="sc-subject-item" [style.border-left-color]="s.classroomColor">
+              <div class="sc-subject-icon">{{ s.subjectIcon ?? '📚' }}</div>
+              <div>
+                <div class="sc-subject-name">{{ s.subjectName }}</div>
+                <div class="sc-subject-meta">{{ s.teacherName }} · {{ s.classroomName }}</div>
+              </div>
+            </div>
+          }
+        </div>
+      </div>
+
+    </div>
+  </div>
+
+  } <!-- /if schedules -->
+</div>

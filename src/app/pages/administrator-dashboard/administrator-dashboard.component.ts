@@ -42,6 +42,7 @@ export class AdministratorDashboardComponent implements OnInit {
   selectedStudentClassrooms: any[] = [];
   teacherSchedules: any[] = [];
   studentClassroomSchedules: Record<string, any[]> = {};
+  teacherClassroomStudents: Record<string, any[]> = {};
 
   selectedTeacher:  any = null;
   selectedStudent:  any = null;
@@ -174,9 +175,24 @@ export class AdministratorDashboardComponent implements OnInit {
     this.syncEditForms();
     this.activeDetail = 'teachers';
     this.teacherSchedules = [];
+    this.teacherClassroomStudents = {};
     if (t?.id) {
       this.scheduleApi.getByTeacher(t.id).pipe(catchError(() => of([]))).subscribe(s => this.teacherSchedules = s);
+      const rooms = this.classrooms.filter((c: any) => c.teacherId === t.id);
+      if (rooms.length) {
+        forkJoin(rooms.map((r: any) =>
+          this.classroomApi.getStudents(r.id).pipe(catchError(() => of([])))
+        )).subscribe(lists => {
+          const map: Record<string, any[]> = {};
+          rooms.forEach((r: any, i: number) => { map[r.id] = (lists as any[][])[i]; });
+          this.teacherClassroomStudents = map;
+        });
+      }
     }
+  }
+
+  studentsForTeacherRoom(classroomId: string): any[] {
+    return this.teacherClassroomStudents[classroomId] ?? [];
   }
   selectStudent(s: any) {
     this.selectedStudent = s;

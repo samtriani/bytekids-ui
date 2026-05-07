@@ -106,13 +106,14 @@
                             <div class="tcs-name">{{ cls.name }}</div>
                             <div class="tcs-meta">{{ cls.schoolYear }} &nbsp;·&nbsp; {{ cls.gradeLevel }}° {{ cls.section }}</div>
                           </div>
+                          <span class="tcs-stu-badge">👨‍🎓 {{ studentsForClassroom(cls.id).length }}</span>
                         </div>
 
                         @if (schedulesForClassroom(cls.id).length) {
                           <div class="tcs-schedule">
                             @for (s of schedulesForClassroom(cls.id); track s.id) {
                               <div class="tcs-slot">
-                                <span class="tcs-day">{{ DAY_ABBR[s.dayOfWeek] ?? s.dayOfWeek }}</span>
+                                <span class="tcs-day">{{ DAY_ABBR[s.dayOfWeek] || s.dayOfWeek }}</span>
                                 <span class="tcs-time">{{ s.startTime }} – {{ s.endTime }}</span>
                                 <span class="tcs-subj">{{ s.subjectIcon ?? '📚' }} {{ s.subjectName }}</span>
                               </div>
@@ -120,6 +121,14 @@
                           </div>
                         } @else {
                           <div class="tcs-no-schedule">Sin horario registrado</div>
+                        }
+
+                        @if (studentsForClassroom(cls.id).length) {
+                          <div class="tcs-students">
+                            @for (s of studentsForClassroom(cls.id); track s.id) {
+                              <span class="tcs-stu-chip">{{ s.displayName }}</span>
+                            }
+                          </div>
                         }
                       </div>
                     }

@@ -20,6 +20,7 @@ export class AiReportsComponent implements OnInit, AfterViewChecked {
     { label:'Todos los Salones',   icon:'🎓', route:'/admin/classrooms' },
     { label:'Maestros',            icon:'👩‍🏫', route:'/admin/teachers' },
     { label:'Estudiantes',         icon:'👨‍🎓', route:'/admin/students' },
+    { label:'Horarios',            icon:'🕐', route:'/admin/schedule' },
     { label:'Reportes IA',         icon:'🤖', route:'/admin/ai-reports', badge:'✨' },
     { label:'Materias',            icon:'📚', route:'/admin/subjects' },
     { label:'Métricas',            icon:'📊', route:'/admin/metrics' },

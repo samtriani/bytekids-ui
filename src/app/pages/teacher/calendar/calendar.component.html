@@ -1,17 +1,22 @@
-<app-shell role="teacher" userName="Profa. García" userAvatar="MG"
+<app-shell role="teacher" [userName]="teacherName" [userAvatar]="teacherInitials"
   [navItems]="navItems" pageTitle="Calendario"></app-shell>
 <div class="page-wrap">
   <div class="ph">
-    <div class="ph-left"><h1>Calendario</h1><p>Organiza clases, exámenes y eventos del salón</p></div>
+    <div class="ph-left"><h1>📅 Calendario</h1><p>Horario semanal y eventos del salón</p></div>
     <button class="btn btn-primary" (click)="openNewEvent()">➕ Nuevo evento</button>
   </div>
 
+  @if (loading) {
+    <div style="text-align:center;padding:60px;color:var(--tx3)">Cargando horario…</div>
+  } @else {
+
   <div class="cal-layout">
+    <!-- Calendario grid -->
     <div class="card card-p" style="flex:1">
       <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:16px">
         <button class="cal-nav" (click)="prevMonth()" [disabled]="monthIdx===0">‹</button>
         <h2 style="font-size:1rem;font-weight:800;color:var(--tx1)">{{ monthName }}</h2>
-        <button class="cal-nav" (click)="nextMonth()" [disabled]="monthIdx===3">›</button>
+        <button class="cal-nav" (click)="nextMonth()" [disabled]="monthIdx===months.length-1">›</button>
       </div>
       <div class="cal-days-header">
         @for (d of days; track d) { <div class="cal-day-name">{{ d }}</div> }
@@ -20,31 +25,59 @@
         @for (week of weeks; track $index) {
           @for (d of week; track $index) {
             <div class="cal-cell"
-              [class.today]="d===today && monthIdx===2"
+              [class.today]="d===todayDay && isToday"
               [class.selected]="d===selectedDay"
               [class.has-event]="hasEvent(d)"
+              [class.has-schedule]="hasSchedule(d)"
               [class.empty]="!d"
               (click)="d&&(selectedDay=d)">
               @if (d) {
                 <span class="cal-num">{{ d }}</span>
-                @if (hasEvent(d)) { <span class="event-pip"></span> }
+                @if (hasSchedule(d)) { <span class="event-pip schedule-pip"></span> }
+                @else if (hasEvent(d)) { <span class="event-pip"></span> }
               }
             </div>
           }
         }
       </div>
+
+      <!-- Leyenda -->
+      <div style="display:flex;gap:16px;margin-top:14px;font-size:.72rem;color:var(--tx3);font-weight:700">
+        <span><span style="display:inline-block;width:8px;height:8px;border-radius:50%;background:var(--guinda);margin-right:4px"></span>Clase programada</span>
+        <span><span style="display:inline-block;width:8px;height:8px;border-radius:50%;background:#0A5C8B;margin-right:4px"></span>Evento personal</span>
+      </div>
     </div>
 
+    <!-- Panel derecho -->
     <div style="display:flex;flex-direction:column;gap:12px;width:270px">
+
+      <!-- Eventos del día -->
       <div class="card card-p">
-        <div class="card-title" style="margin-bottom:10px">{{ selectedDay }} de {{ monthName.split(' ')[0] }}</div>
+        <div class="card-title" style="margin-bottom:10px">
+          {{ selectedDay }} de {{ monthName.split(' ')[0] }}
+        </div>
         @if (selectedEvents.length) {
           <div style="display:flex;flex-direction:column;gap:8px">
-            @for (e of selectedEvents; track e.title) {
-              <div class="event-item" [style.border-left-color]="e.color" [style.background]="e.color+'08'" style="cursor:pointer" (click)="openEvent(e)">
-                <div style="font-size:.64rem;font-weight:800;color:var(--tx3);text-transform:uppercase;margin-bottom:2px">{{ typeLabel(e.type) }}</div>
+            @for (e of selectedEvents; track e.title + e.time) {
+              <div class="event-item" [style.border-left-color]="e.color"
+                   [style.background]="e.color+'12'"
+                   [class.schedule-event]="e.isSchedule"
+                   style="cursor:pointer" (click)="openEvent(e)">
+                <div style="font-size:.62rem;font-weight:800;color:var(--tx3);text-transform:uppercase;margin-bottom:2px;display:flex;align-items:center;gap:4px">
+                  @if (e.isSchedule) { <span style="color:var(--guinda)">📅 HORARIO</span> }
+                  @else { {{ typeLabel(e.type) }} }
+                </div>
                 <div style="font-weight:700;font-size:.84rem;color:var(--tx1)">{{ e.title }}</div>
-                <div style="font-size:.74rem;color:var(--tx3);margin-top:2px">🕐 {{ e.time }}</div>
+                <div style="font-size:.74rem;color:var(--tx3);margin-top:2px">
+                  🕐 {{ e.time }}{{ e.endTime ? ' – ' + e.endTime : '' }}
+                </div>
+                @if (e.isSchedule && isScheduleActiveNow(e.raw)) {
+                  <button class="sc-enter-btn sc-enter-btn--teacher"
+                          (click)="$event.stopPropagation(); startClass(e.raw?.id)"
+                          style="margin-top:8px">
+                    🎓 Dar clase ahora
+                  </button>
+                }
               </div>
             }
           </div>
@@ -54,8 +87,9 @@
         <button class="btn btn-outline btn-block" style="margin-top:10px" (click)="openNewEvent()">➕ Agregar evento</button>
       </div>
 
+      <!-- Próximos eventos -->
       <div class="card card-p">
-        <div class="card-title" style="margin-bottom:10px">Próximos eventos</div>
+        <div class="card-title" style="margin-bottom:10px">Próximas clases</div>
         <div style="display:flex;flex-direction:column;gap:8px">
           @for (u of upcoming; track u.day) {
             <div class="upcoming-item">
@@ -72,13 +106,35 @@
         </div>
       </div>
 
+      <!-- Resumen del horario semanal -->
+      @if (schedules.length) {
+        <div class="card card-p">
+          <div class="card-title" style="margin-bottom:10px">Mi horario semanal</div>
+          <div style="display:flex;flex-direction:column;gap:6px">
+            @for (s of schedules; track s.id) {
+              <div style="display:flex;align-items:center;gap:8px;padding:6px 8px;background:var(--bg2);border-radius:8px;border-left:3px solid var(--guinda)">
+                <div style="font-size:.68rem;font-weight:900;color:var(--guinda);text-transform:uppercase;min-width:28px">
+                  {{ s.dayOfWeek?.substring(0,3) }}
+                </div>
+                <div style="flex:1">
+                  <div style="font-size:.78rem;font-weight:700;color:var(--tx1)">{{ s.subjectIcon ?? '📚' }} {{ s.subjectName }}</div>
+                  <div style="font-size:.68rem;color:var(--tx3)">{{ s.classroomName }} · {{ s.startTime?.substring(0,5) }}–{{ s.endTime?.substring(0,5) }}</div>
+                </div>
+              </div>
+            }
+          </div>
+        </div>
+      }
+
       <div class="card card-p" style="background:var(--guinda-lt);border-color:var(--guinda-border)">
         <div style="font-weight:800;font-size:.84rem;color:var(--guinda);margin-bottom:4px">🤖 Asistente de planeación</div>
-        <div style="font-size:.75rem;color:var(--tx2);margin-bottom:10px">El IA puede sugerirte actividades y fechas de evaluación óptimas para tu salón.</div>
+        <div style="font-size:.75rem;color:var(--tx2);margin-bottom:10px">El IA puede sugerirte actividades y fechas de evaluación óptimas.</div>
         <a routerLink="/teacher/ai-assistant" class="btn btn-primary btn-block">Abrir Asistente IA</a>
       </div>
     </div>
   </div>
+
+  } <!-- /if !loading -->
 </div>
 
 <!-- Modal nuevo evento -->
@@ -126,10 +182,14 @@
       <div class="modal-body">
         <div style="font-size:.84rem;color:var(--tx2);margin-bottom:16px">
           <div>📅 Día {{ selectedDay }} · {{ monthName }}</div>
-          <div>🕐 {{ selectedEvent.time }}</div>
+          <div>🕐 {{ selectedEvent.time }}{{ selectedEvent.endTime ? ' – ' + selectedEvent.endTime : '' }}</div>
           <div>🏷️ {{ typeLabel(selectedEvent.type) }}</div>
         </div>
-        <button class="btn btn-danger btn-block" (click)="deleteEvent(selectedEvent)">🗑️ Eliminar evento</button>
+        @if (!selectedEvent.isSchedule) {
+          <button class="btn btn-danger btn-block" (click)="deleteEvent(selectedEvent)">🗑️ Eliminar evento</button>
+        } @else {
+          <p style="font-size:.78rem;color:var(--tx3);text-align:center">Las clases del horario se administran desde el módulo Coordinador.</p>
+        }
       </div>
     </div>
   </div>

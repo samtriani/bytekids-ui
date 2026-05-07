@@ -1,0 +1,278 @@
+:host { display:block; height:100vh; overflow:hidden; }
+
+/* ── Splash screens ── */
+.aula-splash {
+  height: 100vh; display: flex; flex-direction: column;
+  align-items: center; justify-content: center;
+  gap: 16px; background: var(--bg1);
+  animation: fadeIn .3s ease;
+}
+.aula-splash--warn  { background: linear-gradient(135deg, #fff9f0, #fff); }
+.aula-splash--end   { background: linear-gradient(135deg, #f0fdf4, #fff); }
+.aula-splash--error { background: linear-gradient(135deg, #fff0f0, #fff); }
+
+.aula-splash-icon  { font-size: 4rem; }
+.aula-splash-title { font-size: 1.4rem; font-weight: 900; color: var(--tx1); }
+.aula-splash-sub   { font-size: .92rem; color: var(--tx2); text-align: center; max-width: 380px; line-height: 1.6; }
+
+.aula-splash-bar {
+  width: 200px; height: 4px; background: var(--border);
+  border-radius: 99px; overflow: hidden; margin-top: 8px;
+}
+.aula-splash-bar-fill {
+  height: 100%; width: 40%; background: var(--guinda);
+  border-radius: 99px;
+  animation: loadSlide 1.2s ease-in-out infinite alternate;
+}
+@keyframes loadSlide { from { margin-left: 0 } to { margin-left: 60% } }
+
+.btn-back {
+  margin-top: 8px; padding: 10px 24px; border-radius: 12px;
+  border: 2px solid var(--border); background: var(--bg2);
+  color: var(--tx1); font-weight: 700; cursor: pointer;
+  font-size: .9rem; transition: all .15s;
+  &:hover { border-color: var(--guinda); color: var(--guinda); background: var(--guinda-lt); }
+}
+
+/* ── Aula root ── */
+.aula-root {
+  height: 100vh; display: flex; flex-direction: column;
+  background: var(--bg1); overflow: hidden;
+  animation: fadeIn .25s ease;
+}
+
+/* ── Header ── */
+.aula-header {
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 0 24px; height: 68px; flex-shrink: 0;
+  background: linear-gradient(135deg, #1a0a12 0%, #2d0f20 100%);
+  border-bottom: 1px solid rgba(255,255,255,.06);
+  gap: 16px;
+}
+
+.aula-header-left  { display: flex; align-items: center; gap: 16px; }
+.aula-header-center { display: flex; flex-direction: column; align-items: center; gap: 4px; }
+.aula-header-right { display: flex; flex-direction: column; align-items: center; gap: 2px; }
+
+.aula-exit-btn {
+  display: flex; align-items: center; gap: 6px;
+  padding: 7px 14px; border-radius: 10px;
+  border: 1px solid rgba(255,255,255,.15);
+  background: rgba(255,255,255,.06); color: #fff;
+  font-size: .8rem; font-weight: 700; cursor: pointer;
+  transition: all .15s; white-space: nowrap;
+  &:hover { background: rgba(255,255,255,.12); border-color: rgba(255,255,255,.3); }
+}
+
+.aula-subject-info {
+  display: flex; align-items: center; gap: 10px;
+}
+.aula-subject-icon { font-size: 1.6rem; }
+.aula-subject-name { font-size: .95rem; font-weight: 800; color: #fff; }
+.aula-subject-meta { font-size: .72rem; color: rgba(255,255,255,.55); }
+
+.aula-live-badge {
+  display: flex; align-items: center; gap: 6px;
+  background: rgba(16,185,129,.2); border: 1px solid rgba(16,185,129,.35);
+  color: #6ee7b7; font-size: .7rem; font-weight: 900;
+  padding: 3px 10px; border-radius: 999px;
+  text-transform: uppercase; letter-spacing: .06em;
+}
+.aula-live-dot {
+  width: 6px; height: 6px; border-radius: 50%; background: #34d399;
+  animation: pulse 1.4s ease-in-out infinite;
+}
+.aula-teacher-online { font-size: .73rem; color: #6ee7b7; }
+.aula-teacher-waiting { font-size: .73rem; color: rgba(255,255,255,.45); }
+
+.aula-timer-ring {
+  position: relative; width: 48px; height: 48px;
+}
+.timer-svg { width: 100%; height: 100%; transform: rotate(-90deg); }
+.timer-bg   { fill: none; stroke: rgba(255,255,255,.1); stroke-width: 3; }
+.timer-fill {
+  fill: none; stroke: var(--subject-color, #7A1535); stroke-width: 3;
+  stroke-linecap: round; stroke-dasharray: 113;
+  transition: stroke-dashoffset .5s linear;
+}
+.timer-text {
+  position: absolute; inset: 0; display: flex;
+  align-items: center; justify-content: center;
+  font-size: .68rem; font-weight: 900; color: #fff;
+}
+.aula-timer-lbl { font-size: .6rem; color: rgba(255,255,255,.45); text-transform: uppercase; }
+
+/* ── Progress bar ── */
+.aula-progress-bar {
+  height: 3px; background: rgba(0,0,0,.1); flex-shrink: 0;
+}
+.aula-progress-fill { height: 100%; transition: width .5s linear; }
+
+/* ── Main layout ── */
+.aula-main {
+  flex: 1; display: grid; grid-template-columns: 300px 1fr;
+  gap: 0; overflow: hidden;
+}
+
+/* ── Left panel ── */
+.aula-left {
+  display: flex; flex-direction: column; gap: 0;
+  border-right: 1px solid var(--border); overflow-y: auto;
+  padding: 16px; gap: 12px;
+  background: var(--bg2, #f8f8f8);
+}
+
+.aula-card {
+  background: var(--bg-card, #fff);
+  border: 1px solid var(--border);
+  border-radius: 14px; overflow: hidden;
+}
+
+.aula-card-head {
+  display: flex; align-items: center; gap: 8px;
+  padding: 10px 14px; border-bottom: 1px solid var(--border);
+  background: var(--bg2);
+}
+.aula-card-icon { font-size: 1rem; }
+.aula-card-title { font-size: .82rem; font-weight: 800; color: var(--tx1); flex: 1; }
+.aula-badge {
+  background: var(--guinda); color: #fff;
+  font-size: .65rem; font-weight: 800;
+  padding: 2px 8px; border-radius: 999px;
+}
+
+.aula-info-grid { padding: 12px 14px; display: flex; flex-direction: column; gap: 8px; }
+.aula-info-row { display: flex; justify-content: space-between; align-items: center; }
+.aula-info-lbl { font-size: .73rem; color: var(--tx3); font-weight: 600; }
+.aula-info-val { font-size: .78rem; font-weight: 700; color: var(--tx1); text-align: right; }
+
+.aula-attend-list { padding: 8px; display: flex; flex-direction: column; gap: 4px; }
+.aula-attend-item {
+  display: flex; align-items: center; gap: 10px;
+  padding: 8px 10px; border-radius: 10px; background: var(--bg2);
+}
+.aula-attend-avatar {
+  width: 34px; height: 34px; border-radius: 10px;
+  display: flex; align-items: center; justify-content: center;
+  font-size: .8rem; font-weight: 900; flex-shrink: 0;
+}
+.aula-attend-name { font-size: .8rem; font-weight: 700; color: var(--tx1); }
+.aula-attend-time { font-size: .68rem; color: var(--tx3); }
+.aula-online-dot {
+  width: 8px; height: 8px; border-radius: 50%;
+  background: #10b981; margin-left: auto; flex-shrink: 0;
+  box-shadow: 0 0 0 2px rgba(16,185,129,.25);
+}
+.aula-attend-empty {
+  padding: 20px; text-align: center; color: var(--tx3);
+  display: flex; flex-direction: column; align-items: center; gap: 4px;
+  span { font-size: 1.6rem; }
+  p { font-size: .78rem; margin: 0; }
+}
+
+/* ── Chat panel ── */
+.aula-chat-panel {
+  display: flex; flex-direction: column; overflow: hidden;
+}
+
+.aula-chat-header {
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 12px 20px; border-bottom: 1px solid var(--border);
+  background: var(--bg-card, #fff); flex-shrink: 0;
+}
+.aula-chat-header-left { display: flex; align-items: center; gap: 10px; }
+.aula-bot-avatar {
+  width: 40px; height: 40px; border-radius: 12px;
+  background: linear-gradient(135deg, #1a0a12, #7A1535);
+  display: flex; align-items: center; justify-content: center;
+  font-size: 1.2rem; flex-shrink: 0;
+}
+.aula-bot-name { font-size: .9rem; font-weight: 800; color: var(--tx1); }
+.aula-bot-sub  { font-size: .72rem; color: var(--tx3); }
+.aula-bot-status {
+  display: flex; align-items: center; gap: 5px;
+  font-size: .72rem; color: #10b981; font-weight: 700;
+}
+
+.aula-chat-messages {
+  flex: 1; overflow-y: auto; padding: 16px 20px;
+  display: flex; flex-direction: column; gap: 12px;
+  background: var(--bg1);
+}
+
+.aula-msg {
+  display: flex; align-items: flex-end; gap: 8px;
+  animation: msgIn .2s ease;
+  &--user { flex-direction: row-reverse; }
+}
+@keyframes msgIn { from { opacity:0; transform:translateY(6px) } to { opacity:1; transform:none } }
+
+.aula-msg-avatar {
+  width: 30px; height: 30px; border-radius: 10px;
+  background: linear-gradient(135deg, #1a0a12, #7A1535);
+  display: flex; align-items: center; justify-content: center;
+  font-size: .9rem; flex-shrink: 0;
+  &--user {
+    background: var(--guinda); color: #fff;
+    font-size: .65rem; font-weight: 900;
+  }
+}
+
+.aula-msg-bubble {
+  max-width: 72%; padding: 10px 14px; border-radius: 16px;
+  font-size: .85rem; line-height: 1.55; word-break: break-word;
+  white-space: pre-wrap;
+
+  .aula-msg--bot & {
+    background: var(--bg-card, #fff);
+    border: 1px solid var(--border);
+    border-bottom-left-radius: 4px;
+    color: var(--tx1);
+  }
+  .aula-msg--user & {
+    background: var(--guinda);
+    color: #fff;
+    border-bottom-right-radius: 4px;
+  }
+}
+
+.aula-typing {
+  display: flex; gap: 4px; align-items: center; padding: 12px 16px;
+  span {
+    width: 7px; height: 7px; border-radius: 50%; background: var(--tx3);
+    animation: typeDot 1.2s ease-in-out infinite;
+    &:nth-child(2) { animation-delay: .2s; }
+    &:nth-child(3) { animation-delay: .4s; }
+  }
+}
+@keyframes typeDot { 0%,60%,100%{transform:translateY(0)} 30%{transform:translateY(-6px)} }
+
+.aula-chat-input {
+  display: flex; gap: 10px; padding: 12px 20px;
+  border-top: 1px solid var(--border);
+  background: var(--bg-card, #fff); flex-shrink: 0;
+}
+.aula-input {
+  flex: 1; border: 1.5px solid var(--border); border-radius: 12px;
+  padding: 10px 16px; font-size: .88rem; background: var(--bg2);
+  color: var(--tx1); transition: border-color .15s; font-family: 'Nunito', sans-serif;
+  &:focus { outline: none; border-color: var(--guinda); }
+  &:disabled { opacity: .5; }
+}
+.aula-send-btn {
+  width: 42px; height: 42px; border-radius: 12px; border: none;
+  color: #fff; font-size: 1.1rem; font-weight: 900;
+  cursor: pointer; display: flex; align-items: center; justify-content: center;
+  transition: opacity .15s, transform .1s; flex-shrink: 0;
+  &:hover:not(:disabled) { opacity: .85; transform: scale(1.05); }
+  &:disabled { opacity: .35; cursor: default; }
+}
+
+/* ── Responsive ── */
+@media (max-width: 900px) {
+  .aula-main { grid-template-columns: 1fr; grid-template-rows: auto 1fr; }
+  .aula-left { border-right: none; border-bottom: 1px solid var(--border); max-height: 200px; }
+}
+
+@keyframes fadeIn { from{opacity:0} to{opacity:1} }
+@keyframes pulse  { 0%,100%{opacity:1} 50%{opacity:.4} }

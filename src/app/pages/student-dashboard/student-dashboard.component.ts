@@ -24,12 +24,13 @@ export class StudentDashboardComponent implements OnInit, AfterViewInit {
 
   navItems: NavItem[] = [
     { label: 'Mi Dashboard',  icon: '🏠', route: '/student' },
-    { label: 'Mis Misiones',  icon: '🎯', route: '/student/missions', badge: 3 },
+    { label: 'Mis Misiones',  icon: '🎯', route: '/student/missions' },
     { label: 'Mi Progreso',   icon: '📈', route: '/student/progress' },
     { label: 'Logros',        icon: '🏆', route: '/student/achievements' },
     { label: 'Tutor IA',      icon: '🤖', route: '/student/ai-tutor', badge: '✨' },
     { label: 'Proyectos',     icon: '💻', route: '/student/projects' },
     // { label: 'Roblox Studio', icon: '🎮', route: '/student/roblox' },
+    { label: 'Horario',       icon: '📅', route: '/student/calendar' },
     { label: 'Comunidad',     icon: '👥', route: '/student/community' },
   ];
 
@@ -68,28 +69,39 @@ export class StudentDashboardComponent implements OnInit, AfterViewInit {
 
   ngOnInit() {
     forkJoin({
-      xp:       this.progressApi.getMyXp(),
-      streak:   this.progressApi.getMyStreak(),
-      subjects: this.progressApi.getMySubjects(),
-      missions: this.contentApi.getMyFeed(),
-      subs:     this.submissionApi.getMySubmissions(),
-      earned:   this.achievementApi.getMyAchievements(),
-      defs:     this.achievementApi.getAll(),
+      xp:        this.progressApi.getMyXp(),
+      streak:    this.progressApi.getMyStreak(),
+      subjects:  this.progressApi.getMySubjects(),
+      xpHistory: this.progressApi.getMyXpHistory(),
+      missions:  this.contentApi.getMyFeed(),
+      subs:      this.submissionApi.getMySubmissions(),
+      earned:    this.achievementApi.getMyAchievements(),
+      defs:      this.achievementApi.getAll(),
     }).subscribe({
-      next: ({ xp, streak, subjects, missions, subs, earned, defs }) => {
-        // Stats
+      next: ({ xp, streak, subjects, xpHistory, missions, subs, earned, defs }) => {
         const approvedIds = new Set(subs.filter((s:any) => s.status === 'aprobado').map((s:any) => s.contentId));
+        const pending     = missions.filter((m:any) => !approvedIds.has(m.id)).length;
+
         this.totalXpNum = xp;
-        this.stats[0].value   = xp.toLocaleString();
-        this.stats[0].change  = '+XP acumulado';
-        this.stats[1].value   = String(missions.length);
-        this.stats[1].change  = `${approvedIds.size} completadas`;
-        this.stats[2].value   = String(earned.length);
-        this.stats[2].change  = `de ${defs.length} posibles`;
-        this.stats[3].value   = `${streak}d`;
+        this.stats[0].value  = xp.toLocaleString();
+        this.stats[0].change = `Nivel ${this.level} · ${this.levelName}`;
+        this.stats[1].value  = String(missions.length);
+        this.stats[1].change = `${approvedIds.size} completadas`;
+        this.stats[2].value  = String(earned.length);
+        this.stats[2].change = `de ${defs.length} posibles`;
+        this.stats[3].value  = `${streak}d`;
+        this.stats[3].change = streak > 0 ? '¡Sigue así!' : 'Empieza hoy';
+
+        // Badge real en misiones
+        if (pending > 0) {
+          this.navItems = this.navItems.map(n =>
+            n.route === '/student/missions' ? { ...n, badge: pending } : n
+          );
+        }
 
         // Misiones recientes (primeras 5)
         this.missions = missions.slice(0, 5).map((c: any) => ({
+          id:       c.id,
           title:    c.title,
           subject:  c.subjectName ?? '',
           xp:       c.xpReward,
@@ -105,13 +117,20 @@ export class StudentDashboardComponent implements OnInit, AfterViewInit {
           title: d.title, icon: d.icon ?? '🏆', earned: earnedIds.has(d.id)
         }));
 
-        // Actualiza gráficas con datos reales
-        if (this.xpChartInst && subjects.length) {
-          const labels = subjects.map((s:any) => s.subject?.name ?? '');
-          const data   = subjects.map((s:any) => s.xpInSubject ?? 0);
-          this.skillsChartInst.data.labels = labels;
-          this.skillsChartInst.data.datasets[0].data = data;
+        // Gráfica de habilidades por materia
+        if (this.skillsChartInst && subjects.length) {
+          this.skillsChartInst.data.labels   = subjects.map((s:any) => s.subject?.name ?? '');
+          this.skillsChartInst.data.datasets[0].data = subjects.map((s:any) => s.xpInSubject ?? 0);
           this.skillsChartInst.update();
+        }
+
+        // Gráfica XP acumulado (historial real)
+        if (this.xpChartInst && xpHistory.length) {
+          const history = xpHistory.slice(0, 8).reverse();
+          let acc = 0;
+          this.xpChartInst.data.labels = history.map((_:any, i:number) => `Sem ${i + 1}`);
+          this.xpChartInst.data.datasets[0].data = history.map((e:any) => { acc += e.amount ?? 0; return acc; });
+          this.xpChartInst.update();
         }
       }
     });
