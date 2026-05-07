@@ -188,7 +188,24 @@
   &:last-child { border-bottom: none; }
 }
 
-.tcs-card-head { margin-bottom: 8px; }
+.tcs-card-head {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 8px;
+  margin-bottom: 8px;
+}
+
+.tcs-stu-badge {
+  flex-shrink: 0;
+  background: var(--guinda, #7A1535);
+  color: #fff;
+  font-size: .7rem;
+  font-weight: 800;
+  padding: 3px 9px;
+  border-radius: 999px;
+  white-space: nowrap;
+}
 
 .tcs-name {
   font-size: .9rem;
@@ -249,6 +266,25 @@
   color: var(--tx3);
   font-style: italic;
   padding: 4px 0 2px;
+}
+
+.tcs-students {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px;
+  margin-top: 8px;
+  padding-top: 8px;
+  border-top: 1px solid var(--border);
+}
+
+.tcs-stu-chip {
+  background: var(--bg2);
+  border: 1px solid var(--border);
+  border-radius: 999px;
+  font-size: .68rem;
+  font-weight: 600;
+  color: var(--tx2);
+  padding: 2px 8px;
 }
 
 @media (max-width: 1100px) {

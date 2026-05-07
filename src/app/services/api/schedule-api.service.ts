@@ -24,6 +24,8 @@ export class ScheduleApiService {
     dayOfWeek: string;
     startTime: string;
     endTime: string;
+    startDate: string;
+    endDate: string;
   }): Observable<any> {
     return this.http.post<any>(BASE, req).pipe(map(r => r.data));
   }

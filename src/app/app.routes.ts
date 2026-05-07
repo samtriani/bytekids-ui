@@ -14,6 +14,9 @@ import { ProjectsComponent } from './pages/student/projects/projects.component';
 import { RobloxComponent } from './pages/student/roblox/roblox.component';
 import { CommunityComponent } from './pages/student/community/community.component';
 import { WorkspaceComponent } from './pages/student/workspace/workspace.component';
+import { StudentCalendarComponent } from './pages/student/calendar/calendar.component';
+import { StudentClassroomComponent } from './pages/student/classroom/classroom.component';
+import { TeacherClassroomComponent } from './pages/teacher/classroom/classroom.component';
 
 import { TeacherDashboardComponent } from './pages/teacher-dashboard/teacher-dashboard.component';
 import { ClassroomsComponent as TClassrooms } from './pages/teacher/classrooms/classrooms.component';
@@ -69,6 +72,8 @@ export const routes: Routes = [
   { path: 'student/projects', component: ProjectsComponent, canActivate: STUDENT },
   { path: 'student/roblox', component: RobloxComponent, canActivate: STUDENT },
   { path: 'student/community', component: CommunityComponent, canActivate: STUDENT },
+  { path: 'student/calendar',            component: StudentCalendarComponent,  canActivate: STUDENT },
+  { path: 'student/classroom/:scheduleId', component: StudentClassroomComponent, canActivate: STUDENT },
 
   { path: 'teacher', component: TeacherDashboardComponent, canActivate: TEACHER },
   { path: 'teacher/classrooms', component: TClassrooms, canActivate: TEACHER },
@@ -76,7 +81,8 @@ export const routes: Routes = [
   { path: 'teacher/create', component: CreateContentComponent, canActivate: TEACHER },
   { path: 'teacher/ai-assistant', component: TAiAssist, canActivate: TEACHER },
   { path: 'teacher/reports', component: ReportsComponent, canActivate: TEACHER },
-  { path: 'teacher/calendar', component: TCalendar, canActivate: TEACHER },
+  { path: 'teacher/calendar',              component: TCalendar,              canActivate: TEACHER },
+  { path: 'teacher/classroom/:scheduleId', component: TeacherClassroomComponent, canActivate: TEACHER },
   { path: 'teacher/messages', component: TMessages, canActivate: TEACHER },
 
   { path: 'parent', component: ParentDashboardComponent, canActivate: PARENT },

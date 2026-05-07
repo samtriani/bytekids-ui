@@ -1,4 +1,4 @@
-import { Component, OnInit } from '@angular/core';
+﻿import { Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { RouterLink, Router } from '@angular/router';
 import { ShellComponent, NavItem } from '../../../shared/shell/shell.component';
@@ -24,6 +24,7 @@ const NAV: NavItem[] = [
   { label:'Tutor IA',      icon:'🤖', route:'/student/ai-tutor', badge:'✨' },
   { label:'Proyectos',     icon:'💻', route:'/student/projects' },
   // { label:'Roblox Studio', icon:'🎮', route:'/student/roblox' },
+  { label:'Horario',       icon:'📅', route:'/student/calendar' },
   { label:'Comunidad',     icon:'👥', route:'/student/community' },
 ];
 
@@ -124,3 +125,4 @@ export class ProjectsComponent implements OnInit {
     });
   }
 }
+

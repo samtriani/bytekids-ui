@@ -147,7 +147,12 @@
                         <span style="font-size:.72rem;color:var(--tx3)">{{ room.schoolYear }}</span>
                         <span style="font-size:.74rem;font-weight:800;color:var(--guinda)">{{ room.gradeLevel }}° {{ room.section }}</span>
                       </div>
-                      <button class="btn btn-outline btn-sm" style="flex-shrink:0" (click)="removeTeacherFromClassroom(room.id)" [disabled]="saving">Quitar</button>
+                      <div style="display:flex;align-items:center;gap:6px;flex-shrink:0">
+                        <span style="background:var(--guinda);color:#fff;font-size:.68rem;font-weight:800;padding:2px 8px;border-radius:999px">
+                          👨‍🎓 {{ studentsForTeacherRoom(room.id).length }}
+                        </span>
+                        <button class="btn btn-outline btn-sm" (click)="removeTeacherFromClassroom(room.id)" [disabled]="saving">Quitar</button>
+                      </div>
                     </div>
                     @if (teacherSchedulesByRoom(room.id).length) {
                       <div class="sched-mini">
@@ -157,6 +162,15 @@
                             <span class="sched-mini-time">{{ s.startTime }}–{{ s.endTime }}</span>
                             <span class="sched-mini-sub">{{ s.subjectIcon ?? '📚' }} {{ s.subjectName }}</span>
                           </div>
+                        }
+                      </div>
+                    }
+                    @if (studentsForTeacherRoom(room.id).length) {
+                      <div style="display:flex;flex-wrap:wrap;gap:4px;padding-top:6px;border-top:1px solid var(--border)">
+                        @for (s of studentsForTeacherRoom(room.id); track s.id) {
+                          <span style="background:var(--bg2);border:1px solid var(--border);border-radius:999px;font-size:.66rem;font-weight:600;color:var(--tx2);padding:2px 8px">
+                            {{ s.displayName }}
+                          </span>
                         }
                       </div>
                     }

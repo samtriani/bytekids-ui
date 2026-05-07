@@ -1,0 +1,158 @@
+@if (loading || joining) {
+  <div class="aula-splash">
+    <div class="aula-splash-icon">{{ joining ? '🚪' : '⏳' }}</div>
+    <div class="aula-splash-title">{{ joining ? 'Entrando al aula…' : 'Verificando horario…' }}</div>
+    <div class="aula-splash-bar"><div class="aula-splash-bar-fill"></div></div>
+  </div>
+} @else if (error === 'inactive') {
+  <div class="aula-splash aula-splash--warn">
+    <div class="aula-splash-icon">🕐</div>
+    <div class="aula-splash-title">La clase aún no ha comenzado</div>
+    <div class="aula-splash-sub">
+      Esta clase está programada para
+      <strong>{{ session?.dayOfWeek | titlecase }}</strong>
+      de <strong>{{ session?.startTime?.substring(0,5) }}</strong>
+      a <strong>{{ session?.endTime?.substring(0,5) }}</strong>.
+    </div>
+    <button class="btn-back" (click)="exitClass()">← Volver al horario</button>
+  </div>
+} @else if (error === 'ended') {
+  <div class="aula-splash aula-splash--end">
+    <div class="aula-splash-icon">🎉</div>
+    <div class="aula-splash-title">¡Clase terminada!</div>
+    <div class="aula-splash-sub">Tu asistencia fue registrada. ¡Buen trabajo hoy!</div>
+    <button class="btn-back" (click)="exitClass()">← Volver al horario</button>
+  </div>
+} @else if (error) {
+  <div class="aula-splash aula-splash--error">
+    <div class="aula-splash-icon">❌</div>
+    <div class="aula-splash-title">{{ error }}</div>
+    <button class="btn-back" (click)="exitClass()">← Volver</button>
+  </div>
+} @else if (session?.active) {
+  <div class="aula-root">
+    <div class="aula-header" [style.--subject-color]="subjectColor">
+      <div class="aula-header-left">
+        <button class="aula-exit-btn" (click)="exitClass()">← Salir de clase</button>
+        <div class="aula-subject-info">
+          <span class="aula-subject-icon">{{ session.subjectIcon }}</span>
+          <div>
+            <div class="aula-subject-name">{{ session.subjectName }}</div>
+            <div class="aula-subject-meta">{{ session.classroomName }}</div>
+          </div>
+        </div>
+      </div>
+      <div class="aula-header-center">
+        <div class="aula-live-badge"><span class="aula-live-dot"></span>EN VIVO</div>
+        <div class="aula-teacher-info">
+          @if (teacherOnline) {
+            <span class="aula-teacher-online">👩‍🏫 {{ session.teacherName }} · conectado</span>
+          } @else {
+            <span class="aula-teacher-waiting">👩‍🏫 {{ session.teacherName }} · esperando…</span>
+          }
+        </div>
+      </div>
+      <div class="aula-header-right">
+        <div class="aula-timer-ring">
+          <svg viewBox="0 0 44 44" class="timer-svg">
+            <circle cx="22" cy="22" r="18" class="timer-bg"/>
+            <circle cx="22" cy="22" r="18" class="timer-fill" [style.stroke-dashoffset]="113 - (113 * progressPct / 100)"/>
+          </svg>
+          <div class="timer-text">{{ timeRemaining }}</div>
+        </div>
+        <div class="aula-timer-lbl">restante</div>
+      </div>
+    </div>
+
+    <div class="aula-progress-bar">
+      <div class="aula-progress-fill" [style.width]="progressPct + '%'" [style.background]="subjectColor"></div>
+    </div>
+
+    <div class="aula-main">
+      <div class="aula-left">
+        <div class="aula-card aula-info">
+          <div class="aula-card-head" [style.background]="subjectColor + '18'" [style.border-color]="subjectColor + '40'">
+            <span class="aula-card-icon">📋</span>
+            <span class="aula-card-title">Sesión de hoy</span>
+          </div>
+          <div class="aula-info-grid">
+            <div class="aula-info-row">
+              <span class="aula-info-lbl">Horario</span>
+              <span class="aula-info-val">{{ session.startTime?.substring(0,5) }} – {{ session.endTime?.substring(0,5) }}</span>
+            </div>
+            <div class="aula-info-row">
+              <span class="aula-info-lbl">Materia</span>
+              <span class="aula-info-val">{{ session.subjectIcon }} {{ session.subjectName }}</span>
+            </div>
+            <div class="aula-info-row">
+              <span class="aula-info-lbl">Maestro/a</span>
+              <span class="aula-info-val">{{ session.teacherName }}</span>
+            </div>
+          </div>
+        </div>
+
+        <div class="aula-card aula-attend">
+          <div class="aula-card-head">
+            <span class="aula-card-icon">👥</span>
+            <span class="aula-card-title">Compañeros en clase</span>
+            <span class="aula-badge">{{ classmates.length }}</span>
+          </div>
+          @if (classmates.length) {
+            <div class="aula-attend-list">
+              @for (a of classmates; track a.userId) {
+                <div class="aula-attend-item">
+                  <div class="aula-attend-avatar" [style.background]="subjectColor + '30'" [style.color]="subjectColor">{{ a.initials }}</div>
+                  <div>
+                    <div class="aula-attend-name">{{ a.displayName }}</div>
+                    <div class="aula-attend-time">Entró {{ a.joinedAt | date:'HH:mm' }}</div>
+                  </div>
+                  <div class="aula-online-dot"></div>
+                </div>
+              }
+            </div>
+          } @else {
+            <div class="aula-attend-empty"><span>😴</span><p>Aún no hay compañeros conectados</p></div>
+          }
+        </div>
+      </div>
+
+      <div class="aula-chat-panel">
+        <div class="aula-chat-header">
+          <div class="aula-chat-header-left">
+            <div class="aula-bot-avatar">🤖</div>
+            <div>
+              <div class="aula-bot-name">ByteBot</div>
+              <div class="aula-bot-sub">Asistente de {{ session.subjectName }}</div>
+            </div>
+          </div>
+          <div class="aula-bot-status"><span class="aula-online-dot"></span> Activo</div>
+        </div>
+
+        <div class="aula-chat-messages">
+          @for (msg of messages; track $index) {
+            <div class="aula-msg" [class.aula-msg--bot]="msg.role === 'assistant'" [class.aula-msg--user]="msg.role === 'user'">
+              @if (msg.role === 'assistant') { <div class="aula-msg-avatar">🤖</div> }
+              <div class="aula-msg-bubble" [innerHTML]="msg.content.replace('\n','<br>')"></div>
+              @if (msg.role === 'user') { <div class="aula-msg-avatar aula-msg-avatar--user">{{ studentInitials }}</div> }
+            </div>
+          }
+          @if (botTyping) {
+            <div class="aula-msg aula-msg--bot">
+              <div class="aula-msg-avatar">🤖</div>
+              <div class="aula-msg-bubble aula-typing"><span></span><span></span><span></span></div>
+            </div>
+          }
+          <div #chatEnd></div>
+        </div>
+
+        <div class="aula-chat-input">
+          <input class="aula-input" [(ngModel)]="chatInput" (keyup.enter)="send()"
+                 [disabled]="botTyping" [placeholder]="'Pregunta sobre ' + session.subjectName + '…'">
+          <button class="aula-send-btn" (click)="send()"
+                  [disabled]="botTyping || !chatInput.trim()"
+                  [style.background]="subjectColor">↑</button>
+        </div>
+      </div>
+    </div>
+  </div>
+}

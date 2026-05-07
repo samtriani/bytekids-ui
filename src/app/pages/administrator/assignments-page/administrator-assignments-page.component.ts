@@ -43,7 +43,8 @@ export class AdministratorAssignmentsPageComponent implements OnInit {
   // Horario
   schedules: any[] = [];
   readonly DAYS = ['lunes','martes','miercoles','jueves','viernes','sabado'];
-  scheduleForm = { subjectId: '', teacherId: '', dayOfWeek: 'lunes', startTime: '08:00', endTime: '09:00' };
+  scheduleForm = { subjectId: '', teacherId: '', dayOfWeek: 'lunes', startTime: '08:00', endTime: '09:00', startDate: '', endDate: '' };
+  today = new Date().toISOString().split('T')[0];
 
   constructor(
     private auth: AuthService,
@@ -161,7 +162,7 @@ export class AdministratorAssignmentsPageComponent implements OnInit {
 
   addSchedule() {
     const f = this.scheduleForm;
-    if (!f.subjectId || !f.teacherId || !f.dayOfWeek || !f.startTime || !f.endTime) return;
+    if (!f.subjectId || !f.teacherId || !f.dayOfWeek || !f.startTime || !f.endTime || !f.startDate || !f.endDate) return;
     this.saving = true;
     this.scheduleApi.create({
       classroomId: this.selectedClassroom.id,
@@ -170,10 +171,12 @@ export class AdministratorAssignmentsPageComponent implements OnInit {
       dayOfWeek:   f.dayOfWeek,
       startTime:   f.startTime,
       endTime:     f.endTime,
+      startDate:   f.startDate,
+      endDate:     f.endDate,
     }).subscribe({
       next: entry => {
         this.schedules = [...this.schedules, entry];
-        this.scheduleForm = { subjectId: '', teacherId: '', dayOfWeek: 'lunes', startTime: '08:00', endTime: '09:00' };
+        this.scheduleForm = { subjectId: '', teacherId: '', dayOfWeek: 'lunes', startTime: '08:00', endTime: '09:00', startDate: '', endDate: '' };
         this.saving = false;
         this.showToast('Horario agregado');
       },
@@ -216,11 +219,27 @@ export class AdministratorAssignmentsPageComponent implements OnInit {
     });
   }
 
+  // ── Modal de confirmación ──────────────────────────────────────────
+  confirmModal: { open: boolean; title: string; body: string; onConfirm: () => void } = {
+    open: false, title: '', body: '', onConfirm: () => {}
+  };
+
+  openConfirm(title: string, body: string, onConfirm: () => void) {
+    this.confirmModal = { open: true, title, body, onConfirm };
+  }
+
+  closeConfirm() { this.confirmModal.open = false; }
+
+  runConfirm() { this.confirmModal.onConfirm(); this.closeConfirm(); }
+
   deactivateClassroom(classroomId: string, name: string) {
-    if (!confirm(`¿Dar de baja el salón "${name}"? Quedará inactivo.`)) return;
-    this.run(
-      this.administratorApi.deactivateClassroom(classroomId),
-      `Salón "${name}" dado de baja`,
+    this.openConfirm(
+      `Dar de baja salón`,
+      `¿Estás seguro de dar de baja el salón <strong>"${name}"</strong>? Quedará inactivo y no aparecerá en las vistas activas.`,
+      () => this.run(
+        this.administratorApi.deactivateClassroom(classroomId),
+        `Salón "${name}" dado de baja`
+      )
     );
   }
 

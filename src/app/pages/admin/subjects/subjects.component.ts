@@ -6,6 +6,7 @@ import { ShellComponent, NavItem } from '../../../shared/shell/shell.component';
 import { SubjectService } from '../../../services/api/subject-api.service';
 import { ClassroomApiService } from '../../../services/api/classroom-api.service';
 import { ContentApiService } from '../../../services/api/content-api.service';
+import { ProgressApiService } from '../../../services/api/progress-api.service';
 import { AuthService } from '../../../services/auth.service';
 import { forkJoin, of } from 'rxjs';
 import { catchError } from 'rxjs/operators';
@@ -47,6 +48,7 @@ export class SubjectsComponent implements OnInit {
     private subjectSvc:   SubjectService,
     private classroomApi: ClassroomApiService,
     private contentApi:   ContentApiService,
+    private progressApi:  ProgressApiService,
     private auth:         AuthService
   ) {
     const u = this.auth.getUser();
@@ -96,19 +98,32 @@ export class SubjectsComponent implements OnInit {
             if (name) missionsByName[name] = (missionsByName[name] ?? 0) + 1;
           });
 
-          const totalStudents = Math.max(1, new Set(
-            (clsStudents as any[][]).flat().map((s: any) => s.id || s._id)
-          ).size);
+          // Collect all unique student IDs across every subject
+          const allStudentIds = [...new Set(
+            Object.values(subMap).flatMap(info => [...info.studentIds])
+          )] as string[];
 
-          this.subjects = subjects.map((sub: any) => {
-            const info     = subMap[sub.id] ?? { cls: [], studentIds: new Set() };
-            const students = info.studentIds.size;
-            const eng      = Math.round((students / totalStudents) * 100);
-            const missions = missionsByName[sub.name] ?? 0;
-            return { ...sub, desc: sub.description ?? '', eng, students, missions, cls: info.cls };
-          }).sort((a: any, b: any) => b.eng - a.eng);
+          const xpObs$ = allStudentIds.length
+            ? forkJoin(allStudentIds.map(id =>
+                this.progressApi.getStudentXp(id).pipe(catchError(() => of(0)))
+              ))
+            : of([] as number[]);
 
-          this.loading = false;
+          xpObs$.subscribe(xpValues => {
+            const xpById: Record<string, number> = {};
+            allStudentIds.forEach((id, i) => { xpById[id] = (xpValues as number[])[i] ?? 0; });
+
+            this.subjects = subjects.map((sub: any) => {
+              const info     = subMap[sub.id] ?? { cls: [], studentIds: new Set() };
+              const students = info.studentIds.size;
+              const xps      = [...info.studentIds].map(id => xpById[id] ?? 0);
+              const eng      = xps.length ? avgArr(xps.map(xpToPct)) : 0;
+              const missions = missionsByName[sub.name] ?? 0;
+              return { ...sub, desc: sub.description ?? '', eng, students, missions, cls: info.cls };
+            }).sort((a: any, b: any) => b.eng - a.eng);
+
+            this.loading = false;
+          });
         });
       },
       error: () => { this.loading = false; }
@@ -131,4 +146,10 @@ export class SubjectsComponent implements OnInit {
 
   showToast(msg: string) { this.toast = msg; setTimeout(() => this.toast = '', 3500); }
   ec(v: number){ return v >= 60 ? 'var(--ok)' : v >= 30 ? 'var(--guinda)' : 'var(--tx3)'; }
+}
+
+function xpToPct(xp: number): number { return Math.min(100, Math.round(xp / 15)); }
+function avgArr(arr: number[]): number {
+  if (!arr.length) return 0;
+  return Math.round(arr.reduce((a, b) => a + b, 0) / arr.length);
 }

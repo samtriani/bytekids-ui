@@ -8,8 +8,8 @@
   <div class="g4 mb14">
     <div class="kpi"><div class="kpi-ico">📚</div><div><div class="kpi-val">{{ subjects.length }}</div><div class="kpi-lbl">Materias activas</div></div></div>
     <div class="kpi gold"><div class="kpi-ico">🎯</div><div><div class="kpi-val">{{ loading ? '—' : totalMissions }}</div><div class="kpi-lbl">Misiones creadas</div></div></div>
-    <div class="kpi green"><div class="kpi-ico">📊</div><div><div class="kpi-val">{{ loading ? '—' : avgEng + '%' }}</div><div class="kpi-lbl">Engagement prom.</div></div></div>
-    <div class="kpi"><div class="kpi-ico">🏆</div><div><div class="kpi-val" style="font-size:.85rem">{{ loading ? '—' : topSubject }}</div><div class="kpi-lbl">Mayor alcance</div></div></div>
+    <div class="kpi green"><div class="kpi-ico">📊</div><div><div class="kpi-val">{{ loading ? '—' : avgEng + '%' }}</div><div class="kpi-lbl">Progreso prom.</div></div></div>
+    <div class="kpi"><div class="kpi-ico">🏆</div><div><div class="kpi-val" style="font-size:.85rem">{{ loading ? '—' : topSubject }}</div><div class="kpi-lbl">Mayor progreso</div></div></div>
   </div>
 
   @if (loading) {

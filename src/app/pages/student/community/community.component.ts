@@ -1,4 +1,4 @@
-import { Component, OnInit } from '@angular/core';
+﻿import { Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { RouterLink } from '@angular/router';
@@ -14,6 +14,7 @@ const NAV: NavItem[] = [
   { label:'Tutor IA',      icon:'🤖', route:'/student/ai-tutor', badge:'✨' },
   { label:'Proyectos',     icon:'💻', route:'/student/projects' },
   // { label:'Roblox Studio', icon:'🎮', route:'/student/roblox' },
+  { label:'Horario',       icon:'📅', route:'/student/calendar' },
   { label:'Comunidad',     icon:'👥', route:'/student/community' },
 ];
 
@@ -84,3 +85,4 @@ export class CommunityComponent implements OnInit {
   share(post: any): void { this.showToast(`¡Link de "${post.title}" copiado! 🔗`); }
   showToast(msg: string): void { this.toast = msg; setTimeout(() => this.toast = '', 3000); }
 }
+
