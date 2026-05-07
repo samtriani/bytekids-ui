@@ -23,8 +23,9 @@ export class StudentClassroomComponent implements OnInit, OnDestroy, AfterViewCh
   joining      = false;
   error        = '';
 
-  attendance:   any[]  = [];
-  messages:     ChatMessage[] = [];
+  attendance:    any[]  = [];
+  activeMission: any   = null;
+  messages:      ChatMessage[] = [];
   chatInput     = '';
   botTyping     = false;
   scrollNeeded  = false;
@@ -78,8 +79,8 @@ export class StudentClassroomComponent implements OnInit, OnDestroy, AfterViewCh
         this.joining = false;
         this.initTimer(data);
         this.initBot(data);
-        this.pollAttendance();
-        this.attendanceRef = setInterval(() => this.pollAttendance(), 20000);
+        this.pollAll();
+        this.attendanceRef = setInterval(() => this.pollAll(), 8000);
       });
     });
   }
@@ -120,9 +121,22 @@ export class StudentClassroomComponent implements OnInit, OnDestroy, AfterViewCh
     }];
   }
 
-  private pollAttendance() {
+  private pollAll() {
     this.sessionApi.getAttendance(this.scheduleId).pipe(catchError(() => of([]))).subscribe(list => {
       this.attendance = list;
+    });
+    this.sessionApi.getMission(this.scheduleId).pipe(catchError(() => of(null))).subscribe(m => {
+      const wasNull = !this.activeMission;
+      this.activeMission = m;
+      // Notifica al alumno cuando el maestro lanza una misión nueva
+      if (wasNull && m) {
+        this.messages.push({
+          role: 'assistant',
+          content: `🎯 ¡Tu maestro acaba de lanzar la misión del día!\n\n**${m.title}** · +${m.xpReward} XP\n\nHaz clic en "Ir a la misión" cuando estés listo. ¡Tú puedes! 💪`,
+          timestamp: new Date(),
+        });
+        this.scrollNeeded = true;
+      }
     });
   }
 
@@ -148,6 +162,11 @@ export class StudentClassroomComponent implements OnInit, OnDestroy, AfterViewCh
       this.messages.push({ role: 'assistant', content: 'Lo siento, tuve un problema. ¡Intenta de nuevo! 😅', timestamp: new Date() });
       this.botTyping = false;
     });
+  }
+
+  goToMission() {
+    if (!this.activeMission?.contentId) return;
+    this.router.navigate(['/student/missions', this.activeMission.contentId]);
   }
 
   exitClass() {

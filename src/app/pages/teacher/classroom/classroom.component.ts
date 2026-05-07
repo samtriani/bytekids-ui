@@ -4,6 +4,7 @@ import { FormsModule } from '@angular/forms';
 import { ActivatedRoute, Router } from '@angular/router';
 import { SessionApiService } from '../../../services/api/session-api.service';
 import { ClassroomApiService } from '../../../services/api/classroom-api.service';
+import { ContentApiService } from '../../../services/api/content-api.service';
 import { AiTutorService, ChatMessage } from '../../../services/ai-tutor.service';
 import { AuthService } from '../../../services/auth.service';
 import { catchError, of, forkJoin } from 'rxjs';
@@ -26,6 +27,10 @@ export class TeacherClassroomComponent implements OnInit, OnDestroy, AfterViewCh
 
   enrolledStudents: any[] = [];
   attendance:       any[] = [];
+  availableContent: any[] = [];
+  selectedContentId = '';
+  activeMission: any = null;
+  launchingMission  = false;
   messages:   ChatMessage[] = [];
   chatInput   = '';
   botTyping   = false;
@@ -64,6 +69,7 @@ export class TeacherClassroomComponent implements OnInit, OnDestroy, AfterViewCh
     private router:       Router,
     private sessionApi:   SessionApiService,
     private classroomApi: ClassroomApiService,
+    private contentApi:   ContentApiService,
     private aiService:    AiTutorService,
     private auth:         AuthService,
   ) {}
@@ -85,13 +91,18 @@ export class TeacherClassroomComponent implements OnInit, OnDestroy, AfterViewCh
       forkJoin({
         join:     this.sessionApi.join(this.scheduleId).pipe(catchError(() => of(null))),
         students: this.classroomApi.getStudents(data.classroomId ?? '').pipe(catchError(() => of([]))),
-      }).subscribe(({ students }) => {
-        this.enrolledStudents = students;
+        content:  this.contentApi.getAll().pipe(catchError(() => of([]))),
+        mission:  this.sessionApi.getMission(this.scheduleId).pipe(catchError(() => of(null))),
+      }).subscribe(({ students, content, mission }) => {
+        this.enrolledStudents  = students;
+        this.availableContent  = content.filter((c: any) =>
+          ['mision','tarea','quiz','proyecto'].includes(c.type));
+        this.activeMission     = mission;
         this.joining = false;
         this.initTimer(data);
         this.initBot(data);
         this.pollAttendance();
-        this.attendanceRef = setInterval(() => this.pollAttendance(), 15000);
+        this.attendanceRef = setInterval(() => this.pollAttendance(), 8000);
       });
     });
   }
@@ -135,6 +146,29 @@ export class TeacherClassroomComponent implements OnInit, OnDestroy, AfterViewCh
     this.sessionApi.getAttendance(this.scheduleId).pipe(catchError(() => of([]))).subscribe(list => {
       this.attendance = list;
     });
+  }
+
+  launchMission() {
+    if (!this.selectedContentId || this.launchingMission) return;
+    this.launchingMission = true;
+    this.sessionApi.launchMission(this.scheduleId, this.selectedContentId)
+      .subscribe({
+        next: mission => {
+          this.activeMission     = mission;
+          this.launchingMission  = false;
+          this.selectedContentId = '';
+        },
+        error: (e: any) => {
+          this.launchingMission = false;
+          // Muestra el error en el chat como mensaje del bot
+          this.messages.push({
+            role: 'assistant',
+            content: `❌ No se pudo lanzar la misión: ${e?.error?.message ?? 'Error desconocido'}`,
+            timestamp: new Date(),
+          });
+          this.scrollNeeded = true;
+        }
+      });
   }
 
   send() {

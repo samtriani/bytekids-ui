@@ -91,6 +91,28 @@
           </div>
         </div>
 
+        <!-- Misión del día -->
+        @if (activeMission) {
+          <div class="aula-card aula-mission-card">
+            <div class="aula-card-head" style="background:rgba(124,58,237,.1);border-color:rgba(124,58,237,.25)">
+              <span class="aula-card-icon">🎯</span>
+              <span class="aula-card-title">Misión del día</span>
+              <span class="aula-badge" style="background:#7C3AED;animation:pulse 1.4s ease-in-out infinite">Nueva</span>
+            </div>
+            <div class="aula-mission-body">
+              <div class="aula-mission-icon-big">{{ activeMission.subjectIcon }}</div>
+              <div class="aula-mission-title">{{ activeMission.title }}</div>
+              <div class="aula-mission-meta">
+                <span class="aula-mission-xp">⭐ +{{ activeMission.xpReward }} XP</span>
+                <span class="aula-mission-diff">{{ activeMission.difficulty }}</span>
+              </div>
+              <button class="aula-go-mission-btn" (click)="goToMission()">
+                🚀 Ir a la misión
+              </button>
+            </div>
+          </div>
+        }
+
         <div class="aula-card aula-attend">
           <div class="aula-card-head">
             <span class="aula-card-icon">👥</span>

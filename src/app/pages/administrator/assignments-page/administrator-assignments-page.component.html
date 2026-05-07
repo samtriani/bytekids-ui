@@ -196,7 +196,10 @@
                       <div class="sched-entry">
                         <div class="sched-entry-header">
                           <div class="sched-time">{{ e.startTime }} – {{ e.endTime }}</div>
-                          <button class="btn-baja" (click)="removeSchedule(e.id)" [disabled]="saving">✕</button>
+                          <div style="display:flex;gap:4px">
+                            <button class="btn-edit-sched" (click)="openEditSchedule(e)" [disabled]="saving" title="Editar">✏️</button>
+                            <button class="btn-baja" (click)="removeSchedule(e.id)" [disabled]="saving" title="Eliminar">✕</button>
+                          </div>
                         </div>
                         <div class="sched-subject">{{ e.subjectIcon ?? '📚' }} {{ e.subjectName }}</div>
                         <div class="sched-teacher">👩‍🏫 {{ e.teacherName }}</div>
@@ -225,6 +228,74 @@
 
   </div>
 </div>
+
+<!-- Modal editar horario -->
+@if (editingSchedule) {
+  <div class="confirm-overlay" (click)="closeEditSchedule()">
+    <div class="edit-sched-modal" (click)="$event.stopPropagation()">
+      <div class="edit-sched-header">
+        <span>✏️ Editar clase — <strong>{{ editingSchedule.subjectName }}</strong></span>
+        <button class="modal-close-btn" (click)="closeEditSchedule()">✕</button>
+      </div>
+
+      <div class="edit-sched-body">
+        <div class="edit-sched-row">
+          <div class="fg">
+            <label class="label">Materia</label>
+            <select class="select" [(ngModel)]="editScheduleForm.subjectId">
+              @for (s of selectedClassroomSubjects; track s.id) {
+                <option [value]="s.id">{{ s.icon ?? '📚' }} {{ s.name }}</option>
+              }
+            </select>
+          </div>
+          <div class="fg">
+            <label class="label">Maestro</label>
+            <select class="select" [(ngModel)]="editScheduleForm.teacherId">
+              @for (t of teachers; track t.id) {
+                <option [value]="t.id">{{ t.displayName }}</option>
+              }
+            </select>
+          </div>
+        </div>
+
+        <div class="edit-sched-row">
+          <div class="fg">
+            <label class="label">Día</label>
+            <select class="select" [(ngModel)]="editScheduleForm.dayOfWeek">
+              @for (d of DAYS; track d) { <option [value]="d">{{ d | titlecase }}</option> }
+            </select>
+          </div>
+          <div class="fg">
+            <label class="label">Hora inicio</label>
+            <input class="input" type="time" [(ngModel)]="editScheduleForm.startTime">
+          </div>
+          <div class="fg">
+            <label class="label">Hora fin</label>
+            <input class="input" type="time" [(ngModel)]="editScheduleForm.endTime">
+          </div>
+        </div>
+
+        <div class="edit-sched-row">
+          <div class="fg">
+            <label class="label">Fecha inicio</label>
+            <input class="input" type="date" [(ngModel)]="editScheduleForm.startDate" [min]="today">
+          </div>
+          <div class="fg">
+            <label class="label">Fecha fin</label>
+            <input class="input" type="date" [(ngModel)]="editScheduleForm.endDate" [min]="editScheduleForm.startDate || today">
+          </div>
+        </div>
+      </div>
+
+      <div class="edit-sched-footer">
+        <button class="btn btn-ghost" (click)="closeEditSchedule()">Cancelar</button>
+        <button class="btn btn-primary" (click)="saveEditSchedule()" [disabled]="saving">
+          {{ saving ? 'Guardando…' : '✅ Guardar cambios' }}
+        </button>
+      </div>
+    </div>
+  </div>
+}
 
 @if (confirmModal.open) {
   <div class="confirm-overlay" (click)="closeConfirm()">

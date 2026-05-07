@@ -30,6 +30,14 @@ export class ScheduleApiService {
     return this.http.post<any>(BASE, req).pipe(map(r => r.data));
   }
 
+  update(id: string, req: {
+    classroomId: string; subjectId: string; teacherId: string;
+    dayOfWeek: string; startTime: string; endTime: string;
+    startDate: string; endDate: string;
+  }): Observable<any> {
+    return this.http.put<any>(`${BASE}/${id}`, req).pipe(map(r => r.data));
+  }
+
   remove(id: string): Observable<void> {
     return this.http.delete<any>(`${BASE}/${id}`).pipe(map(() => void 0));
   }

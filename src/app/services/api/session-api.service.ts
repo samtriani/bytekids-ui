@@ -24,4 +24,12 @@ export class SessionApiService {
   getAttendance(scheduleId: string): Observable<any[]> {
     return this.http.get<any>(`${BASE}/schedule/${scheduleId}/attendance`).pipe(map(r => r.data ?? []));
   }
+
+  launchMission(scheduleId: string, contentId: string): Observable<any> {
+    return this.http.post<any>(`${BASE}/schedule/${scheduleId}/mission?contentId=${contentId}`, {}).pipe(map(r => r.data));
+  }
+
+  getMission(scheduleId: string): Observable<any | null> {
+    return this.http.get<any>(`${BASE}/schedule/${scheduleId}/mission`).pipe(map(r => r.data ?? null));
+  }
 }

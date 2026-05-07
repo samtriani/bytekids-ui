@@ -46,6 +46,10 @@ export class AdministratorAssignmentsPageComponent implements OnInit {
   scheduleForm = { subjectId: '', teacherId: '', dayOfWeek: 'lunes', startTime: '08:00', endTime: '09:00', startDate: '', endDate: '' };
   today = new Date().toISOString().split('T')[0];
 
+  // Edición de horario
+  editingSchedule: any = null;
+  editScheduleForm = { subjectId: '', teacherId: '', dayOfWeek: 'lunes', startTime: '08:00', endTime: '09:00', startDate: '', endDate: '' };
+
   constructor(
     private auth: AuthService,
     private userApi: UserApiService,
@@ -183,6 +187,48 @@ export class AdministratorAssignmentsPageComponent implements OnInit {
       error: (e: any) => {
         this.saving = false;
         this.showToast(e?.error?.message ?? 'Error al guardar el horario');
+      }
+    });
+  }
+
+  openEditSchedule(s: any) {
+    this.editingSchedule = s;
+    this.editScheduleForm = {
+      subjectId:  s.subjectId  ?? '',
+      teacherId:  s.teacherId  ?? '',
+      dayOfWeek:  s.dayOfWeek  ?? 'lunes',
+      startTime:  s.startTime  ? String(s.startTime).substring(0,5) : '08:00',
+      endTime:    s.endTime    ? String(s.endTime).substring(0,5)   : '09:00',
+      startDate:  s.startDate  ? String(s.startDate).substring(0,10) : '',
+      endDate:    s.endDate    ? String(s.endDate).substring(0,10)   : '',
+    };
+  }
+
+  closeEditSchedule() { this.editingSchedule = null; }
+
+  saveEditSchedule() {
+    const f = this.editScheduleForm;
+    if (!f.subjectId || !f.teacherId || !f.dayOfWeek || !f.startTime || !f.endTime || !f.startDate || !f.endDate) return;
+    this.saving = true;
+    this.scheduleApi.update(this.editingSchedule.id, {
+      classroomId: this.selectedClassroom.id,
+      subjectId:   f.subjectId,
+      teacherId:   f.teacherId,
+      dayOfWeek:   f.dayOfWeek,
+      startTime:   f.startTime,
+      endTime:     f.endTime,
+      startDate:   f.startDate,
+      endDate:     f.endDate,
+    }).subscribe({
+      next: updated => {
+        this.schedules = this.schedules.map(s => s.id === updated.id ? updated : s);
+        this.saving = false;
+        this.closeEditSchedule();
+        this.showToast('Horario actualizado');
+      },
+      error: (e: any) => {
+        this.saving = false;
+        this.showToast(e?.error?.message ?? 'Error al actualizar el horario');
       }
     });
   }

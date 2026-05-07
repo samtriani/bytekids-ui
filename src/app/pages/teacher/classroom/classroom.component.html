@@ -70,6 +70,48 @@
 
     <div class="aula-main">
       <div class="aula-left">
+
+        <!-- Misión del día -->
+        <div class="aula-card aula-mission-card">
+          <div class="aula-card-head" style="background:rgba(124,58,237,.08);border-color:rgba(124,58,237,.2)">
+            <span class="aula-card-icon">🎯</span>
+            <span class="aula-card-title">Misión del día</span>
+            @if (activeMission) {
+              <span class="aula-badge" style="background:#7C3AED">Activa</span>
+            }
+          </div>
+
+          @if (activeMission) {
+            <div class="aula-mission-active">
+              <div class="aula-mission-icon">{{ activeMission.subjectIcon }}</div>
+              <div class="aula-mission-info">
+                <div class="aula-mission-title">{{ activeMission.title }}</div>
+                <div class="aula-mission-meta">
+                  <span class="aula-mission-xp">+{{ activeMission.xpReward }} XP</span>
+                  <span class="aula-mission-type">{{ activeMission.type }}</span>
+                </div>
+              </div>
+            </div>
+            <div class="aula-mission-hint">Tus alumnos ya pueden ver esta misión 👇</div>
+          } @else {
+            <div class="aula-mission-empty">Sin misión activa</div>
+          }
+
+          <div class="aula-mission-launcher">
+            <select class="aula-select" [(ngModel)]="selectedContentId">
+              <option value="">Selecciona una misión…</option>
+              @for (c of availableContent; track c.id) {
+                <option [value]="c.id">{{ c.subjectIcon ?? '📚' }} {{ c.title }}</option>
+              }
+            </select>
+            <button class="aula-launch-btn"
+                    (click)="launchMission()"
+                    [disabled]="!selectedContentId || launchingMission">
+              {{ launchingMission ? '…' : (activeMission ? '🔄 Cambiar' : '🚀 Lanzar') }}
+            </button>
+          </div>
+        </div>
+
         <div class="aula-card">
           <div class="aula-card-head">
             <span class="aula-card-icon">👨‍🎓</span>
