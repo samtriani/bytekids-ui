@@ -133,7 +133,9 @@
                   <span>👩‍🏫 {{ e.teacherName }}</span>
                 </div>
                 @if (e.startDate && e.endDate) {
-                  <div class="sc-event-range">📆 {{ e.startDate }} → {{ e.endDate }}</div>
+                  <div class="sc-event-range">
+                    📆 Inicio: {{ e.startDate | date:'dd/MM/yyyy' }} &nbsp;–&nbsp; Fin: {{ e.endDate | date:'dd/MM/yyyy' }}
+                  </div>
                 }
 
                 @if (isScheduleActiveNow(e)) {

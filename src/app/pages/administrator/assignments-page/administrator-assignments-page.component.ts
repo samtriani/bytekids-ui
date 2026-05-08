@@ -246,7 +246,9 @@ export class AdministratorAssignmentsPageComponent implements OnInit {
   }
 
   schedulesByDay(day: string): any[] {
-    return this.schedules.filter(s => s.dayOfWeek === day);
+    return this.schedules
+      .filter(s => s.dayOfWeek === day)
+      .sort((a, b) => String(a.startTime).localeCompare(String(b.startTime)));
   }
 
   removeSubject(subjectId: string) {

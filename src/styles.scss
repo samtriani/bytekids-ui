@@ -438,8 +438,8 @@ input,select,textarea { font-family:inherit; }
 /* ── TOAST FLOTANTE ─────────────────────────────────────────────── */
 .bk-toast {
   position: fixed;
-  top: 20px;
-  right: 24px;
+  bottom: 28px;
+  right: 28px;
   z-index: 9999;
   min-width: 260px;
   max-width: 400px;
@@ -461,8 +461,8 @@ input,select,textarea { font-family:inherit; }
 .bk-toast-default { background: var(--guinda, #7A1535); color: #fff; border-left: 4px solid #5C0F27; }
 
 @keyframes toastIn {
-  from { opacity: 0; transform: translateY(-12px) scale(.97); }
-  to   { opacity: 1; transform: translateY(0)     scale(1);   }
+  from { opacity: 0; transform: translateY(16px) scale(.97); }
+  to   { opacity: 1; transform: translateY(0)    scale(1);   }
 }
 
 /* ── AVATAR ──────────────────────────────────────────────────────── */
