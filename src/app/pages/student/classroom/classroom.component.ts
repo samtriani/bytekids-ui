@@ -3,6 +3,7 @@ import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { ActivatedRoute, Router } from '@angular/router';
 import { SessionApiService } from '../../../services/api/session-api.service';
+import { SubmissionApiService } from '../../../services/api/submission-api.service';
 import { AiTutorService, ChatMessage } from '../../../services/ai-tutor.service';
 import { AuthService } from '../../../services/auth.service';
 import { catchError, of } from 'rxjs';
@@ -23,8 +24,15 @@ export class StudentClassroomComponent implements OnInit, OnDestroy, AfterViewCh
   joining      = false;
   error        = '';
 
-  attendance:    any[]  = [];
-  activeMission: any   = null;
+  attendance:       any[]  = [];
+  activeMission:    any   = null;
+  mySubmission:     any   = null;
+  activeTab:     'chat' | 'bot' = 'chat';
+  chatMessages:  any[] = [];
+  chatMsg        = '';
+  sendingChat    = false;
+  private lastMsgTime: string | undefined;
+  private seenMsgIds  = new Set<string>();
   messages:      ChatMessage[] = [];
   chatInput     = '';
   botTyping     = false;
@@ -54,11 +62,12 @@ export class StudentClassroomComponent implements OnInit, OnDestroy, AfterViewCh
   }
 
   constructor(
-    private route:      ActivatedRoute,
-    private router:     Router,
-    private sessionApi: SessionApiService,
-    private aiService:  AiTutorService,
-    private auth:       AuthService,
+    private route:         ActivatedRoute,
+    private router:        Router,
+    private sessionApi:    SessionApiService,
+    private submissionApi: SubmissionApiService,
+    private aiService:     AiTutorService,
+    public  auth:          AuthService,
   ) {}
 
   ngOnInit() {
@@ -121,13 +130,45 @@ export class StudentClassroomComponent implements OnInit, OnDestroy, AfterViewCh
     }];
   }
 
+  private addChatMessages(msgs: any[]) {
+    const fresh = msgs.filter(m => !this.seenMsgIds.has(String(m.id)));
+    if (!fresh.length) return;
+    fresh.forEach(m => this.seenMsgIds.add(String(m.id)));
+    this.chatMessages = [...this.chatMessages, ...fresh];
+    this.lastMsgTime  = fresh[fresh.length - 1].sentAt;
+    this.scrollNeeded = true;
+  }
+
+  sendChat() {
+    const text = this.chatMsg.trim();
+    if (!text || this.sendingChat) return;
+    this.chatMsg     = '';
+    this.sendingChat = true;
+    this.sessionApi.sendChatMessage(this.scheduleId, text).pipe(catchError(() => of(null))).subscribe(msg => {
+      if (msg) this.addChatMessages([msg]);
+      this.sendingChat = false;
+    });
+  }
+
   private pollAll() {
     this.sessionApi.getAttendance(this.scheduleId).pipe(catchError(() => of([]))).subscribe(list => {
       this.attendance = list;
     });
+    this.sessionApi.getChatMessages(this.scheduleId, this.lastMsgTime).pipe(catchError(() => of([]))).subscribe(msgs => {
+      if (msgs.length) this.addChatMessages(msgs);
+    });
     this.sessionApi.getMission(this.scheduleId).pipe(catchError(() => of(null))).subscribe(m => {
       const wasNull = !this.activeMission;
       this.activeMission = m;
+      if (m?.contentId) {
+        this.submissionApi.getMySubmissions().pipe(catchError(() => of([]))).subscribe(subs => {
+          this.mySubmission = (subs as any[]).find(s =>
+            (s.contentId || s.content?.id) === m.contentId
+          ) ?? null;
+        });
+      } else {
+        this.mySubmission = null;
+      }
       // Notifica al alumno cuando el maestro lanza una misión nueva
       if (wasNull && m) {
         this.messages.push({
@@ -166,7 +207,11 @@ export class StudentClassroomComponent implements OnInit, OnDestroy, AfterViewCh
 
   goToMission() {
     if (!this.activeMission?.contentId) return;
-    this.router.navigate(['/student/missions', this.activeMission.contentId]);
+    // returnUrl para volver al aula al terminar la misión
+    this.router.navigate(
+      ['/student/missions', this.activeMission.contentId],
+      { queryParams: { returnUrl: `/student/classroom/${this.scheduleId}` } }
+    );
   }
 
   exitClass() {

@@ -5,6 +5,7 @@ import { ActivatedRoute, Router } from '@angular/router';
 import { SessionApiService } from '../../../services/api/session-api.service';
 import { ClassroomApiService } from '../../../services/api/classroom-api.service';
 import { ContentApiService } from '../../../services/api/content-api.service';
+import { SubmissionApiService } from '../../../services/api/submission-api.service';
 import { AiTutorService, ChatMessage } from '../../../services/ai-tutor.service';
 import { AuthService } from '../../../services/auth.service';
 import { catchError, of, forkJoin } from 'rxjs';
@@ -27,10 +28,20 @@ export class TeacherClassroomComponent implements OnInit, OnDestroy, AfterViewCh
 
   enrolledStudents: any[] = [];
   attendance:       any[] = [];
-  availableContent: any[] = [];
+  availableContent:   any[] = [];
   selectedContentId = '';
-  activeMission: any = null;
-  launchingMission  = false;
+  activeMission:     any   = null;
+  launchingMission   = false;
+  missionSubmissions: any[] = [];
+  reviewingSubmission: any   = null;
+  reviewFeedback       = '';
+  reviewing            = false;
+  activeTab:    'chat' | 'bot' = 'chat';
+  chatMessages: any[] = [];
+  chatMsg       = '';
+  sendingChat   = false;
+  private lastMsgTime: string | undefined;
+  private seenMsgIds  = new Set<string>();
   messages:   ChatMessage[] = [];
   chatInput   = '';
   botTyping   = false;
@@ -65,13 +76,14 @@ export class TeacherClassroomComponent implements OnInit, OnDestroy, AfterViewCh
   }
 
   constructor(
-    private route:        ActivatedRoute,
-    private router:       Router,
-    private sessionApi:   SessionApiService,
-    private classroomApi: ClassroomApiService,
-    private contentApi:   ContentApiService,
-    private aiService:    AiTutorService,
-    private auth:         AuthService,
+    private route:         ActivatedRoute,
+    private router:        Router,
+    private sessionApi:    SessionApiService,
+    private classroomApi:  ClassroomApiService,
+    private contentApi:    ContentApiService,
+    private submissionApi: SubmissionApiService,
+    private aiService:     AiTutorService,
+    public  auth:          AuthService,
   ) {}
 
   ngOnInit() {
@@ -142,9 +154,75 @@ export class TeacherClassroomComponent implements OnInit, OnDestroy, AfterViewCh
     }];
   }
 
+  private addChatMessages(msgs: any[]) {
+    const fresh = msgs.filter(m => !this.seenMsgIds.has(String(m.id)));
+    if (!fresh.length) return;
+    fresh.forEach(m => this.seenMsgIds.add(String(m.id)));
+    this.chatMessages = [...this.chatMessages, ...fresh];
+    this.lastMsgTime  = fresh[fresh.length - 1].sentAt;
+    this.scrollNeeded = true;
+  }
+
+  sendChat() {
+    const text = this.chatMsg.trim();
+    if (!text || this.sendingChat) return;
+    this.chatMsg     = '';
+    this.sendingChat = true;
+    this.sessionApi.sendChatMessage(this.scheduleId, text).pipe(catchError(() => of(null))).subscribe(msg => {
+      if (msg) this.addChatMessages([msg]);
+      this.sendingChat = false;
+    });
+  }
+
   private pollAttendance() {
     this.sessionApi.getAttendance(this.scheduleId).pipe(catchError(() => of([]))).subscribe(list => {
       this.attendance = list;
+    });
+    this.sessionApi.getChatMessages(this.scheduleId, this.lastMsgTime).pipe(catchError(() => of([]))).subscribe(msgs => {
+      if (msgs.length) this.addChatMessages(msgs);
+    });
+    if (this.activeMission?.contentId) {
+      this.submissionApi.getByContent(this.activeMission.contentId).pipe(catchError(() => of([]))).subscribe(subs => {
+        this.missionSubmissions = subs;
+      });
+    }
+  }
+
+  get studentsWithSubmission(): any[] {
+    return this.enrolledStudents.map(s => ({
+      ...s,
+      sub: this.missionSubmissions.find(m =>
+        (m.studentId || m.student?.id) === s.id
+      ) ?? null,
+    }));
+  }
+
+  get submittedCount(): number {
+    return this.studentsWithSubmission.filter(s => !!s.sub).length;
+  }
+
+  openReview(sub: any) {
+    this.reviewingSubmission = sub;
+    this.reviewFeedback = sub.teacherFeedback ?? '';
+  }
+
+  closeReview() { this.reviewingSubmission = null; this.reviewFeedback = ''; }
+
+  submitReview(status: 'aprobado' | 'rechazado') {
+    if (!this.reviewingSubmission || this.reviewing) return;
+    this.reviewing = true;
+    this.submissionApi.review(this.reviewingSubmission.id, {
+      status,
+      feedback: this.reviewFeedback || undefined,
+    }).subscribe({
+      next: updated => {
+        this.missionSubmissions = this.missionSubmissions.map(s =>
+          s.id === updated.id ? updated : s
+        );
+        this.reviewing = false;
+        this.closeReview();
+      },
+      error: () => { this.reviewing = false; }
     });
   }
 

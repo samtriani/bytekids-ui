@@ -156,6 +156,30 @@
   &:disabled { opacity:.35; cursor:default; }
 }
 
+/* ── Tabs ── */
+.aula-tabs { display:flex; gap:8px; padding:12px 16px; background:var(--bg-card,#fff); border-bottom:1px solid var(--border); flex-shrink:0; }
+.aula-tab {
+  flex:1; padding:10px 14px; border-radius:12px; border:1.5px solid var(--border);
+  background:var(--bg2); color:var(--tx3); font-size:.82rem; font-weight:700;
+  cursor:pointer; transition:all .18s; display:flex; align-items:center; justify-content:center; gap:7px;
+  &:hover:not(.active) { border-color:var(--guinda-border); color:var(--guinda); background:var(--guinda-lt); }
+  &.active { background:var(--guinda); border-color:var(--guinda); color:#fff; box-shadow:0 4px 14px rgba(122,21,53,.30); }
+}
+.aula-tab-count {
+  background:var(--guinda); color:#fff; font-size:.62rem; font-weight:900;
+  padding:1px 7px; border-radius:999px; min-width:20px; text-align:center;
+  .aula-tab.active & { background:rgba(255,255,255,.35); }
+}
+
+/* ── Chat del aula (room messages) ── */
+.aula-chat-empty { flex:1; display:flex; flex-direction:column; align-items:center; justify-content:center; gap:6px; color:var(--tx3); span{font-size:2.2rem;} p{font-size:.82rem;margin:0;} }
+.aula-room-msg { display:flex; align-items:flex-end; gap:8px; animation:msgIn .2s ease; &--me{flex-direction:row-reverse;} }
+.aula-room-av { width:30px; height:30px; border-radius:10px; flex-shrink:0; display:flex; align-items:center; justify-content:center; font-size:.72rem; font-weight:900; background:var(--bg2); color:var(--tx2); border:1px solid var(--border); &--teacher{background:linear-gradient(135deg,#1a0a12,#7A1535);color:#fff;border:none;} &--me{background:var(--guinda);color:#fff;border:none;} }
+.aula-room-bubble { max-width:75%; display:flex; flex-direction:column; gap:2px; .aula-room-msg--me &{align-items:flex-end;} }
+.aula-room-name { font-size:.67rem; font-weight:700; color:var(--tx3); padding:0 4px; &.teacher{color:var(--guinda);} }
+.aula-room-text { padding:8px 12px; border-radius:14px; font-size:.84rem; line-height:1.45; word-break:break-word; background:var(--bg-card,#fff); border:1px solid var(--border); color:var(--tx1); border-bottom-left-radius:4px; .aula-room-msg--me &{background:var(--guinda);color:#fff;border:none;border-bottom-right-radius:4px;border-bottom-left-radius:14px;} }
+.aula-room-time { font-size:.62rem; color:var(--tx3); padding:0 4px; }
+
 /* ── Misión del día (maestro) ── */
 .aula-mission-active {
   display: flex; align-items: center; gap: 10px;
@@ -169,25 +193,125 @@
 .aula-mission-xp    { font-size: .68rem; font-weight: 700; color: #7C3AED; background: rgba(124,58,237,.12); padding: 1px 6px; border-radius: 999px; }
 .aula-mission-type  { font-size: .68rem; color: var(--tx3); }
 .aula-mission-hint  { font-size: .7rem; color: #10b981; font-weight: 600; padding: 6px 14px 8px; }
+
+/* Progreso entregas */
+.aula-sub-progress { display:flex; align-items:center; gap:8px; padding:6px 14px 4px; }
+.aula-sub-progress-bar { flex:1; height:6px; background:var(--bg2); border-radius:999px; overflow:hidden; }
+.aula-sub-progress-fill { height:100%; background:linear-gradient(90deg,#7C3AED,#a78bfa); border-radius:999px; transition:width .4s ease; }
+.aula-sub-count { font-size:.68rem; font-weight:800; color:var(--tx3); white-space:nowrap; }
+
+/* Lista de alumnos con estado */
+.aula-sub-list { padding:4px 10px 10px; display:flex; flex-direction:column; gap:4px; }
+.aula-sub-item {
+  display:flex; align-items:center; gap:8px; padding:5px 8px;
+  border-radius:8px; background:var(--bg2);
+  &.delivered { background:rgba(124,58,237,.05); border:1px solid rgba(124,58,237,.12); }
+}
+.aula-sub-av { width:24px; height:24px; border-radius:6px; background:var(--border); display:flex; align-items:center; justify-content:center; font-size:.6rem; font-weight:900; color:var(--tx3); flex-shrink:0; }
+.aula-sub-name { flex:1; font-size:.75rem; font-weight:600; color:var(--tx1); overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+.aula-sub-badge {
+  font-size:.62rem; font-weight:800; padding:2px 7px; border-radius:999px; white-space:nowrap; flex-shrink:0;
+  &.ok       { background:rgba(16,185,129,.15); color:#065f46; }
+  &.pending  { background:rgba(245,158,11,.15); color:#92400e; }
+  &.rejected { background:rgba(239,68,68,.12);  color:#991b1b; }
+  &.none     { color:var(--tx3); }
+}
 .aula-mission-empty { font-size: .78rem; color: var(--tx3); text-align: center; padding: 12px; }
 
 .aula-mission-launcher {
-  display: flex; gap: 8px; padding: 8px 12px 12px;
+  display: flex; flex-direction: column; gap: 8px; padding: 8px 12px 12px;
 }
 .aula-select {
-  flex: 1; border: 1.5px solid var(--border); border-radius: 10px;
-  padding: 7px 10px; font-size: .78rem; background: var(--bg2); color: var(--tx1);
+  width: 100%; border: 1.5px solid var(--border); border-radius: 10px;
+  padding: 8px 10px; font-size: .78rem; background: var(--bg2); color: var(--tx1);
   &:focus { outline: none; border-color: #7C3AED; }
 }
 .aula-launch-btn {
-  padding: 7px 14px; border-radius: 10px; border: none;
+  width: 100%; padding: 9px; border-radius: 10px; border: none;
   background: linear-gradient(135deg, #7C3AED, #5b21b6);
-  color: #fff; font-size: .78rem; font-weight: 800; cursor: pointer;
-  display: flex; align-items: center; justify-content: center;
-  white-space: nowrap; transition: opacity .15s;
-  &:disabled { opacity: .4; cursor: default; }
-  &:hover:not(:disabled) { opacity: .88; }
+  color: #fff; font-size: .8rem; font-weight: 800; cursor: pointer;
+  display: flex; align-items: center; justify-content: center; gap: 6px;
+  transition: opacity .15s, transform .1s;
+  box-shadow: 0 3px 10px rgba(124,58,237,.3);
+  &:disabled { opacity: .4; cursor: default; box-shadow: none; }
+  &:hover:not(:disabled) { opacity: .9; transform: translateY(-1px); }
 }
+
+/* ── Modal revisión de entrega ── */
+.review-overlay {
+  position: fixed; inset: 0; background: rgba(0,0,0,.55);
+  z-index: 1100; display: flex; align-items: center;
+  justify-content: center; padding: 20px;
+  animation: fadeIn .15s ease;
+}
+.review-modal {
+  background: var(--bg-card, #fff); border-radius: 18px;
+  width: 100%; max-width: 560px; max-height: 85vh;
+  display: flex; flex-direction: column;
+  box-shadow: 0 24px 64px rgba(0,0,0,.35);
+  animation: popIn .2s cubic-bezier(.34,1.56,.64,1);
+  overflow: hidden;
+}
+.review-header {
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 16px 20px; border-bottom: 1px solid var(--border);
+  flex-shrink: 0;
+}
+.review-header-left { display: flex; align-items: center; gap: 12px; }
+.review-avatar {
+  width: 40px; height: 40px; border-radius: 12px;
+  background: var(--guinda); color: #fff;
+  display: flex; align-items: center; justify-content: center;
+  font-size: .8rem; font-weight: 900; flex-shrink: 0;
+}
+.review-student-name { font-size: .92rem; font-weight: 800; color: var(--tx1); }
+.review-mission-name { font-size: .74rem; color: var(--tx3); }
+.review-close {
+  background: transparent; border: none; font-size: 1rem;
+  color: var(--tx3); cursor: pointer; padding: 4px 8px; border-radius: 6px;
+  &:hover { background: var(--bg2); color: var(--tx1); }
+}
+.review-body { padding: 18px 20px; overflow-y: auto; display: flex; flex-direction: column; gap: 12px; flex: 1; }
+.review-status-row { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
+.review-label { font-size: .78rem; font-weight: 700; color: var(--tx3); }
+.review-time   { font-size: .72rem; color: var(--tx3); margin-left: auto; }
+.review-section-title { font-size: .75rem; font-weight: 800; color: var(--tx2); text-transform: uppercase; letter-spacing: .04em; }
+.review-code {
+  background: #1e1e2e; color: #cdd6f4; border-radius: 10px;
+  padding: 14px 16px; font-size: .82rem; font-family: 'Space Mono', monospace;
+  line-height: 1.6; overflow-x: auto; white-space: pre-wrap; word-break: break-word;
+  margin: 0; border: 1px solid rgba(255,255,255,.06);
+}
+.review-no-content { font-size: .82rem; color: var(--tx3); text-align: center; padding: 16px; background: var(--bg2); border-radius: 10px; }
+.review-textarea {
+  width: 100%; border: 1.5px solid var(--border); border-radius: 10px;
+  padding: 10px 14px; font-size: .84rem; font-family: 'Nunito', sans-serif;
+  background: var(--bg2); color: var(--tx1); resize: vertical;
+  &:focus { outline: none; border-color: var(--guinda); }
+}
+.review-footer {
+  display: flex; gap: 8px; padding: 14px 20px;
+  border-top: 1px solid var(--border); background: var(--bg2); flex-shrink: 0;
+  .btn { flex: 0; }
+}
+.review-btn-reject {
+  padding: 9px 18px; border-radius: 10px; border: 1.5px solid rgba(239,68,68,.3);
+  background: rgba(239,68,68,.08); color: #991b1b; font-size: .84rem; font-weight: 800;
+  cursor: pointer; transition: all .15s; display: flex; align-items: center; justify-content: center; gap: 5px;
+  &:hover:not(:disabled) { background: rgba(239,68,68,.15); }
+  &:disabled { opacity: .4; cursor: default; }
+}
+.review-btn-approve {
+  flex: 1; padding: 9px 18px; border-radius: 10px; border: none;
+  background: linear-gradient(135deg, #1a6b3c, #27a85e);
+  color: #fff; font-size: .84rem; font-weight: 800;
+  cursor: pointer; transition: all .15s; display: flex; align-items: center; justify-content: center; gap: 5px;
+  box-shadow: 0 3px 12px rgba(26,107,60,.3);
+  &:hover:not(:disabled) { opacity: .9; transform: translateY(-1px); }
+  &:disabled { opacity: .4; cursor: default; box-shadow: none; }
+}
+.aula-sub-badge.clickable { cursor: pointer; &:hover { filter: brightness(1.1); transform: scale(1.03); } }
+@keyframes popIn { from{opacity:0;transform:scale(.92)} to{opacity:1;transform:scale(1)} }
 
 @media (max-width:900px) { .aula-main { grid-template-columns:1fr; grid-template-rows:auto 1fr; } .aula-left { border-right:none; border-bottom:1px solid var(--border); max-height:220px; } }
 @keyframes fadeIn { from{opacity:0} to{opacity:1} }

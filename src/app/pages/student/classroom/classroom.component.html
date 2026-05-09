@@ -106,9 +106,27 @@
                 <span class="aula-mission-xp">⭐ +{{ activeMission.xpReward }} XP</span>
                 <span class="aula-mission-diff">{{ activeMission.difficulty }}</span>
               </div>
-              <button class="aula-go-mission-btn" (click)="goToMission()">
-                🚀 Ir a la misión
-              </button>
+
+              <!-- Estado de mi entrega -->
+              @if (mySubmission?.status === 'aprobado') {
+                <div class="aula-sub-status aula-sub-status--ok">
+                  ✅ ¡Aprobada! +{{ activeMission.xpReward }} XP ganados
+                </div>
+              } @else if (mySubmission?.status === 'enviado' || mySubmission?.status === 'revisado') {
+                <div class="aula-sub-status aula-sub-status--pending">
+                  ⏳ Entregada — esperando revisión del maestro
+                </div>
+              } @else if (mySubmission?.status === 'rechazado') {
+                <div class="aula-sub-status aula-sub-status--rejected">
+                  ❌ Rechazada — intenta de nuevo
+                </div>
+              }
+
+              @if (mySubmission?.status !== 'aprobado') {
+                <button class="aula-go-mission-btn" (click)="goToMission()">
+                  {{ mySubmission ? '🔄 Ver mi entrega' : '🚀 Ir a la misión' }}
+                </button>
+              }
             </div>
           </div>
         }
@@ -139,41 +157,84 @@
       </div>
 
       <div class="aula-chat-panel">
-        <div class="aula-chat-header">
-          <div class="aula-chat-header-left">
-            <div class="aula-bot-avatar">🤖</div>
-            <div>
-              <div class="aula-bot-name">ByteBot</div>
-              <div class="aula-bot-sub">Asistente de {{ session.subjectName }}</div>
-            </div>
+        <!-- Tabs -->
+        <div class="aula-tabs">
+          <button class="aula-tab" [class.active]="activeTab==='chat'" (click)="activeTab='chat'">
+            💬 Chat del aula
+            @if (chatMessages.length) { <span class="aula-tab-count">{{ chatMessages.length }}</span> }
+          </button>
+          <button class="aula-tab" [class.active]="activeTab==='bot'" (click)="activeTab='bot'">
+            🤖 ByteBot
+          </button>
+        </div>
+
+        <!-- Tab: Chat del aula -->
+        @if (activeTab === 'chat') {
+          <div class="aula-chat-messages">
+            @if (!chatMessages.length) {
+              <div class="aula-chat-empty">
+                <span>💬</span>
+                <p>Sé el primero en escribir algo</p>
+              </div>
+            }
+            @for (m of chatMessages; track m.id) {
+              <div class="aula-room-msg" [class.aula-room-msg--me]="m.senderId === auth.getUser()?.userId">
+                @if (m.senderId !== auth.getUser()?.userId) {
+                  <div class="aula-room-av" [class.aula-room-av--teacher]="m.senderRole==='teacher'">
+                    {{ m.senderInit }}
+                  </div>
+                }
+                <div class="aula-room-bubble">
+                  @if (m.senderId !== auth.getUser()?.userId) {
+                    <div class="aula-room-name" [class.teacher]="m.senderRole==='teacher'">
+                      {{ m.senderRole === 'teacher' ? '👩‍🏫 ' : '' }}{{ m.senderName }}
+                    </div>
+                  }
+                  <div class="aula-room-text">{{ m.content }}</div>
+                  <div class="aula-room-time">{{ m.sentAt | date:'HH:mm' }}</div>
+                </div>
+                @if (m.senderId === auth.getUser()?.userId) {
+                  <div class="aula-room-av aula-room-av--me">{{ studentInitials }}</div>
+                }
+              </div>
+            }
+            <div #chatEnd></div>
           </div>
-          <div class="aula-bot-status"><span class="aula-online-dot"></span> Activo</div>
-        </div>
+          <div class="aula-chat-input">
+            <input class="aula-input" [(ngModel)]="chatMsg" (keyup.enter)="sendChat()"
+                   [disabled]="sendingChat" placeholder="Escribe un mensaje…">
+            <button class="aula-send-btn" (click)="sendChat()"
+                    [disabled]="sendingChat || !chatMsg.trim()"
+                    [style.background]="subjectColor">↑</button>
+          </div>
+        }
 
-        <div class="aula-chat-messages">
-          @for (msg of messages; track $index) {
-            <div class="aula-msg" [class.aula-msg--bot]="msg.role === 'assistant'" [class.aula-msg--user]="msg.role === 'user'">
-              @if (msg.role === 'assistant') { <div class="aula-msg-avatar">🤖</div> }
-              <div class="aula-msg-bubble" [innerHTML]="msg.content.replace('\n','<br>')"></div>
-              @if (msg.role === 'user') { <div class="aula-msg-avatar aula-msg-avatar--user">{{ studentInitials }}</div> }
-            </div>
-          }
-          @if (botTyping) {
-            <div class="aula-msg aula-msg--bot">
-              <div class="aula-msg-avatar">🤖</div>
-              <div class="aula-msg-bubble aula-typing"><span></span><span></span><span></span></div>
-            </div>
-          }
-          <div #chatEnd></div>
-        </div>
-
-        <div class="aula-chat-input">
-          <input class="aula-input" [(ngModel)]="chatInput" (keyup.enter)="send()"
-                 [disabled]="botTyping" [placeholder]="'Pregunta sobre ' + session.subjectName + '…'">
-          <button class="aula-send-btn" (click)="send()"
-                  [disabled]="botTyping || !chatInput.trim()"
-                  [style.background]="subjectColor">↑</button>
-        </div>
+        <!-- Tab: ByteBot -->
+        @if (activeTab === 'bot') {
+          <div class="aula-chat-messages">
+            @for (msg of messages; track $index) {
+              <div class="aula-msg" [class.aula-msg--bot]="msg.role==='assistant'" [class.aula-msg--user]="msg.role==='user'">
+                @if (msg.role === 'assistant') { <div class="aula-msg-avatar">🤖</div> }
+                <div class="aula-msg-bubble" [innerHTML]="msg.content.replace('\n','<br>')"></div>
+                @if (msg.role === 'user') { <div class="aula-msg-avatar aula-msg-avatar--user">{{ studentInitials }}</div> }
+              </div>
+            }
+            @if (botTyping) {
+              <div class="aula-msg aula-msg--bot">
+                <div class="aula-msg-avatar">🤖</div>
+                <div class="aula-msg-bubble aula-typing"><span></span><span></span><span></span></div>
+              </div>
+            }
+            <div #chatEnd></div>
+          </div>
+          <div class="aula-chat-input">
+            <input class="aula-input" [(ngModel)]="chatInput" (keyup.enter)="send()"
+                   [disabled]="botTyping" [placeholder]="'Pregunta sobre ' + session.subjectName + '…'">
+            <button class="aula-send-btn" (click)="send()"
+                    [disabled]="botTyping || !chatInput.trim()"
+                    [style.background]="subjectColor">↑</button>
+          </div>
+        }
       </div>
     </div>
   </div>

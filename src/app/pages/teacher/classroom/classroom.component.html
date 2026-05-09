@@ -92,7 +92,38 @@
                 </div>
               </div>
             </div>
-            <div class="aula-mission-hint">Tus alumnos ya pueden ver esta misión 👇</div>
+
+            <!-- Progreso de entregas -->
+            <div class="aula-sub-progress">
+              <div class="aula-sub-progress-bar">
+                <div class="aula-sub-progress-fill"
+                     [style.width]="enrolledStudents.length ? (submittedCount / enrolledStudents.length * 100) + '%' : '0%'">
+                </div>
+              </div>
+              <span class="aula-sub-count">{{ submittedCount }}/{{ enrolledStudents.length }} entregaron</span>
+            </div>
+
+            <!-- Lista por alumno -->
+            @if (studentsWithSubmission.length) {
+              <div class="aula-sub-list">
+                @for (s of studentsWithSubmission; track s.id) {
+                  <div class="aula-sub-item" [class.delivered]="!!s.sub">
+                    <div class="aula-sub-av">{{ (s.initials || (s.displayName | slice:0:2)) | uppercase }}</div>
+                    <span class="aula-sub-name">{{ s.displayName }}</span>
+                    @if (s.sub?.status === 'aprobado') {
+                      <span class="aula-sub-badge ok" (click)="openReview(s.sub)" style="cursor:pointer">✅ Aprobada</span>
+                    } @else if (s.sub?.status === 'enviado' || s.sub?.status === 'revisado') {
+                      <span class="aula-sub-badge pending clickable" (click)="openReview(s.sub)">📋 Revisar</span>
+                    } @else if (s.sub?.status === 'rechazado') {
+                      <span class="aula-sub-badge rejected" (click)="openReview(s.sub)" style="cursor:pointer">❌ Rechazada</span>
+                    } @else {
+                      <span class="aula-sub-badge none">— Sin entregar</span>
+                    }
+                  </div>
+                }
+              </div>
+            }
+
           } @else {
             <div class="aula-mission-empty">Sin misión activa</div>
           }
@@ -145,42 +176,148 @@
       </div>
 
       <div class="aula-chat-panel">
-        <div class="aula-chat-header">
-          <div class="aula-chat-header-left">
-            <div class="aula-bot-avatar">🤖</div>
-            <div>
-              <div class="aula-bot-name">ByteBot — Asistente del maestro</div>
-              <div class="aula-bot-sub">{{ session.subjectName }} · {{ session.classroomName }}</div>
-            </div>
+        <!-- Tabs -->
+        <div class="aula-tabs">
+          <button class="aula-tab" [class.active]="activeTab==='chat'" (click)="activeTab='chat'">
+            💬 Chat del aula
+            @if (chatMessages.length) { <span class="aula-tab-count">{{ chatMessages.length }}</span> }
+          </button>
+          <button class="aula-tab" [class.active]="activeTab==='bot'" (click)="activeTab='bot'">
+            🤖 ByteBot
+          </button>
+        </div>
+
+        <!-- Tab: Chat del aula -->
+        @if (activeTab === 'chat') {
+          <div class="aula-chat-messages">
+            @if (!chatMessages.length) {
+              <div class="aula-chat-empty">
+                <span>💬</span>
+                <p>El chat del aula está vacío</p>
+                <p style="font-size:.72rem">Los mensajes se mostrarán aquí en tiempo real</p>
+              </div>
+            }
+            @for (m of chatMessages; track m.id) {
+              <div class="aula-room-msg" [class.aula-room-msg--me]="m.senderId === auth.getUser()?.userId">
+                @if (m.senderId !== auth.getUser()?.userId) {
+                  <div class="aula-room-av" [class.aula-room-av--teacher]="m.senderRole==='teacher'">{{ m.senderInit }}</div>
+                }
+                <div class="aula-room-bubble">
+                  @if (m.senderId !== auth.getUser()?.userId) {
+                    <div class="aula-room-name" [class.teacher]="m.senderRole==='teacher'">
+                      {{ m.senderRole === 'teacher' ? '👩‍🏫 ' : '' }}{{ m.senderName }}
+                    </div>
+                  }
+                  <div class="aula-room-text">{{ m.content }}</div>
+                  <div class="aula-room-time">{{ m.sentAt | date:'HH:mm' }}</div>
+                </div>
+                @if (m.senderId === auth.getUser()?.userId) {
+                  <div class="aula-room-av aula-room-av--me">{{ teacherInitials }}</div>
+                }
+              </div>
+            }
+            <div #chatEnd></div>
           </div>
-          <div class="aula-bot-status"><span class="aula-online-dot"></span> Activo</div>
-        </div>
+          <div class="aula-chat-input">
+            <input class="aula-input" [(ngModel)]="chatMsg" (keyup.enter)="sendChat()"
+                   [disabled]="sendingChat" placeholder="Escribe un mensaje al grupo…">
+            <button class="aula-send-btn" (click)="sendChat()"
+                    [disabled]="sendingChat || !chatMsg.trim()"
+                    [style.background]="subjectColor">↑</button>
+          </div>
+        }
 
-        <div class="aula-chat-messages">
-          @for (msg of messages; track $index) {
-            <div class="aula-msg" [class.aula-msg--bot]="msg.role === 'assistant'" [class.aula-msg--user]="msg.role === 'user'">
-              @if (msg.role === 'assistant') { <div class="aula-msg-avatar">🤖</div> }
-              <div class="aula-msg-bubble" [innerHTML]="msg.content.replace('\n','<br>')"></div>
-              @if (msg.role === 'user') { <div class="aula-msg-avatar aula-msg-avatar--user">{{ teacherInitials }}</div> }
-            </div>
-          }
-          @if (botTyping) {
-            <div class="aula-msg aula-msg--bot">
-              <div class="aula-msg-avatar">🤖</div>
-              <div class="aula-msg-bubble aula-typing"><span></span><span></span><span></span></div>
-            </div>
-          }
-          <div #chatEnd></div>
-        </div>
-
-        <div class="aula-chat-input">
-          <input class="aula-input" [(ngModel)]="chatInput" (keyup.enter)="send()"
-                 [disabled]="botTyping" placeholder="Pide ayuda a ByteBot para preparar la sesión…">
-          <button class="aula-send-btn" (click)="send()"
-                  [disabled]="botTyping || !chatInput.trim()"
-                  [style.background]="subjectColor">↑</button>
-        </div>
+        <!-- Tab: ByteBot -->
+        @if (activeTab === 'bot') {
+          <div class="aula-chat-messages">
+            @for (msg of messages; track $index) {
+              <div class="aula-msg" [class.aula-msg--bot]="msg.role==='assistant'" [class.aula-msg--user]="msg.role==='user'">
+                @if (msg.role === 'assistant') { <div class="aula-msg-avatar">🤖</div> }
+                <div class="aula-msg-bubble" [innerHTML]="msg.content.replace('\n','<br>')"></div>
+                @if (msg.role === 'user') { <div class="aula-msg-avatar aula-msg-avatar--user">{{ teacherInitials }}</div> }
+              </div>
+            }
+            @if (botTyping) {
+              <div class="aula-msg aula-msg--bot">
+                <div class="aula-msg-avatar">🤖</div>
+                <div class="aula-msg-bubble aula-typing"><span></span><span></span><span></span></div>
+              </div>
+            }
+            <div #chatEnd></div>
+          </div>
+          <div class="aula-chat-input">
+            <input class="aula-input" [(ngModel)]="chatInput" (keyup.enter)="send()"
+                   [disabled]="botTyping" placeholder="Pide ayuda a ByteBot…">
+            <button class="aula-send-btn" (click)="send()"
+                    [disabled]="botTyping || !chatInput.trim()"
+                    [style.background]="subjectColor">↑</button>
+          </div>
+        }
       </div>
+    </div>
+  </div>
+}
+
+<!-- Modal revisar entrega -->
+@if (reviewingSubmission) {
+  <div class="review-overlay" (click)="closeReview()">
+    <div class="review-modal" (click)="$event.stopPropagation()">
+
+      <div class="review-header">
+        <div class="review-header-left">
+          <div class="review-avatar">{{ reviewingSubmission.studentInitials || '?' }}</div>
+          <div>
+            <div class="review-student-name">{{ reviewingSubmission.studentName || 'Alumno' }}</div>
+            <div class="review-mission-name">{{ activeMission?.title }}</div>
+          </div>
+        </div>
+        <button class="review-close" (click)="closeReview()">✕</button>
+      </div>
+
+      <div class="review-body">
+        <!-- Estado actual -->
+        <div class="review-status-row">
+          <span class="review-label">Estado actual:</span>
+          @if (reviewingSubmission.status === 'aprobado') {
+            <span class="aula-sub-badge ok">✅ Aprobada</span>
+          } @else if (reviewingSubmission.status === 'rechazado') {
+            <span class="aula-sub-badge rejected">❌ Rechazada</span>
+          } @else {
+            <span class="aula-sub-badge pending">⏳ Pendiente de revisión</span>
+          }
+          <span class="review-time">{{ reviewingSubmission.submittedAt | date:'HH:mm' }}</span>
+        </div>
+
+        <!-- Respuesta del alumno -->
+        @if (reviewingSubmission.codeSubmitted) {
+          <div class="review-section-title">Respuesta del alumno</div>
+          <pre class="review-code">{{ reviewingSubmission.codeSubmitted }}</pre>
+        } @else {
+          <div class="review-no-content">Esta entrega no tiene respuesta escrita.</div>
+        }
+
+        <!-- Feedback del maestro -->
+        <div class="review-section-title">Retroalimentación <span style="font-weight:400;color:var(--tx3)">(opcional)</span></div>
+        <textarea class="review-textarea"
+                  [(ngModel)]="reviewFeedback"
+                  placeholder="Escribe comentarios para el alumno…"
+                  rows="3"></textarea>
+      </div>
+
+      <div class="review-footer">
+        <button class="btn btn-ghost" (click)="closeReview()">Cancelar</button>
+        <button class="review-btn-reject"
+                (click)="submitReview('rechazado')"
+                [disabled]="reviewing || reviewingSubmission.status === 'rechazado'">
+          ❌ Rechazar
+        </button>
+        <button class="review-btn-approve"
+                (click)="submitReview('aprobado')"
+                [disabled]="reviewing || reviewingSubmission.status === 'aprobado'">
+          {{ reviewing ? '…' : '✅ Aprobar' }}
+        </button>
+      </div>
+
     </div>
   </div>
 }

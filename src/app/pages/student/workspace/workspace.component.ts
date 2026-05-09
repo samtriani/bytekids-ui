@@ -137,7 +137,10 @@ export class WorkspaceComponent implements OnInit {
     this.router.navigate(['/student/ai-tutor'], { queryParams: { q } });
   }
 
-  goBack(): void { this.router.navigate(['/student/missions']); }
+  goBack(): void {
+    const returnUrl = this.route.snapshot.queryParamMap.get('returnUrl');
+    this.router.navigateByUrl(returnUrl ?? '/student/missions');
+  }
 
   diffLabel(d: string): string {
     return d === 'facil' ? 'Fácil' : d === 'dificil' ? 'Difícil' : 'Medio';

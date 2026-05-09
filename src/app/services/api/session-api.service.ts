@@ -32,4 +32,15 @@ export class SessionApiService {
   getMission(scheduleId: string): Observable<any | null> {
     return this.http.get<any>(`${BASE}/schedule/${scheduleId}/mission`).pipe(map(r => r.data ?? null));
   }
+
+  sendChatMessage(scheduleId: string, content: string): Observable<any> {
+    return this.http.post<any>(`${BASE}/schedule/${scheduleId}/chat?content=${encodeURIComponent(content)}`, {}).pipe(map(r => r.data));
+  }
+
+  getChatMessages(scheduleId: string, since?: string): Observable<any[]> {
+    const url = since
+      ? `${BASE}/schedule/${scheduleId}/chat?since=${encodeURIComponent(since)}`
+      : `${BASE}/schedule/${scheduleId}/chat`;
+    return this.http.get<any>(url).pipe(map(r => r.data ?? []));
+  }
 }
