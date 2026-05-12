@@ -27,7 +27,9 @@ export class StudentClassroomComponent implements OnInit, OnDestroy, AfterViewCh
   attendance:       any[]  = [];
   activeMission:    any   = null;
   mySubmission:     any   = null;
-  activeTab:     'chat' | 'bot' = 'chat';
+  activeTab:          'chat' | 'bot' | 'video' = 'chat';
+  teacherVideoActive  = false;
+  jitsiApi:   any = null;
   chatMessages:  any[] = [];
   chatMsg        = '';
   sendingChat    = false;
@@ -85,7 +87,7 @@ export class StudentClassroomComponent implements OnInit, OnDestroy, AfterViewCh
 
       this.joining = true;
       this.sessionApi.join(this.scheduleId).pipe(catchError(() => of(null))).subscribe(() => {
-        this.joining = false;
+        this.joining  = false;
         this.initTimer(data);
         this.initBot(data);
         this.pollAll();
@@ -150,9 +152,54 @@ export class StudentClassroomComponent implements OnInit, OnDestroy, AfterViewCh
     });
   }
 
+  get jitsiRoom(): string {
+    const appId = 'vpaas-magic-cookie-7825138c95d24c7cb6f660d4a535d186';
+    return `${appId}/ByteKids-${this.scheduleId.replace(/-/g, '')}`;
+  }
+
+  joinVideo() {
+    this.activeTab = 'video';
+    setTimeout(() => this.mountJitsi(), 300);
+  }
+
+  private mountJitsi() {
+    const container = document.getElementById('jitsi-student');
+    if (!container || this.jitsiApi) return;
+    this.sessionApi.getJaasToken(this.scheduleId).pipe(catchError(() => of(null))).subscribe(jwt => {
+      const load = () => {
+        this.jitsiApi = new (window as any).JitsiMeetExternalAPI('8x8.vc', {
+          roomName: this.jitsiRoom,
+          parentNode: container,
+          width: '100%', height: '100%',
+          jwt,
+          userInfo: { displayName: this.studentName },
+          configOverwrite: { prejoinPageEnabled: false, disableDeepLinking: true },
+          interfaceConfigOverwrite: { SHOW_JITSI_WATERMARK: false },
+        });
+      };
+      const apiUrl = `https://8x8.vc/${this.jitsiRoom.split('/')[0]}/external_api.js`;
+      if ((window as any).JitsiMeetExternalAPI) { load(); return; }
+      const s = document.createElement('script');
+      s.src = apiUrl;
+      s.onload = load;
+      document.body.appendChild(s);
+    });
+  }
+
+  private destroyJitsi() {
+    if (this.jitsiApi) { this.jitsiApi.dispose(); this.jitsiApi = null; }
+  }
+
   private pollAll() {
-    this.sessionApi.getAttendance(this.scheduleId).pipe(catchError(() => of([]))).subscribe(list => {
-      this.attendance = list;
+    this.sessionApi.getAttendance(this.scheduleId).pipe(catchError(() => of({ participants: [], teacherVideoActive: false }))).subscribe(data => {
+      this.attendance = data.participants ?? [];
+      const wasActive = this.teacherVideoActive;
+      this.teacherVideoActive = data.teacherVideoActive ?? false;
+      // Notificar si el maestro acaba de iniciar la videollamada
+      if (!wasActive && this.teacherVideoActive) {
+        this.messages.push({ role: 'assistant', content: '📷 ¡El maestro inició la videollamada! Haz clic en la pestaña **Video** para unirte.', timestamp: new Date() });
+        this.scrollNeeded = true;
+      }
     });
     this.sessionApi.getChatMessages(this.scheduleId, this.lastMsgTime).pipe(catchError(() => of([]))).subscribe(msgs => {
       if (msgs.length) this.addChatMessages(msgs);
@@ -205,6 +252,14 @@ export class StudentClassroomComponent implements OnInit, OnDestroy, AfterViewCh
     });
   }
 
+  get jitsiRoomUrl(): string {
+    const room = 'ByteKids-' + this.scheduleId.replace(/-/g, '');
+    const name = encodeURIComponent(this.studentName);
+    return `https://meet.jit.si/${room}#userInfo.displayName="${name}"`;
+  }
+
+  openVideo() { window.open(this.jitsiRoomUrl, '_blank'); }
+
   goToMission() {
     if (!this.activeMission?.contentId) return;
     // returnUrl para volver al aula al terminar la misión
@@ -214,7 +269,14 @@ export class StudentClassroomComponent implements OnInit, OnDestroy, AfterViewCh
     );
   }
 
+  ngOnDestroy() {
+    this.destroyJitsi();
+    clearInterval(this.timerRef);
+    clearInterval(this.attendanceRef);
+  }
+
   exitClass() {
+    this.destroyJitsi();
     this.sessionApi.leave(this.scheduleId).pipe(catchError(() => of(null))).subscribe(() => {
       this.router.navigate(['/student/calendar']);
     });
@@ -227,8 +289,4 @@ export class StudentClassroomComponent implements OnInit, OnDestroy, AfterViewCh
     }
   }
 
-  ngOnDestroy() {
-    clearInterval(this.timerRef);
-    clearInterval(this.attendanceRef);
-  }
 }

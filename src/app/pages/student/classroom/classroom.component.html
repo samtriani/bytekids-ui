@@ -160,8 +160,13 @@
         <!-- Tabs -->
         <div class="aula-tabs">
           <button class="aula-tab" [class.active]="activeTab==='chat'" (click)="activeTab='chat'">
-            💬 Chat del aula
+            💬 Chat
             @if (chatMessages.length) { <span class="aula-tab-count">{{ chatMessages.length }}</span> }
+          </button>
+          <button class="aula-tab aula-tab--video"
+                  [class.active]="activeTab==='video'"
+                  (click)="activeTab='video'">
+            📷 Video @if (teacherVideoActive) { <span class="aula-vid-dot"></span> }
           </button>
           <button class="aula-tab" [class.active]="activeTab==='bot'" (click)="activeTab='bot'">
             🤖 ByteBot
@@ -206,6 +211,32 @@
             <button class="aula-send-btn" (click)="sendChat()"
                     [disabled]="sendingChat || !chatMsg.trim()"
                     [style.background]="subjectColor">↑</button>
+          </div>
+        }
+
+        <!-- Tab: Video -->
+        @if (activeTab === 'video') {
+          <div class="aula-video-panel">
+            @if (!teacherVideoActive) {
+              <div class="aula-video-start">
+                <div class="aula-video-start-icon">📷</div>
+                <div class="aula-video-start-title">Videollamada</div>
+                <div class="aula-video-start-sub">Esperando a que el maestro inicie la videollamada…</div>
+                <div class="aula-video-waiting-dots"><span></span><span></span><span></span></div>
+              </div>
+            } @else {
+              <div class="aula-video-live-bar">
+                <span class="aula-vid-dot"></span> Videollamada activa
+              </div>
+              @if (!jitsiApi) {
+                <div class="aula-video-join-wrap">
+                  <button class="aula-video-btn" (click)="joinVideo()">
+                    🎥 Unirse a la videollamada
+                  </button>
+                </div>
+              }
+              <div id="jitsi-student" class="aula-jitsi-container"></div>
+            }
           </div>
         }
 

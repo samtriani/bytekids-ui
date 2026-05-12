@@ -179,8 +179,13 @@
         <!-- Tabs -->
         <div class="aula-tabs">
           <button class="aula-tab" [class.active]="activeTab==='chat'" (click)="activeTab='chat'">
-            💬 Chat del aula
+            💬 Chat
             @if (chatMessages.length) { <span class="aula-tab-count">{{ chatMessages.length }}</span> }
+          </button>
+          <button class="aula-tab aula-tab--video"
+                  [class.active]="activeTab==='video'"
+                  (click)="activeTab='video'">
+            📷 Video @if (teacherVideoActive) { <span class="aula-vid-dot"></span> }
           </button>
           <button class="aula-tab" [class.active]="activeTab==='bot'" (click)="activeTab='bot'">
             🤖 ByteBot
@@ -224,6 +229,28 @@
             <button class="aula-send-btn" (click)="sendChat()"
                     [disabled]="sendingChat || !chatMsg.trim()"
                     [style.background]="subjectColor">↑</button>
+          </div>
+        }
+
+        <!-- Tab: Video -->
+        @if (activeTab === 'video') {
+          <div class="aula-video-panel">
+            @if (!teacherVideoActive) {
+              <div class="aula-video-start">
+                <div class="aula-video-start-icon">📷</div>
+                <div class="aula-video-start-title">Videollamada</div>
+                <div class="aula-video-start-sub">Solo tú puedes iniciar la videollamada.<br>Los alumnos recibirán la invitación automáticamente.</div>
+                <button class="aula-video-btn" (click)="startVideo()">
+                  🎥 Iniciar videollamada
+                </button>
+              </div>
+            } @else {
+              <div class="aula-video-live-bar">
+                <span class="aula-vid-dot"></span> Videollamada activa
+                <button class="aula-video-end-btn" (click)="startVideo()">⏹ Finalizar</button>
+              </div>
+              <div id="jitsi-teacher" class="aula-jitsi-container"></div>
+            }
           </div>
         }
 

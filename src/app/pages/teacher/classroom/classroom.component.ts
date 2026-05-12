@@ -36,7 +36,9 @@ export class TeacherClassroomComponent implements OnInit, OnDestroy, AfterViewCh
   reviewingSubmission: any   = null;
   reviewFeedback       = '';
   reviewing            = false;
-  activeTab:    'chat' | 'bot' = 'chat';
+  activeTab:         'chat' | 'bot' | 'video' = 'chat';
+  teacherVideoActive = false;
+  private jitsiApi:  any = null;
   chatMessages: any[] = [];
   chatMsg       = '';
   sendingChat   = false;
@@ -174,9 +176,54 @@ export class TeacherClassroomComponent implements OnInit, OnDestroy, AfterViewCh
     });
   }
 
+  get jitsiRoom(): string {
+    const appId = 'vpaas-magic-cookie-7825138c95d24c7cb6f660d4a535d186';
+    return `${appId}/ByteKids-${this.scheduleId.replace(/-/g, '')}`;
+  }
+
+  startVideo() {
+    this.sessionApi.toggleVideo(this.scheduleId).pipe(catchError(() => of(false))).subscribe(active => {
+      this.teacherVideoActive = active;
+      if (active) {
+        this.activeTab = 'video';
+        setTimeout(() => this.mountJitsi(), 300);
+      } else {
+        this.destroyJitsi();
+      }
+    });
+  }
+
+  private mountJitsi() {
+    const container = document.getElementById('jitsi-teacher');
+    if (!container) return;
+    this.sessionApi.getJaasToken(this.scheduleId).pipe(catchError(() => of(null))).subscribe(jwt => {
+      const load = () => {
+        this.jitsiApi = new (window as any).JitsiMeetExternalAPI('8x8.vc', {
+          roomName: this.jitsiRoom,
+          parentNode: container,
+          width: '100%', height: '100%',
+          jwt,
+          userInfo: { displayName: this.teacherName },
+          configOverwrite: { prejoinPageEnabled: false, disableDeepLinking: true },
+          interfaceConfigOverwrite: { SHOW_JITSI_WATERMARK: false },
+        });
+      };
+      const apiUrl = `https://8x8.vc/${this.jitsiRoom.split('/')[0]}/external_api.js`;
+      if ((window as any).JitsiMeetExternalAPI) { load(); return; }
+      const s = document.createElement('script');
+      s.src = apiUrl;
+      s.onload = load;
+      document.body.appendChild(s);
+    });
+  }
+
+  private destroyJitsi() {
+    if (this.jitsiApi) { this.jitsiApi.dispose(); this.jitsiApi = null; }
+  }
+
   private pollAttendance() {
-    this.sessionApi.getAttendance(this.scheduleId).pipe(catchError(() => of([]))).subscribe(list => {
-      this.attendance = list;
+    this.sessionApi.getAttendance(this.scheduleId).pipe(catchError(() => of({ participants: [], teacherVideoActive: false }))).subscribe(data => {
+      this.attendance = data.participants ?? [];
     });
     this.sessionApi.getChatMessages(this.scheduleId, this.lastMsgTime).pipe(catchError(() => of([]))).subscribe(msgs => {
       if (msgs.length) this.addChatMessages(msgs);
@@ -226,6 +273,13 @@ export class TeacherClassroomComponent implements OnInit, OnDestroy, AfterViewCh
     });
   }
 
+  get jitsiRoomUrl(): string {
+    const room = 'ByteKids-' + this.scheduleId.replace(/-/g, '');
+    return `https://meet.jit.si/${room}`;
+  }
+
+  openVideo() { window.open(this.jitsiRoomUrl, '_blank'); }
+
   launchMission() {
     if (!this.selectedContentId || this.launchingMission) return;
     this.launchingMission = true;
@@ -268,6 +322,7 @@ export class TeacherClassroomComponent implements OnInit, OnDestroy, AfterViewCh
   }
 
   exitClass() {
+    this.destroyJitsi();
     this.sessionApi.leave(this.scheduleId).pipe(catchError(() => of(null))).subscribe(() => {
       this.router.navigate(['/teacher/calendar']);
     });
@@ -281,6 +336,7 @@ export class TeacherClassroomComponent implements OnInit, OnDestroy, AfterViewCh
   }
 
   ngOnDestroy() {
+    this.destroyJitsi();
     clearInterval(this.timerRef);
     clearInterval(this.attendanceRef);
   }
