@@ -39,7 +39,7 @@ export class MissionsComponent implements OnInit {
     { label:'Tutor IA',     icon:'🤖', route:'/student/ai-tutor', badge:'✨' },
     { label:'Proyectos',    icon:'💻', route:'/student/projects' },
     // { label:'Roblox Studio',icon:'🎮', route:'/student/roblox' },
-    { label:'Horario',       icon:'📅', route:'/student/calendar' },
+    { label:'Calendario',    icon:'📅', route:'/student/calendar' },
     { label:'Comunidad',     icon:'👥', route:'/student/community' },
   ];
 
@@ -76,9 +76,10 @@ export class MissionsComponent implements OnInit {
 
   private mapContent(c: any): any {
     const meta = SUBJECT_META[c.subjectName] ?? { icon: '📚', color: '#6B7FBB' };
+    const color = c.subjectColor || meta.color;
     const sub  = this.submissionMap[c.id];
     const status = sub
-      ? (sub.status === 'aprobado' ? 'Completado' : 'En progreso')
+      ? (sub.status === 'aprobado' ? 'Completado' : sub.status === 'rechazado' ? 'Rechazado' : 'En progreso')
       : 'Disponible';
     const progress = sub
       ? (sub.status === 'aprobado' ? 100 : 50)
@@ -92,11 +93,35 @@ export class MissionsComponent implements OnInit {
       progress:   saved?.progress ?? progress,
       status:     saved?.status ?? status,
       icon:       c.subjectIcon ?? meta.icon,
-      color:      meta.color,
+      color,
       difficulty: c.difficulty === 'facil' ? 'Fácil' : c.difficulty === 'dificil' ? 'Difícil' : 'Medio',
       time:       c.estimatedMinutes ? `${c.estimatedMinutes} min` : '—',
       locked:     false,
+      dueDate:    c.dueDate ?? null,
+      dueLabel:   this.buildDueLabel(c.dueDate),
+      dueUrgency: this.calcDueUrgency(c.dueDate),
+      score:      sub?.score ?? null,
+      feedback:   sub?.teacherFeedback ?? null,
     };
+  }
+
+  buildDueLabel(dueDate: string | null): string {
+    if (!dueDate) return '';
+    const diff = Math.ceil((new Date(dueDate).getTime() - Date.now()) / 86400000);
+    if (diff < 0)  return 'Vencida';
+    if (diff === 0) return 'Vence hoy';
+    if (diff === 1) return 'Vence mañana';
+    if (diff <= 3)  return `Vence en ${diff} días`;
+    return `Vence ${new Date(dueDate).toLocaleDateString('es-MX', { day: 'numeric', month: 'short' })}`;
+  }
+
+  calcDueUrgency(dueDate: string | null): 'overdue' | 'urgent' | 'soon' | 'ok' | '' {
+    if (!dueDate) return '';
+    const diff = Math.ceil((new Date(dueDate).getTime() - Date.now()) / 86400000);
+    if (diff < 0)  return 'overdue';
+    if (diff === 0) return 'urgent';
+    if (diff <= 3)  return 'soon';
+    return 'ok';
   }
 
   get filtered() {

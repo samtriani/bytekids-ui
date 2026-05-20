@@ -32,4 +32,8 @@ export class SubmissionApiService {
   review(id: string, req: { status: string; score?: number; feedback?: string }): Observable<any> {
     return this.http.put<any>(`${BASE}/${id}/review`, req).pipe(map(r => r.data));
   }
+
+  getGradebook(classroomId: string): Observable<any> {
+    return this.http.get<any>(`${BASE}/gradebook/classroom/${classroomId}`).pipe(map(r => r.data));
+  }
 }

@@ -42,7 +42,14 @@
       <div class="fg-row fg">
         <div>
           <label class="label">Materia</label>
-          <select class="select" [(ngModel)]="subject">@for (s of subjects; track s){ <option>{{ s }}</option> }</select>
+          <select class="select" [(ngModel)]="subjectId">
+            @if (!subjects.length) {
+              <option value="">Sin materias asignadas al salón</option>
+            }
+            @for (s of subjects; track s.id) {
+              <option [value]="s.id">{{ s.icon }} {{ s.name }}</option>
+            }
+          </select>
         </div>
         <div>
           <label class="label">Salón destino</label>
@@ -61,6 +68,10 @@
       <div class="fg">
         <label class="label">Tiempo estimado (minutos)</label>
         <input type="number" class="input" [(ngModel)]="mins" min="5" max="240">
+      </div>
+      <div class="fg">
+        <label class="label">Fecha límite de entrega <span style="color:var(--tx3);font-weight:400">(opcional)</span></label>
+        <input type="date" class="input" [(ngModel)]="dueDate" [min]="today">
       </div>
       <div style="display:flex;gap:8px;margin-top:4px">
         <button class="btn btn-primary" style="flex:1;justify-content:center" (click)="save()" [disabled]="!title.trim()">
@@ -135,7 +146,7 @@
       </div>
       <div class="modal-body">
         <div style="background:var(--bg2);border-radius:10px;padding:16px;margin-bottom:14px">
-          <div style="font-size:.68rem;font-weight:800;color:var(--guinda);text-transform:uppercase;margin-bottom:4px">{{ type }} · {{ subject }} · {{ diff }}</div>
+          <div style="font-size:.68rem;font-weight:800;color:var(--guinda);text-transform:uppercase;margin-bottom:4px">{{ type }} · {{ selectedSubjectName }} · {{ diff }}</div>
           <div style="font-weight:900;font-size:1.05rem;color:var(--tx1);margin-bottom:6px">{{ title }}</div>
           @if (desc) { <div style="font-size:.84rem;color:var(--tx2);margin-bottom:8px">{{ desc }}</div> }
           <div style="display:flex;gap:10px;font-size:.78rem;color:var(--tx3)">

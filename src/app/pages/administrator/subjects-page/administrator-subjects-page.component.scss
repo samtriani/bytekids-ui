@@ -1,5 +1,11 @@
 @import '../users-page/administrator-users-page.component.scss';
 
+.subj-color-dot { width:32px; height:32px; border-radius:8px; display:flex; align-items:center; justify-content:center; font-size:1rem; flex-shrink:0; }
+
+.subj-preview { display:flex; align-items:center; gap:14px; padding:14px 16px; border-radius:14px; border:1px solid; margin-bottom:14px; }
+.subj-preview-icon { width:44px; height:44px; border-radius:12px; display:flex; align-items:center; justify-content:center; font-size:1.4rem; flex-shrink:0; }
+.subj-color-badge { margin-left:auto; padding:4px 10px; border-radius:999px; color:#fff; font-size:.72rem; font-weight:800; font-family:monospace; flex-shrink:0; }
+
 .detail-menu-item-wrap {
   display: flex;
   align-items: stretch;

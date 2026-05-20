@@ -41,8 +41,13 @@
           @for (row of filteredSubjects; track row.id) {
             <div class="detail-menu-item-wrap">
               <button class="detail-menu-item" [class.selected]="selected?.id === row.id" (click)="select(row)">
-                <strong>{{ row.icon }} {{ row.name }}</strong>
-                <small>{{ row.description || 'Sin descripcion' }}</small>
+                <div style="display:flex;align-items:center;gap:8px">
+                  <div class="subj-color-dot" [style.background]="row.color || '#6B7FBB'">{{ row.icon }}</div>
+                  <div>
+                    <strong>{{ row.name }}</strong>
+                    <small>{{ row.description || 'Sin descripcion' }}</small>
+                  </div>
+                </div>
               </button>
               <button class="btn-baja" title="Dar de baja" (click)="deactivate(row)" [disabled]="saving">✕</button>
             </div>
@@ -51,10 +56,18 @@
 
         <div class="detail-panel">
           @if (selected) {
+            <!-- Vista previa del color real -->
+            <div class="subj-preview" [style.background]="(selected.color || '#6B7FBB') + '18'" [style.border-color]="(selected.color || '#6B7FBB') + '44'">
+              <div class="subj-preview-icon" [style.background]="selected.color || '#6B7FBB'">{{ selected.icon || '📚' }}</div>
+              <div>
+                <div style="font-weight:800;font-size:1.05rem" [style.color]="selected.color || '#6B7FBB'">{{ selected.name }}</div>
+                <div style="font-size:.78rem;color:var(--tx3);margin-top:2px">Así aparece en misiones y workspace</div>
+              </div>
+              <div class="subj-color-badge" [style.background]="selected.color || '#6B7FBB'">{{ selected.color || '—' }}</div>
+            </div>
             <div class="entity-grid">
               <div class="entity-card"><span>Nombre</span><strong>{{ selected.name }}</strong></div>
               <div class="entity-card"><span>Icono</span><strong>{{ selected.icon || '--' }}</strong></div>
-              <div class="entity-card"><span>Color</span><strong>{{ selected.color || '--' }}</strong></div>
               <div class="entity-card"><span>Estatus</span><strong>{{ selected.isActive ? 'Activa' : 'Inactiva' }}</strong></div>
             </div>
             <div class="editor-card">

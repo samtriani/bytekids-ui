@@ -2,21 +2,13 @@ import { Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { RouterLink, ActivatedRoute } from '@angular/router';
-import { ShellComponent, NavItem } from '../../../shared/shell/shell.component';
+import { ShellComponent } from '../../../shared/shell/shell.component';
+import { TEACHER_NAV } from '../shared/teacher-nav';
 import { ContentApiService } from '../../../services/api/content-api.service';
 import { ClassroomApiService } from '../../../services/api/classroom-api.service';
 import { AuthService } from '../../../services/auth.service';
-
-const NAV: NavItem[] = [
-  {label:'Mi Panel',        icon:'🏠', route:'/teacher'},
-  {label:'Mis Salones',     icon:'🏫', route:'/teacher/classrooms'},
-  {label:'Alumnos',         icon:'👨‍🎓', route:'/teacher/students'},
-  {label:'Crear Contenido', icon:'📝', route:'/teacher/create'},
-  {label:'Asistente IA',    icon:'🤖', route:'/teacher/ai-assistant', badge:'IA'},
-  {label:'Reportes',        icon:'📊', route:'/teacher/reports'},
-  {label:'Calendario',      icon:'📅', route:'/teacher/calendar'},
-  {label:'Mensajes',        icon:'💬', route:'/teacher/messages'},
-];
+import { forkJoin, of } from 'rxjs';
+import { catchError } from 'rxjs/operators';
 
 @Component({
   selector: 'app-create-content',
@@ -26,7 +18,7 @@ const NAV: NavItem[] = [
   styleUrls: ['./create-content.component.scss']
 })
 export class CreateContentComponent implements OnInit {
-  navItems = NAV;
+  navItems = TEACHER_NAV;
 
   teacher: any = null;
   get teacherName(): string { return this.teacher?.displayName || 'Maestro'; }
@@ -35,11 +27,11 @@ export class CreateContentComponent implements OnInit {
   // Form
   type = 'Misión';
   types = ['Misión', 'Tarea', 'Quiz', 'Proyecto', 'Material'];
-  subject = 'Python';
-  subjects = ['Python', 'HTML/CSS/JS', 'Scratch', 'Robótica', 'Roblox Studio', 'Matemáticas'];
+  subjectId = '';                            // ID real del backend
+  subjects: { id: string; name: string; icon: string }[] = [];
   diff = 'Medio';
   diffs = ['Fácil', 'Medio', 'Difícil'];
-  title = ''; desc = ''; xp = 50; mins = 30;
+  title = ''; desc = ''; xp = 50; mins = 30; dueDate = '';
   forStudent = '';
   showPreview = false;
   toast = ''; toastType = 'ok';
@@ -51,6 +43,7 @@ export class CreateContentComponent implements OnInit {
   // Classrooms from API
   classrooms: any[] = [];
   classroomId = '';
+  get today(): string { return new Date().toISOString().slice(0, 10); }
   get classroomLabel(): string {
     return this.classrooms.find(c => (c._id || c.id) === this.classroomId)?.name || '—';
   }
@@ -77,13 +70,29 @@ export class CreateContentComponent implements OnInit {
 
   ngOnInit(): void {
     this.teacher = this.auth.getUser();
-    this.classroomApi.getMyClassrooms().subscribe({
-      next: cls => {
-        this.classrooms = cls;
-        if (cls.length) this.classroomId = cls[0]._id || cls[0].id;
-      }
+    this.classroomApi.getMyClassrooms().pipe(catchError(() => of([]))).subscribe(cls => {
+      this.classrooms = cls;
+      if (cls.length) this.classroomId = cls[0]._id || cls[0].id;
+
+      if (!cls.length) { this.loadPublished(); return; }
+
+      // Cargar materias de todos los salones del maestro y deduplicar
+      forkJoin(
+        cls.map((c: any) => this.classroomApi.getSubjects(c.id || c._id).pipe(catchError(() => of([]))))
+      ).subscribe(subjectLists => {
+        const seen = new Set<string>();
+        const all: { id: string; name: string; icon: string }[] = [];
+        (subjectLists as any[][]).flat().forEach(s => {
+          if (!seen.has(s.id)) {
+            seen.add(s.id);
+            all.push({ id: s.id, name: s.name, icon: s.icon ?? '📚' });
+          }
+        });
+        this.subjects  = all;
+        this.subjectId = all.length ? all[0].id : '';
+        this.loadPublished();
+      });
     });
-    this.loadPublished();
   }
 
   private loadPublished(): void {
@@ -104,15 +113,24 @@ export class CreateContentComponent implements OnInit {
     });
   }
 
+  get selectedSubjectName(): string {
+    return this.subjects.find(s => s.id === this.subjectId)?.name ?? '';
+  }
+
   useTpl(t: any): void {
-    this.subject = t.s; this.xp = t.xp; this.mins = t.m; this.title = t.n; this.diff = t.d;
+    // Busca el ID de la materia por nombre
+    const match = this.subjects.find(s => s.name === t.s);
+    if (match) this.subjectId = match.id;
+    this.xp = t.xp; this.mins = t.m; this.title = t.n; this.diff = t.d;
   }
 
   startEdit(p: any): void {
     this.editingId = p.id;
     this.title = p.title;
     this.desc = p.desc;
-    this.subject = p.subject || this.subjects[0];
+    // Buscar el subjectId correspondiente al nombre guardado
+    const matched = this.subjects.find(s => s.name === p.subject || s.id === p.subjectId);
+    this.subjectId = matched?.id ?? (this.subjects[0]?.id ?? '');
     this.xp = p.xp;
     this.mins = p.mins;
     this.diff = this.apiToDiff(p.diff);
@@ -123,20 +141,21 @@ export class CreateContentComponent implements OnInit {
 
   cancelEdit(): void {
     this.editingId = null;
-    this.title = ''; this.desc = '';
+    this.title = ''; this.desc = ''; this.dueDate = '';
   }
 
   save(): void {
     if (!this.title.trim()) return;
-    const req = {
+    const req: any = {
       title: this.title.trim(),
       description: this.desc,
       type: this.typeToApi(this.type),
-      subjectName: this.subject,
       xpReward: this.xp,
       difficulty: this.diffToApi(this.diff),
       estimatedMinutes: this.mins,
     };
+    if (this.subjectId) req.subjectId = this.subjectId;
+    if (this.dueDate)  req.dueDate = new Date(this.dueDate).toISOString();
 
     if (this.editingId) {
       this.contentApi.update(this.editingId, req).subscribe({
@@ -162,7 +181,7 @@ export class CreateContentComponent implements OnInit {
           });
           this.published.unshift({
             id: cid, title: this.title, type: this.type,
-            subject: this.subject, xp: this.xp, diff: this.diff,
+            subject: this.selectedSubjectName, xp: this.xp, diff: this.diff,
             mins: this.mins, desc: this.desc,
             date: new Date().toISOString().substring(0, 10),
           });

@@ -11,9 +11,9 @@
       <a [routerLink]="'/student/ai-tutor'" [queryParams]="{q:'Quiero aprender Roblox Studio. ¿Por dónde empiezo?'}" class="bk-btn yellow" style="display:inline-flex; margin-top:12px">🤖 Pedir ayuda a ByteBot</a>
     </div>
     <div class="rb-stats">
-      <div class="rb-stat"><span class="rb-sval">Nivel 2</span><span class="rb-slbl">Tu nivel actual</span></div>
-      <div class="rb-stat"><span class="rb-sval" style="color:var(--bk-yellow-light)">290 XP</span><span class="rb-slbl">XP ganado</span></div>
-      <div class="rb-stat"><span class="rb-sval" style="color:var(--bk-green)">35%</span><span class="rb-slbl">Progreso total</span></div>
+      <div class="rb-stat"><span class="rb-sval">Nivel {{ robloxLevel }}</span><span class="rb-slbl">Tu nivel actual</span></div>
+      <div class="rb-stat"><span class="rb-sval" style="color:var(--bk-yellow-light)">{{ robloxXp }} XP</span><span class="rb-slbl">XP ganado</span></div>
+      <div class="rb-stat"><span class="rb-sval" style="color:var(--bk-green)">{{ robloxProgress }}%</span><span class="rb-slbl">Progreso total</span></div>
     </div>
   </div>
 

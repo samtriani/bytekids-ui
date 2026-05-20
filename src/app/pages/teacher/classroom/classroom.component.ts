@@ -35,6 +35,7 @@ export class TeacherClassroomComponent implements OnInit, OnDestroy, AfterViewCh
   missionSubmissions: any[] = [];
   reviewingSubmission: any   = null;
   reviewFeedback       = '';
+  reviewScore:         number | null = null;
   reviewing            = false;
   activeTab:         'chat' | 'bot' | 'video' = 'chat';
   teacherVideoActive = false;
@@ -105,7 +106,7 @@ export class TeacherClassroomComponent implements OnInit, OnDestroy, AfterViewCh
       forkJoin({
         join:     this.sessionApi.join(this.scheduleId).pipe(catchError(() => of(null))),
         students: this.classroomApi.getStudents(data.classroomId ?? '').pipe(catchError(() => of([]))),
-        content:  this.contentApi.getAll().pipe(catchError(() => of([]))),
+        content:  this.contentApi.getMyContent().pipe(catchError(() => of([]))),
         mission:  this.sessionApi.getMission(this.scheduleId).pipe(catchError(() => of(null))),
       }).subscribe(({ students, content, mission }) => {
         this.enrolledStudents  = students;
@@ -251,9 +252,10 @@ export class TeacherClassroomComponent implements OnInit, OnDestroy, AfterViewCh
   openReview(sub: any) {
     this.reviewingSubmission = sub;
     this.reviewFeedback = sub.teacherFeedback ?? '';
+    this.reviewScore    = sub.score != null ? sub.score / 10 : null;
   }
 
-  closeReview() { this.reviewingSubmission = null; this.reviewFeedback = ''; }
+  closeReview() { this.reviewingSubmission = null; this.reviewFeedback = ''; this.reviewScore = null; }
 
   submitReview(status: 'aprobado' | 'rechazado') {
     if (!this.reviewingSubmission || this.reviewing) return;
@@ -261,6 +263,7 @@ export class TeacherClassroomComponent implements OnInit, OnDestroy, AfterViewCh
     this.submissionApi.review(this.reviewingSubmission.id, {
       status,
       feedback: this.reviewFeedback || undefined,
+      score: this.reviewScore != null ? Math.round(this.reviewScore * 10) : undefined,
     }).subscribe({
       next: updated => {
         this.missionSubmissions = this.missionSubmissions.map(s =>

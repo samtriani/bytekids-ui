@@ -99,12 +99,20 @@ export class AdministratorUsersPageComponent implements OnInit {
     );
   }
 
+  private readonly DAY_ORDER: Record<string, number> = {
+    MONDAY:1, TUESDAY:2, WEDNESDAY:3, THURSDAY:4, FRIDAY:5, SATURDAY:6, SUNDAY:7,
+    lunes:1,  martes:2,  miercoles:3, jueves:4,   viernes:5, sabado:6,   domingo:7,
+  };
+
   schedulesForClassroom(classroomId: string): any[] {
-    return this.teacherSchedules.filter(s => s.classroomId === classroomId);
+    return this.teacherSchedules
+      .filter(s => s.classroomId === classroomId)
+      .sort((a, b) => (this.DAY_ORDER[a.dayOfWeek] ?? 9) - (this.DAY_ORDER[b.dayOfWeek] ?? 9));
   }
 
   readonly DAY_ABBR: Record<string, string> = {
-    lunes:'Lun', martes:'Mar', miercoles:'Mié', jueves:'Jue', viernes:'Vie', sabado:'Sáb'
+    lunes:'Lun', martes:'Mar', miercoles:'Mié', jueves:'Jue', viernes:'Vie', sabado:'Sáb',
+    MONDAY:'Lun', TUESDAY:'Mar', WEDNESDAY:'Mié', THURSDAY:'Jue', FRIDAY:'Vie', SATURDAY:'Sáb', SUNDAY:'Dom',
   };
 
   select(row: any) {

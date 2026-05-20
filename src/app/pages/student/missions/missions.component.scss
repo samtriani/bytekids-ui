@@ -24,9 +24,17 @@
 .mc-title { font-weight:800; font-size:.95rem; color:var(--bk-text); }
 .mc-info { display:flex; justify-content:space-between; align-items:center; font-size:.75rem; color:var(--bk-text-muted); font-weight:600; }
 .mc-status { font-weight:700; }
-.mc-status.completado { color:var(--bk-green); }
+.mc-status.completado  { color:var(--bk-green); }
 .mc-status.en-progreso { color:var(--bk-blue-light); }
-.mc-status.disponible { color:var(--bk-yellow); }
+.mc-status.disponible  { color:var(--bk-yellow); }
+.mc-status.rechazado   { color:#EF4444; font-weight:800; }
+.mc-due { font-size:.72rem; font-weight:700; padding:3px 8px; border-radius:6px; margin:5px 0 2px; display:inline-block; }
+.mc-due--ok      { background:rgba(16,185,129,.1);  color:#059669; }
+.mc-due--soon    { background:rgba(245,158,11,.12); color:#B45309; }
+.mc-due--urgent  { background:rgba(239,68,68,.12);  color:#DC2626; }
+.mc-due--overdue { background:rgba(239,68,68,.18);  color:#DC2626; font-weight:900; }
+.mc-score { font-size:.75rem; font-weight:800; color:#7C3AED; margin:3px 0; }
+.mc-rejected-hint { font-size:.71rem; color:#6B7280; background:#FEF2F2; border-left:3px solid #EF4444; padding:4px 8px; border-radius:4px; margin:4px 0; line-height:1.4; }
 .mc-btn { display:block; text-align:center; padding:10px; border-radius:10px; font-weight:800; font-size:.85rem; color:#fff; cursor:pointer; transition:all .2s; text-decoration:none; border:none; font-family:'Nunito',sans-serif; }
 .mc-btn:hover { transform:translateY(-1px); opacity:.9; }
 .locked-btn { background:var(--bk-bg-card2); color:var(--bk-text-muted); border:1px solid var(--bk-border); cursor:not-allowed; }

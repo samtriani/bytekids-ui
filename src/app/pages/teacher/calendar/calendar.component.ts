@@ -2,21 +2,11 @@ import { Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { RouterLink, Router } from '@angular/router';
-import { ShellComponent, NavItem } from '../../../shared/shell/shell.component';
+import { ShellComponent } from '../../../shared/shell/shell.component';
+import { TEACHER_NAV } from '../shared/teacher-nav';
 import { ScheduleApiService } from '../../../services/api/schedule-api.service';
 import { AuthService } from '../../../services/auth.service';
 import { catchError, of } from 'rxjs';
-
-const NAV: NavItem[] = [
-  {label:'Mi Panel',        icon:'🏠', route:'/teacher'},
-  {label:'Mis Salones',     icon:'🏫', route:'/teacher/classrooms'},
-  {label:'Alumnos',         icon:'👨‍🎓', route:'/teacher/students'},
-  {label:'Crear Contenido', icon:'📝', route:'/teacher/create'},
-  {label:'Asistente IA',    icon:'🤖', route:'/teacher/ai-assistant', badge:'IA'},
-  {label:'Reportes',        icon:'📊', route:'/teacher/reports'},
-  {label:'Calendario',      icon:'📅', route:'/teacher/calendar'},
-  {label:'Mensajes',        icon:'💬', route:'/teacher/messages'},
-];
 
 const MONTH_NAMES = ['Enero','Febrero','Marzo','Abril','Mayo','Junio',
                      'Julio','Agosto','Septiembre','Octubre','Noviembre','Diciembre'];
@@ -37,7 +27,7 @@ interface MonthMeta { label: string; year: number; month: number; days: number; 
   styleUrls: ['./calendar.component.scss']
 })
 export class CalendarComponent implements OnInit {
-  navItems  = NAV;
+  navItems  = TEACHER_NAV;
   days      = ['Dom','Lun','Mar','Mié','Jue','Vie','Sáb'];
   loading   = true;
 

@@ -26,7 +26,7 @@ export class AiTutorComponent implements AfterViewChecked, OnInit {
     { label: 'Tutor IA',      icon: '🤖', route: '/student/ai-tutor', badge: '✨' },
     { label: 'Proyectos',     icon: '💻', route: '/student/projects' },
     // { label: 'Roblox Studio', icon: '🎮', route: '/student/roblox' },
-    { label: 'Horario',       icon: '📅', route: '/student/calendar' },
+    { label: 'Calendario',     icon: '📅', route: '/student/calendar' },
     { label: 'Comunidad',     icon: '👥', route: '/student/community' },
   ];
 
@@ -53,12 +53,14 @@ export class AiTutorComponent implements AfterViewChecked, OnInit {
   codeOutput = '';
   outputError = false;
 
-  private exercises: Record<string, { instructions: string; starter: string; solution: string; successOutput: string }> = {
+  private get exercises(): Record<string, { instructions: string; starter: string; solution: string; successOutput: string }> {
+    const firstName = this.auth.getUser()?.displayName?.split(' ')[0] || 'Alumno';
+    return {
     'Variables y Datos': {
       instructions: '📋 Crea 3 variables: tu nombre, tu edad y tu materia favorita. Luego imprime cada una con print().',
       starter: '# Escribe tu código aquí\nnombre = ""\nedad = 0\nmateria = ""\n\nprint(nombre)\nprint(edad)\nprint(materia)',
       solution: 'nombre',
-      successOutput: 'Axel\n10\nPython'
+      successOutput: `${firstName}\n10\nPython`
     },
     'Condicionales IF/ELSE': {
       instructions: '📋 Crea una variable "puntos" con el valor 850. Si es mayor a 800 imprime "¡Nivel Experto!", si no imprime "¡Sigue practicando!".',
@@ -102,7 +104,8 @@ export class AiTutorComponent implements AfterViewChecked, OnInit {
       solution: 'espacio',
       successOutput: '✅ ¡Correcto! Tu sprite salta al presionar espacio'
     },
-  };
+    };
+  }
 
   get exercise() {
     return this.activeMission ? (this.exercises[this.activeMission.title] ?? null) : null;

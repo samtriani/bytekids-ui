@@ -30,7 +30,7 @@ export class StudentDashboardComponent implements OnInit, AfterViewInit {
     { label: 'Tutor IA',      icon: '🤖', route: '/student/ai-tutor', badge: '✨' },
     { label: 'Proyectos',     icon: '💻', route: '/student/projects' },
     // { label: 'Roblox Studio', icon: '🎮', route: '/student/roblox' },
-    { label: 'Horario',       icon: '📅', route: '/student/calendar' },
+    { label: 'Calendario',    icon: '📅', route: '/student/calendar' },
     { label: 'Comunidad',     icon: '👥', route: '/student/community' },
   ];
 
@@ -119,8 +119,13 @@ export class StudentDashboardComponent implements OnInit, AfterViewInit {
 
         // Gráfica de habilidades por materia
         if (this.skillsChartInst && subjects.length) {
-          this.skillsChartInst.data.labels   = subjects.map((s:any) => s.subject?.name ?? '');
-          this.skillsChartInst.data.datasets[0].data = subjects.map((s:any) => s.xpInSubject ?? 0);
+          const vals = subjects.map((s:any) => s.xpInSubject ?? 0);
+          const maxVal = Math.max(...vals, 100);
+          const suggestedMax = Math.ceil(maxVal / 100) * 100;
+          this.skillsChartInst.data.labels = subjects.map((s:any) =>
+            s.subject?.name ?? s.subjectName ?? '');
+          this.skillsChartInst.data.datasets[0].data = vals;
+          this.skillsChartInst.options.scales.r.suggestedMax = suggestedMax;
           this.skillsChartInst.update();
         }
 

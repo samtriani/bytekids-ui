@@ -16,7 +16,7 @@ const NAV: NavItem[] = [
   { label: 'Logros',        icon: '🏆', route: '/student/achievements' },
   { label: 'Tutor IA',      icon: '🤖', route: '/student/ai-tutor', badge: '✨' },
   { label: 'Proyectos',     icon: '💻', route: '/student/projects' },
-  { label: 'Horario',       icon: '📅', route: '/student/calendar' },
+  { label: 'Calendario',    icon: '📅', route: '/student/calendar' },
   { label: 'Comunidad',     icon: '👥', route: '/student/community' },
 ];
 

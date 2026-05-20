@@ -1,0 +1,110 @@
+<app-shell role="teacher" [userName]="teacherName" [userAvatar]="teacherInitials"
+  [navItems]="navItems" pageTitle="Libreta"></app-shell>
+
+<div class="page-wrap">
+  <div class="ph">
+    <div class="ph-left">
+      <h1>📋 Libreta de calificaciones</h1>
+      <p>Calificaciones y estado de entregas por salón</p>
+    </div>
+  </div>
+
+  <!-- Selector de salón -->
+  <div class="gb-controls card card-p">
+    <div style="display:flex;align-items:center;gap:12px;flex-wrap:wrap">
+      <div style="flex:1;min-width:200px">
+        <label class="label">Salón</label>
+        <select class="select" [(ngModel)]="selectedClassroom" (change)="loadGradebook()">
+          @for (c of classrooms; track c.id || c._id) {
+            <option [value]="c.id || c._id">{{ c.name }}</option>
+          }
+          @if (!classrooms.length) { <option value="">Sin salones</option> }
+        </select>
+      </div>
+      <div>
+        <label class="label">Filtrar</label>
+        <div class="chips">
+          @for (f of statusFilters; track f) {
+            <button class="chip" [class.on]="filterStatus===f" (click)="filterStatus=f">{{ f }}</button>
+          }
+        </div>
+      </div>
+    </div>
+  </div>
+
+  @if (loading) {
+    <div style="text-align:center;padding:60px;color:var(--tx3)">Cargando libreta…</div>
+  } @else if (!students.length || !content.length) {
+    <div style="text-align:center;padding:60px;color:var(--tx3)">
+      <div style="font-size:3rem;margin-bottom:8px">📋</div>
+      <p>{{ !students.length ? 'No hay alumnos en este salón.' : 'No hay contenido asignado a este salón aún.' }}</p>
+    </div>
+  } @else {
+    <!-- Tabla libreta -->
+    <div class="gb-table-wrap card">
+      <table class="gb-table">
+        <thead>
+          <tr>
+            <th class="gb-th gb-th-student">Alumno</th>
+            @for (c of content; track c.id) {
+              <th class="gb-th">
+                <div class="gb-content-head">
+                  <span class="gb-content-icon">{{ typeIcon(c.type) }}</span>
+                  <span class="gb-content-title">{{ c.title }}</span>
+                  @if (c.dueDate) {
+                    <span class="gb-due-chip">{{ c.dueDate | date:'d MMM' }}</span>
+                  }
+                </div>
+                <div class="gb-content-meta">
+                  <span>+{{ c.xpReward }} XP</span>
+                  <span class="gb-submitted-count">{{ submittedCount(c.id) }}/{{ students.length }}</span>
+                </div>
+              </th>
+            }
+          </tr>
+        </thead>
+        <tbody>
+          @for (s of filteredStudents; track s.id) {
+            <tr class="gb-row">
+              <td class="gb-td-student">
+                <div class="gb-student-cell">
+                  <div class="gb-av">{{ s.initials || '?' }}</div>
+                  <span class="gb-student-name">{{ s.name }}</span>
+                </div>
+              </td>
+              @for (c of content; track c.id) {
+                <td class="gb-td"
+                    [class.gb-td--approved]="getGrade(s.id, c.id)?.status==='aprobado'"
+                    [class.gb-td--rejected]="getGrade(s.id, c.id)?.status==='rechazado'"
+                    [class.gb-td--pending]="getGrade(s.id, c.id)?.status==='enviado'">
+                  <div class="gb-cell">
+                    <span class="gb-score" [style.color]="scoreColor(getGrade(s.id, c.id))">{{ scoreLabel(getGrade(s.id, c.id)) }}</span>
+                    @if (getGrade(s.id, c.id)?.attempts > 1) {
+                      <span class="gb-attempts">×{{ getGrade(s.id, c.id)?.attempts }}</span>
+                    }
+                  </div>
+                </td>
+              }
+            </tr>
+          }
+          <!-- Fila promedio -->
+          <tr class="gb-row gb-avg-row">
+            <td class="gb-td-student" style="font-weight:800;color:var(--tx2)">Promedio</td>
+            @for (c of content; track c.id) {
+              <td class="gb-td" style="font-weight:800;color:var(--guinda)">{{ avgScore(c.id) }}</td>
+            }
+          </tr>
+        </tbody>
+      </table>
+    </div>
+
+    <!-- Leyenda -->
+    <div class="gb-legend card card-p">
+      <span class="gb-leg-item gb-leg-approved">✓ Aprobado</span>
+      <span class="gb-leg-item gb-leg-rejected">✗ Rechazado</span>
+      <span class="gb-leg-item gb-leg-pending">⏳ Pendiente revisión</span>
+      <span class="gb-leg-item">— Sin entregar</span>
+      <span class="gb-leg-item" style="color:var(--tx3)">×N = intentos</span>
+    </div>
+  }
+</div>

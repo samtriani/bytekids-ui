@@ -4,7 +4,7 @@
   padding: 18px 24px; display: flex; align-items: center; justify-content: space-between; gap: 20px;
 }
 .lv-left  { display: flex; align-items: center; gap: 14px; }
-.lv-badge { background: rgba(37,99,235,0.2); border: 1.5px solid var(--bk-blue); color: #93C5FD; font-weight: 800; font-size: .88rem; padding: 6px 14px; border-radius: 20px; white-space: nowrap; }
+.lv-badge { background: var(--bk-blue, #2563EB); border: none; color: #fff; font-weight: 900; font-size: .88rem; padding: 6px 16px; border-radius: 20px; white-space: nowrap; box-shadow: 0 2px 8px rgba(37,99,235,.35); }
 .lv-title { font-family: 'Syne', sans-serif; font-weight: 800; font-size: 1rem; color: var(--bk-text); }
 .lv-sub   { font-size: .78rem; color: var(--bk-text-muted); font-weight: 600; }
 .lv-bar-wrap { display: flex; align-items: center; gap: 12px; min-width: 280px; }

@@ -8,13 +8,13 @@
       <!-- Nueva publicación -->
       @if (!showNewPost) {
         <div class="new-post-box">
-          <div class="np-avatar" style="background:rgba(6,182,212,.2);color:#06B6D4">AP</div>
+          <div class="np-avatar" style="background:rgba(6,182,212,.2);color:#06B6D4">{{ me?.initials || 'A' }}</div>
           <button class="np-input" (click)="showNewPost=true">¿Qué aprendiste hoy? Compártelo... ✨</button>
         </div>
       } @else {
         <div class="new-post-form">
           <div class="npf-header">
-            <div class="np-avatar" style="background:rgba(6,182,212,.2);color:#06B6D4">AP</div>
+            <div class="np-avatar" style="background:rgba(6,182,212,.2);color:#06B6D4">{{ me?.initials || 'A' }}</div>
             <select class="npf-subject" [(ngModel)]="newPostSubject">
               @for (s of subjects; track s) { <option>{{ s }}</option> }
             </select>
@@ -66,7 +66,7 @@
         <div class="card-title" style="margin-bottom:14px">🏆 Ranking del salón</div>
         <div style="display:flex;flex-direction:column;gap:8px">
           @for (s of topStudents; track s.name) {
-            <div class="rank-row" [class.me]="s.name==='Axel Partida'">
+            <div class="rank-row" [class.me]="s.id === me?.userId">
               <span class="rank-num" [class]="s.rank<=3?'gold':''">{{ s.rank === 1?'🥇':s.rank===2?'🥈':s.rank===3?'🥉':s.rank }}</span>
               <div class="rank-av" [style.background]="s.color+'20'" [style.color]="s.color">{{ s.avatar }}</div>
               <span class="rank-name">{{ s.name }}</span>

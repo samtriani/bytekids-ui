@@ -12,8 +12,10 @@
 .cal-cell.empty { cursor:default; }
 .cal-num { font-weight:600; font-size:.84rem; color:var(--tx1); }
 .cal-cell.today .cal-num { color:var(--guinda); font-weight:800; }
-.event-pip { position:absolute; bottom:3px; width:5px; height:5px; background:var(--guinda); border-radius:50%; }
-.cal-cell.selected .event-pip { background:#fff; }
+.event-pip { position:absolute; bottom:3px; width:6px; height:6px; border-radius:50%; transition:background .2s; background:var(--guinda); }
+.event-pip.activity-yes { background:#10b981; }
+.event-pip.activity-no  { background:#f59e0b; }
+.cal-cell.selected .event-pip { opacity:.8; }
 .event-item { padding:10px 12px; border-radius:var(--r2); border-left:3px solid; }
 .upcoming-item { display:flex; align-items:center; gap:10px; padding:7px; border-radius:var(--r2); transition:background .15s; }
 .upcoming-item:hover { background:var(--surface2); }
