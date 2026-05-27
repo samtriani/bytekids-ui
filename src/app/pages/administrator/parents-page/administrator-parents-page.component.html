@@ -1,0 +1,208 @@
+<app-shell role="administrator" [userName]="userName" [userAvatar]="userAvatar"
+  [navItems]="navItems" pageTitle="Módulo Coordinador"></app-shell>
+
+<div class="page-wrap">
+  <div class="ph">
+    <div class="ph-left">
+      <h1>Padres y Tutores</h1>
+      <p>Da de alta padres, asigna sus hijos y administra sus cuentas.</p>
+    </div>
+  </div>
+
+  @if (toast) {
+    <div [class]="'bk-toast bk-toast-' + toastType">{{ toast }}</div>
+  }
+
+  @if (loading) {
+    <div class="empty-box" style="text-align:center;padding:40px">Cargando…</div>
+  } @else {
+    <div class="layout">
+
+      <!-- ── Columna izquierda: Alta nueva ── -->
+      <div class="card card-p create-card">
+        <div class="section-head">
+          <h3>Alta nueva</h3>
+          <span class="tag tag-guinda">Padre / Tutor</span>
+        </div>
+        <div class="fg">
+          <label class="label">Nombre completo *</label>
+          <input class="input" [(ngModel)]="createForm.displayName" placeholder="María Torres Partida">
+        </div>
+        <div class="fg">
+          <label class="label">Usuario *</label>
+          <input class="input" [(ngModel)]="createForm.username" placeholder="maria.torres">
+        </div>
+        <div class="fg">
+          <label class="label">Contraseña *</label>
+          <input class="input" type="password" [(ngModel)]="createForm.password" placeholder="Mínimo 6 caracteres">
+        </div>
+        <div class="fg">
+          <label class="label">Edad</label>
+          <input class="input" type="number" [(ngModel)]="createForm.age" placeholder="Ej: 38" min="18" max="99">
+        </div>
+        <div class="fg">
+          <label class="label">Dirección</label>
+          <input class="input" [(ngModel)]="createForm.address" placeholder="Calle, número, colonia">
+        </div>
+        <button class="btn btn-primary btn-block" (click)="create()"
+          [disabled]="saving || !createForm.displayName || !createForm.username || !createForm.password">
+          {{ saving ? 'Guardando…' : '➕ Crear padre / tutor' }}
+        </button>
+      </div>
+
+      <!-- ── Columna derecha: Lista + detalle ── -->
+      <div class="card card-p detail-card">
+        <div class="section-head">
+          <h3>Padres registrados</h3>
+          <span class="tag tag-blue">{{ parents.length }} registros</span>
+        </div>
+
+        <div class="fg" style="margin-bottom:12px">
+          <input class="input" [(ngModel)]="search" placeholder="Buscar por nombre o usuario…">
+        </div>
+
+        <div class="detail-layout">
+
+          <!-- Lista -->
+          <div class="detail-menu">
+            @if (filteredParents.length) {
+              @for (p of filteredParents; track p.id) {
+                <button class="detail-menu-item" [class.selected]="selected?.id === p.id" (click)="select(p)">
+                  <strong>{{ p.displayName }}</strong>
+                  <small>{{ p.username }} · {{ linkedChildren.length && selected?.id === p.id ? linkedChildren.length + ' hijo(s)' : '' }}</small>
+                </button>
+              }
+            } @else {
+              <div class="empty-box">Sin padres registrados aún.</div>
+            }
+          </div>
+
+          <!-- Detalle -->
+          <div class="detail-panel">
+            @if (selected) {
+
+              <!-- Header -->
+              <div class="entity-header">
+                <div class="entity-avatar">{{ selected.initials || '?' }}</div>
+                <div style="flex:1">
+                  <h4>{{ selected.displayName }}</h4>
+                  <p>{{ selected.username }} · {{ selected.isActive ? 'Activo' : 'Inactivo' }}</p>
+                </div>
+                <span class="tag tag-guinda" style="align-self:flex-start">Padre/Tutor</span>
+              </div>
+
+              <!-- Info rápida -->
+              <div class="entity-grid">
+                <div class="entity-card"><span>Edad</span><strong>{{ selected.age ?? '—' }}{{ selected.age ? ' años' : '' }}</strong></div>
+                <div class="entity-card"><span>Iniciales</span><strong>{{ selected.initials || '—' }}</strong></div>
+                <div class="entity-card" style="grid-column:span 2"><span>Dirección</span><strong>{{ selected.address || '—' }}</strong></div>
+              </div>
+
+              <!-- ── Hijos vinculados ── -->
+              <div class="children-section">
+                <div class="cs-header">
+                  <span>👨‍👩‍👧 Hijos vinculados</span>
+                  @if (!loadingChildren) {
+                    <span class="tcs-count">{{ linkedChildren.length }}</span>
+                  }
+                </div>
+
+                <!-- Buscador para vincular -->
+                <div class="cs-link-box">
+                  <input class="input input-sm" [(ngModel)]="searchChild"
+                    placeholder="Buscar alumno para vincular…">
+                  @if (searchChild.trim() && availableToLink.length) {
+                    <div class="cs-dropdown">
+                      @for (s of availableToLink.slice(0, 6); track s.id) {
+                        <button class="cs-drop-item" [disabled]="linking" (click)="linkStudent(s)">
+                          <span class="cs-drop-av">{{ s.initials || '?' }}</span>
+                          <span class="cs-drop-name">{{ s.displayName }}</span>
+                          <span class="cs-drop-user">{{ s.username }}</span>
+                          <span class="cs-drop-add">{{ linking ? '…' : '+ Vincular' }}</span>
+                        </button>
+                      }
+                    </div>
+                  } @else if (searchChild.trim() && !availableToLink.length) {
+                    <div class="cs-no-results">Sin alumnos disponibles para ese término</div>
+                  }
+                </div>
+
+                <!-- Lista de hijos -->
+                @if (loadingChildren) {
+                  <div class="cs-loading">Cargando hijos…</div>
+                } @else if (linkedChildren.length) {
+                  <div class="cs-children-list">
+                    @for (child of linkedChildren; track child.id) {
+                      <div class="cs-child-item">
+                        <div class="cs-child-av">{{ child.initials || '?' }}</div>
+                        <div class="cs-child-info">
+                          <span class="cs-child-name">{{ child.displayName }}</span>
+                          <span class="cs-child-user">{{ child.username }}</span>
+                        </div>
+                        @if (confirmUnlinkId === child.id) {
+                          <button class="btn btn-sm cs-unlink-confirm" (click)="unlinkStudent(child)">¿Desvincular?</button>
+                          <button class="btn btn-ghost btn-sm" (click)="confirmUnlinkId = null">✕</button>
+                        } @else {
+                          <button class="btn btn-ghost btn-sm cs-unlink-btn" (click)="confirmUnlinkId = child.id" title="Desvincular">✕</button>
+                        }
+                      </div>
+                    }
+                  </div>
+                } @else {
+                  <div class="cs-empty">Sin hijos vinculados — usa el buscador para agregar alumnos</div>
+                }
+              </div>
+
+              <!-- ── Editar padre ── -->
+              <div class="editor-card">
+                <div class="editor-card-header">✏️ Editar padre / tutor</div>
+                <div class="editor-card-body">
+                  <div class="fg">
+                    <label class="label">Nombre completo</label>
+                    <input class="input" [(ngModel)]="editForm.displayName">
+                  </div>
+                  <div class="fg-row">
+                    <div class="fg">
+                      <label class="label">Usuario</label>
+                      <input class="input" [(ngModel)]="editForm.username">
+                    </div>
+                    <div class="fg">
+                      <label class="label">Iniciales</label>
+                      <input class="input" [(ngModel)]="editForm.initials" maxlength="2">
+                    </div>
+                  </div>
+                  <div class="fg">
+                    <label class="label">Nueva contraseña</label>
+                    <input class="input" type="password" [(ngModel)]="editForm.password" placeholder="Opcional">
+                  </div>
+                  <div class="fg-row">
+                    <div class="fg">
+                      <label class="label">Edad</label>
+                      <input class="input" type="number" [(ngModel)]="editForm.age" min="18" max="99">
+                    </div>
+                    <div class="fg" style="flex:2">
+                      <label class="label">Dirección</label>
+                      <input class="input" [(ngModel)]="editForm.address">
+                    </div>
+                  </div>
+                  <div class="btn-stack">
+                    <button class="btn btn-primary btn-block" (click)="update()" [disabled]="saving">
+                      {{ saving ? 'Guardando…' : 'Guardar cambios' }}
+                    </button>
+                    <button class="btn btn-ghost btn-block" (click)="deactivate()" [disabled]="saving">
+                      Desactivar cuenta
+                    </button>
+                  </div>
+                </div>
+              </div>
+
+            } @else {
+              <div class="empty-box">Selecciona un padre para ver su detalle.</div>
+            }
+          </div>
+        </div>
+      </div>
+
+    </div>
+  }
+</div>

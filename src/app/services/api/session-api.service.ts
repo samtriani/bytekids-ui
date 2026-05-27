@@ -21,7 +21,36 @@ export class SessionApiService {
     return this.http.post<any>(`${BASE}/schedule/${scheduleId}/leave`, {}).pipe(map(() => void 0));
   }
 
-  getAttendance(scheduleId: string): Observable<any[]> {
-    return this.http.get<any>(`${BASE}/schedule/${scheduleId}/attendance`).pipe(map(r => r.data ?? []));
+  getAttendance(scheduleId: string): Observable<{ participants: any[]; teacherVideoActive: boolean }> {
+    return this.http.get<any>(`${BASE}/schedule/${scheduleId}/attendance`).pipe(
+      map(r => r.data ?? { participants: [], teacherVideoActive: false })
+    );
+  }
+
+  toggleVideo(scheduleId: string): Observable<boolean> {
+    return this.http.post<any>(`${BASE}/schedule/${scheduleId}/video`, {}).pipe(map(r => r.data));
+  }
+
+  getJaasToken(scheduleId: string): Observable<string> {
+    return this.http.get<any>(`${BASE}/schedule/${scheduleId}/jaas-token`).pipe(map(r => r.data));
+  }
+
+  launchMission(scheduleId: string, contentId: string): Observable<any> {
+    return this.http.post<any>(`${BASE}/schedule/${scheduleId}/mission?contentId=${contentId}`, {}).pipe(map(r => r.data));
+  }
+
+  getMission(scheduleId: string): Observable<any | null> {
+    return this.http.get<any>(`${BASE}/schedule/${scheduleId}/mission`).pipe(map(r => r.data ?? null));
+  }
+
+  sendChatMessage(scheduleId: string, content: string): Observable<any> {
+    return this.http.post<any>(`${BASE}/schedule/${scheduleId}/chat?content=${encodeURIComponent(content)}`, {}).pipe(map(r => r.data));
+  }
+
+  getChatMessages(scheduleId: string, since?: string): Observable<any[]> {
+    const url = since
+      ? `${BASE}/schedule/${scheduleId}/chat?since=${encodeURIComponent(since)}`
+      : `${BASE}/schedule/${scheduleId}/chat`;
+    return this.http.get<any>(url).pipe(map(r => r.data ?? []));
   }
 }

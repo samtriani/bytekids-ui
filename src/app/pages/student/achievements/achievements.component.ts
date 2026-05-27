@@ -22,7 +22,7 @@ export class AchievementsComponent implements OnInit {
     { label:'Tutor IA',      icon:'🤖', route:'/student/ai-tutor', badge:'✨' },
     { label:'Proyectos',     icon:'💻', route:'/student/projects' },
     // { label:'Roblox Studio', icon:'🎮', route:'/student/roblox' },
-    { label:'Horario',       icon:'📅', route:'/student/calendar' },
+    { label:'Calendario',    icon:'📅', route:'/student/calendar' },
     { label:'Comunidad',     icon:'👥', route:'/student/community' },
   ];
 

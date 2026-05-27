@@ -1,4 +1,4 @@
-<app-shell role="parent" userName="Sam Partida" userAvatar="SP" [navItems]="navItems"></app-shell>
+<app-shell role="parent" [userName]="parentName" [userAvatar]="parentInitials" [navItems]="navItems"></app-shell>
 <div class="ai-page">
   <div class="ai-header fade-in-up">
     <div class="ai-header-left">
@@ -14,7 +14,7 @@
           <div class="chat-msg" [class]="msg.role">
             @if (msg.role==='assistant') { <div class="msg-av bot"><img src="assets/logo-bytekids.jpeg" class="msg-img" alt=""></div> }
             <div class="msg-bubble" [innerHTML]="formatMessage(msg.content)"></div>
-            @if (msg.role==='user') { <div class="msg-av user">MG</div> }
+            @if (msg.role==='user') { <div class="msg-av user">{{ parentInitials }}</div> }
           </div>
         }
         @if (isLoading) {

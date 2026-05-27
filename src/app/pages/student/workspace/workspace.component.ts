@@ -22,6 +22,7 @@ export class WorkspaceComponent implements OnInit {
   screen: Screen = 'loading';
   content: any = null;
   existingSub: any = null;
+  rejectedSub: any = null;
   student: any = null;
 
   // Misión / Tarea / Proyecto
@@ -39,9 +40,67 @@ export class WorkspaceComponent implements OnInit {
   readonly Object = Object;
   get isQuiz(): boolean { return this.content?.type === 'quiz'; }
   get alreadyDone(): boolean { return this.existingSub?.status === 'aprobado'; }
+  get submitted(): boolean { return !!this.existingSub && this.existingSub.status !== 'rechazado'; }
   get progress(): number {
     const answered = Object.keys(this.answers).length;
     return this.questions.length ? Math.round((answered / this.questions.length) * 100) : 0;
+  }
+  get isCodeSubject(): boolean {
+    const s = (this.content?.subjectName ?? '').toLowerCase();
+    return s.includes('python') || s.includes('html') || s.includes('scratch') ||
+           s.includes('robot') || s.includes('roblox') || s.includes('program');
+  }
+  get subjectColor(): string {
+    if (this.content?.subjectColor) return this.content.subjectColor;
+    // Fallback por nombre para contenido sin color configurado
+    const s = (this.content?.subjectName ?? '').toLowerCase();
+    if (s.includes('python'))   return '#06B6D4';
+    if (s.includes('html'))     return '#7C3AED';
+    if (s.includes('scratch'))  return '#2563EB';
+    if (s.includes('robot'))    return '#F59E0B';
+    if (s.includes('roblox'))   return '#10B981';
+    if (s.includes('ciencia'))  return '#059669';
+    if (s.includes('matem'))    return '#EC4899';
+    if (s.includes('arq') || s.includes('arte') || s.includes('diseñ')) return '#F97316';
+    return '#7C3AED';
+  }
+  get responseLabel(): string {
+    const t = this.content?.type ?? '';
+    if (this.isCodeSubject)    return '💻 Tu código';
+    if (t === 'proyecto')      return '📦 Describe tu proyecto';
+    if (t === 'tarea')         return '📝 Tu respuesta';
+    return '✏️ Tu trabajo';
+  }
+  get responsePlaceholder(): string {
+    const t = this.content?.type ?? '';
+    const s = (this.content?.subjectName ?? '').toLowerCase();
+    if (this.isCodeSubject)
+      return `# Escribe tu código aquí\n# Materia: ${this.content?.subjectName ?? ''}\n\n`;
+    if (s.includes('arq') || s.includes('diseñ') || s.includes('arte'))
+      return 'Describe cómo realizaste tu diseño:\n• ¿Qué figuras o formas usaste?\n• ¿Cómo lo construiste?\n• ¿Qué aprendiste?\n\nPuedes incluir una descripción detallada de tu trabajo.';
+    if (t === 'proyecto')
+      return 'Describe tu proyecto:\n• ¿Qué construiste o creaste?\n• ¿Qué pasos seguiste?\n• ¿Qué desafíos encontraste?\n• ¿Qué aprendiste?';
+    return 'Escribe tu respuesta aquí, explica tu proceso y lo que aprendiste…';
+  }
+  get isRejected(): boolean { return !!this.rejectedSub && !this.existingSub; }
+
+  get dueLabel(): string {
+    if (!this.content?.dueDate) return '';
+    const diff = Math.ceil((new Date(this.content.dueDate).getTime() - Date.now()) / 86400000);
+    if (diff < 0)   return '⚠️ Fecha límite vencida';
+    if (diff === 0) return '⚠️ Vence hoy';
+    if (diff === 1) return '📅 Vence mañana';
+    if (diff <= 3)  return `📅 Vence en ${diff} días`;
+    return `📅 Vence el ${new Date(this.content.dueDate).toLocaleDateString('es-MX', { day: 'numeric', month: 'short' })}`;
+  }
+
+  get dueUrgent(): boolean {
+    if (!this.content?.dueDate) return false;
+    return Math.ceil((new Date(this.content.dueDate).getTime() - Date.now()) / 86400000) <= 1;
+  }
+
+  get fromClassroom(): boolean {
+    return !!this.route.snapshot.queryParamMap.get('returnUrl');
   }
 
   constructor(
@@ -64,9 +123,15 @@ export class WorkspaceComponent implements OnInit {
     ]).then(([content, subs]) => {
       if (!content) { this.screen = 'error'; return; }
       this.content = content;
-      this.existingSub = (subs as any[]).find(s =>
+      const allSubs = subs as any[];
+      this.existingSub = allSubs.find(s =>
         (s.contentId || s.content?.id) === id && s.status !== 'rechazado'
       ) ?? null;
+      // Find most recent rejected sub (for feedback + pre-fill)
+      const rejectedSubs = allSubs
+        .filter(s => (s.contentId || s.content?.id) === id && s.status === 'rechazado')
+        .sort((a, b) => new Date(b.submittedAt).getTime() - new Date(a.submittedAt).getTime());
+      this.rejectedSub = rejectedSubs[0] ?? null;
 
       if (this.isQuiz) {
         this.quizApi.getQuestions(id).pipe(catchError(() => of([]))).subscribe(qs => {
@@ -74,7 +139,8 @@ export class WorkspaceComponent implements OnInit {
           this.screen = this.alreadyDone ? 'done' : 'quiz';
         });
       } else {
-        this.codeAnswer = this.existingSub?.codeSubmitted ?? '';
+        // Pre-fill: approved/pending > rejected code > empty
+        this.codeAnswer = this.existingSub?.codeSubmitted ?? this.rejectedSub?.codeSubmitted ?? '';
         this.screen = this.alreadyDone ? 'done' : 'work';
       }
     });
@@ -137,7 +203,10 @@ export class WorkspaceComponent implements OnInit {
     this.router.navigate(['/student/ai-tutor'], { queryParams: { q } });
   }
 
-  goBack(): void { this.router.navigate(['/student/missions']); }
+  goBack(): void {
+    const returnUrl = this.route.snapshot.queryParamMap.get('returnUrl');
+    this.router.navigateByUrl(returnUrl ?? '/student/missions');
+  }
 
   diffLabel(d: string): string {
     return d === 'facil' ? 'Fácil' : d === 'dificil' ? 'Difícil' : 'Medio';

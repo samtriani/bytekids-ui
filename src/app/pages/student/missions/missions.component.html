@@ -38,12 +38,23 @@
           <span>⏱️ {{ m.time }}</span>
           <span class="mc-status" [class]="m.status.replace(' ','-').toLowerCase()">{{ m.status }}</span>
         </div>
+        @if (m.dueLabel) {
+          <div class="mc-due" [class]="'mc-due--' + m.dueUrgency">
+            📅 {{ m.dueLabel }}
+          </div>
+        }
+        @if (m.score !== null && m.status === 'Completado') {
+          <div class="mc-score">⭐ {{ (m.score / 10).toFixed(1) }}/10</div>
+        }
+        @if (m.status === 'Rechazado' && m.feedback) {
+          <div class="mc-rejected-hint">💬 {{ m.feedback | slice:0:60 }}{{ m.feedback.length > 60 ? '…' : '' }}</div>
+        }
         <div class="bk-progress" style="height:6px; margin:10px 0">
           <div class="bar" [style.width]="m.progress+'%'" [style.background]="m.color"></div>
         </div>
         @if (!m.locked) {
-          <button class="mc-btn" [style.background]="m.color" (click)="startMission(m)">
-            {{ m.status==='Completado' ? '🔁 Repasar' : m.progress > 0 ? '▶ Continuar' : '🚀 Iniciar' }}
+          <button class="mc-btn" [style.background]="m.status === 'Rechazado' ? '#EF4444' : m.color" (click)="startMission(m)">
+            {{ m.status==='Completado' ? '🔁 Repasar' : m.status==='Rechazado' ? '🔄 Corregir y reenviar' : m.progress > 0 ? '▶ Continuar' : '🚀 Iniciar' }}
           </button>
         } @else {
           <div class="mc-btn locked-btn">🔒 Bloqueado</div>

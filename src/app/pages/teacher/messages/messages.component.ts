@@ -2,23 +2,13 @@ import { Component, OnInit, ViewChild, ElementRef, AfterViewChecked } from '@ang
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { RouterLink } from '@angular/router';
-import { ShellComponent, NavItem } from '../../../shared/shell/shell.component';
+import { ShellComponent } from '../../../shared/shell/shell.component';
+import { TEACHER_NAV } from '../shared/teacher-nav';
 import { RolePipe } from '../../../shared/pipes/role.pipe';
 import { MessageApiService } from '../../../services/api/message-api.service';
 import { AuthService } from '../../../services/auth.service';
 import { forkJoin, of } from 'rxjs';
 import { catchError } from 'rxjs/operators';
-
-const NAV: NavItem[] = [
-  {label:'Mi Panel',        icon:'🏠', route:'/teacher'},
-  {label:'Mis Salones',     icon:'🏫', route:'/teacher/classrooms'},
-  {label:'Alumnos',         icon:'👨‍🎓', route:'/teacher/students'},
-  {label:'Crear Contenido', icon:'📝', route:'/teacher/create'},
-  {label:'Asistente IA',    icon:'🤖', route:'/teacher/ai-assistant', badge:'IA'},
-  {label:'Reportes',        icon:'📊', route:'/teacher/reports'},
-  {label:'Calendario',      icon:'📅', route:'/teacher/calendar'},
-  {label:'Mensajes',        icon:'💬', route:'/teacher/messages'},
-];
 
 @Component({
   selector: 'app-teacher-messages',
@@ -29,7 +19,7 @@ const NAV: NavItem[] = [
 })
 export class MessagesComponent implements OnInit, AfterViewChecked {
   @ViewChild('msgBottom') msgBottom!: ElementRef;
-  navItems = NAV;
+  navItems = TEACHER_NAV;
 
   teacher: any = null;
   conversations: any[] = [];

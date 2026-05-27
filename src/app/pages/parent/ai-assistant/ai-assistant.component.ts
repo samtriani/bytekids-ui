@@ -4,6 +4,7 @@ import { FormsModule } from '@angular/forms';
 import { RouterLink } from '@angular/router';
 import { ShellComponent, NavItem } from '../../../shared/shell/shell.component';
 import { AiTutorService, ChatMessage } from '../../../services/ai-tutor.service';
+import { AuthService } from '../../../services/auth.service';
 
 @Component({ selector: 'app-ai-assistant-parent', standalone: true,
   imports: [CommonModule, FormsModule, RouterLink, ShellComponent],
@@ -13,14 +14,17 @@ export class AiAssistantComponent implements AfterViewChecked {
   @ViewChild('chatEnd') chatEnd!: ElementRef;
 
   navItems: NavItem[] = [
-    { label:'Dashboard',     icon:'🏠', route:'/parent' },
-    { label:'Mis Hijos',     icon:'👦', route:'/parent/children' },
-    { label:'Progreso',      icon:'📈', route:'/parent/progress' },
-    { label:'Logros',        icon:'🏆', route:'/parent/achievements' },
-    { label:'Mensajes',      icon:'💬', route:'/parent/messages', badge:2 },
-    { label:'Calendario',    icon:'📅', route:'/parent/calendar' },
-    { label:'Asistente IA',  icon:'🤖', route:'/parent/ai-assistant', badge:'✨' },
+    { label:'Dashboard',    icon:'🏠', route:'/parent' },
+    { label:'Mis Hijos',    icon:'👦', route:'/parent/children' },
+    { label:'Progreso',     icon:'📈', route:'/parent/progress' },
+    { label:'Logros',       icon:'🏆', route:'/parent/achievements' },
+    { label:'Mensajes',     icon:'💬', route:'/parent/messages' },
+    { label:'Calendario',   icon:'📅', route:'/parent/calendar' },
+    { label:'Asistente IA', icon:'🤖', route:'/parent/ai-assistant', badge:'✨' },
   ];
+
+  get parentName():     string { return this.auth.getUser()?.displayName || 'Padre/Madre'; }
+  get parentInitials(): string { return this.auth.getUser()?.initials    || 'P'; }
 
   messages: ChatMessage[] = [{
     role: 'assistant',
@@ -39,7 +43,7 @@ export class AiAssistantComponent implements AfterViewChecked {
     '💬 ¿Cómo hablar con el maestro sobre el progreso?',
   ];
 
-  constructor(private aiService: AiTutorService) {}
+  constructor(private aiService: AiTutorService, private auth: AuthService) {}
   ngAfterViewChecked() { if(this.shouldScroll){try{this.chatEnd.nativeElement.scrollIntoView({behavior:'smooth'});}catch{}this.shouldScroll=false;} }
 
   async send(text?: string) {

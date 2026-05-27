@@ -1,25 +1,94 @@
-import { Component } from '@angular/core';
+import { Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { RouterLink } from '@angular/router';
 import { ShellComponent, NavItem } from '../../../shared/shell/shell.component';
-const NAV: NavItem[] = [{label:"Mi Panel",icon:"🏠",route:"/parent"},{label:"Mis Hijos",icon:"👦",route:"/parent/children"},{label:"Progreso",icon:"📈",route:"/parent/progress"},{label:"Logros",icon:"🏆",route:"/parent/achievements"},{label:"Mensajes",icon:"💬",route:"/parent/messages",badge:2},{label:"Calendario",icon:"📅",route:"/parent/calendar"},{label:"Asistente IA",icon:"🤖",route:"/parent/ai-assistant",badge:"IA"}];
-@Component({ selector:'app-parent-achievements', standalone:true, imports:[CommonModule,RouterLink,ShellComponent],
-  templateUrl:'./achievements.component.html', styleUrls:['./achievements.component.scss']
+import { UserApiService } from '../../../services/api/user-api.service';
+import { AchievementApiService } from '../../../services/api/achievement-api.service';
+import { AuthService } from '../../../services/auth.service';
+import { forkJoin, of } from 'rxjs';
+import { catchError } from 'rxjs/operators';
+
+const NAV: NavItem[] = [
+  {label:'Mi Panel',      icon:'🏠', route:'/parent'},
+  {label:'Mis Hijos',     icon:'👦', route:'/parent/children'},
+  {label:'Progreso',      icon:'📈', route:'/parent/progress'},
+  {label:'Logros',        icon:'🏆', route:'/parent/achievements'},
+  {label:'Mensajes',      icon:'💬', route:'/parent/messages'},
+  {label:'Calendario',    icon:'📅', route:'/parent/calendar'},
+  {label:'Asistente IA',  icon:'🤖', route:'/parent/ai-assistant', badge:'IA'},
+];
+
+@Component({
+  selector: 'app-parent-achievements',
+  standalone: true,
+  imports: [CommonModule, RouterLink, ShellComponent],
+  templateUrl: './achievements.component.html',
+  styleUrls: ['./achievements.component.scss']
 })
-export class AchievementsComponent {
+export class AchievementsComponent implements OnInit {
   navItems = NAV;
+  parentName = '';
+  parentInitials = '';
   filt = 'Todos';
-  achievements = [
-    {child:'Axel',  icon:'⚡',title:'Primer Código',    xp:25,  date:'10 Ene',earned:true,  desc:'Completó su primera misión'},
-    {child:'Axel',  icon:'🐛',title:'Bug Hunter',       xp:50,  date:'18 Ene',earned:true,  desc:'Corrigió 5 errores de código'},
-    {child:'Axel',  icon:'🔄',title:'Loop Master',      xp:75,  date:'25 Ene',earned:true,  desc:'Usó bucles en 10 misiones'},
-    {child:'Axel',  icon:'🔥',title:'Racha 7 días',     xp:100, date:'01 Feb',earned:true,  desc:'Estudió 7 días seguidos'},
-    {child:'Axel',  icon:'🌐',title:'Web Wizard',       xp:120, date:null,    earned:false, desc:'Completar todas las misiones HTML'},
-    {child:'Axel',  icon:'🐍',title:'Python Pro',       xp:150, date:null,    earned:false, desc:'Alcanzar nivel 5 en Python'},
-    {child:'Anton.',icon:'🎨',title:'Primera Animación',xp:30,  date:'15 Feb',earned:true,  desc:'Creó su primera animación'},
-    {child:'Anton.',icon:'✏️',title:'Artista Digital',  xp:40,  date:'22 Feb',earned:true,  desc:'Completó módulo de arte digital'},
-    {child:'Anton.',icon:'🌟',title:'Racha 5 días',     xp:60,  date:null,    earned:false, desc:'Estudiar 5 días consecutivos'},
-  ];
-  get rows() { return this.achievements.filter(a=>this.filt==='Todos'||a.child.startsWith(this.filt==='Axel'?'Axel':'Anton')); }
-  totalXp(child: string) { return this.achievements.filter(a=>a.child.startsWith(child)&&a.earned).reduce((acc,a)=>acc+a.xp,0); }
+  children: any[] = [];
+  allAchievements: any[] = [];
+  loading = true;
+
+  get filters(): string[] { return ['Todos', ...this.children.map(c => c.name.split(' ')[0])]; }
+
+  get rows(): any[] {
+    if (this.filt === 'Todos') return this.allAchievements;
+    return this.allAchievements.filter(a => a.childName.startsWith(this.filt));
+  }
+
+  countByChild(childId: string): number {
+    return this.allAchievements.filter(a => a.childId === childId).length;
+  }
+
+  xpByChild(childId: string): number {
+    return this.allAchievements
+      .filter(a => a.childId === childId)
+      .reduce((acc, a) => acc + (a.xpReward ?? 0), 0);
+  }
+
+  constructor(
+    private userApi: UserApiService,
+    private achievementApi: AchievementApiService,
+    private auth: AuthService
+  ) {}
+
+  ngOnInit(): void {
+    const user = this.auth.getUser();
+    this.parentName    = user?.displayName || 'Padre/Madre';
+    this.parentInitials = user?.initials   || 'P';
+    const parentId = user?.userId ?? '';
+    if (!parentId) { this.loading = false; return; }
+
+    this.userApi.getStudentsOfParent(parentId).pipe(catchError(() => of([]))).subscribe(students => {
+      if (!students.length) { this.loading = false; return; }
+      this.children = students;
+      forkJoin(students.map((s: any) =>
+        this.achievementApi.getStudentAchievements(s.id || s._id).pipe(catchError(() => of([])))
+      )).subscribe({
+        next: (results: any[][]) => {
+          this.allAchievements = results.flatMap((achs, i) => {
+            const s = students[i];
+            return (achs as any[]).map((a: any) => ({
+              childId:   s.id || s._id,
+              childName: s.displayName || s.username,
+              icon:      a.achievement?.icon    || a.icon    || '🏆',
+              title:     a.achievement?.title   || a.title   || 'Logro',
+              desc:      a.achievement?.description || a.description || '',
+              xpReward:  a.achievement?.xpReward ?? a.xpReward ?? 0,
+              date:      a.earnedAt
+                ? new Date(a.earnedAt).toLocaleDateString('es-MX', {day:'numeric', month:'short'})
+                : '—',
+            }));
+          });
+          this.loading = false;
+        },
+        error: () => { this.loading = false; }
+      });
+    });
+  }
 }

@@ -30,6 +30,9 @@ export class RobloxComponent implements OnInit {
   toast = '';
   loading = true;
   modules: any[] = [];
+  robloxXp = 0;
+  robloxLevel = 1;
+  robloxProgress = 0;
 
   luaSnippets = [
     { title:'Mover jugador', code:'local speed = 50\ngame.Players.LocalPlayer\n  .Character.Humanoid\n  .WalkSpeed = speed' },
@@ -71,6 +74,11 @@ export class RobloxComponent implements OnInit {
               desc: c.description ?? '',
             };
           });
+        const completed = this.modules.filter(m => m.status === 'Completado');
+        this.robloxXp = completed.reduce((sum, m) => sum + m.xp, 0);
+        this.robloxLevel = Math.floor(this.robloxXp / 200) + 1;
+        this.robloxProgress = this.modules.length
+          ? Math.round((completed.length / this.modules.length) * 100) : 0;
         this.loading = false;
       },
       error: () => { this.loading = false; }

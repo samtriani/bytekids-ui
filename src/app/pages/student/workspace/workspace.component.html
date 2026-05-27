@@ -18,72 +18,152 @@
 <!-- DONE -->
 @if (screen === 'done') {
   <div class="ws-done">
-    <div class="ws-done-icon">🎉</div>
-    <h2>¡Misión completada!</h2>
-
+    <div class="ws-done-confetti">🎉</div>
     @if (quizResult) {
-      <div class="ws-score" [style.color]="scoreColor(quizResult.scorePercent ?? quizResult.score ?? 0)">
+      <div class="ws-done-score" [style.color]="scoreColor(quizResult.scorePercent ?? quizResult.score ?? 0)">
         {{ quizResult.scorePercent ?? quizResult.score ?? 0 }}%
       </div>
-      <p style="color:#6B7FBB">
-        {{ quizResult.correctAnswers ?? '—' }} / {{ quizResult.totalQuestions ?? questions.length }} respuestas correctas
-      </p>
+      <h2 class="ws-done-title">{{ (quizResult.scorePercent ?? quizResult.score ?? 0) >= 80 ? '¡Excelente resultado!' : '¡Completado!' }}</h2>
+      <p class="ws-done-sub">{{ quizResult.correctAnswers ?? '—' }} de {{ quizResult.totalQuestions ?? questions.length }} respuestas correctas</p>
     } @else {
-      <p style="color:#6B7FBB">Tu entrega fue registrada. El maestro la revisará pronto.</p>
+      <h2 class="ws-done-title">¡Entregado!</h2>
+      <p class="ws-done-sub">Tu maestro revisará tu trabajo pronto. ¡Buen trabajo, {{ student?.displayName?.split(' ')[0] }}! 💪</p>
     }
-
-    <div class="ws-done-xp">+{{ content?.xpReward ?? 0 }} XP</div>
-
+    <div class="ws-done-xp-wrap">
+      <div class="ws-done-xp">⭐ +{{ content?.xpReward ?? 0 }} XP</div>
+    </div>
     <div class="ws-done-actions">
-      <button class="ws-btn primary" (click)="goBack()">← Volver a misiones</button>
-      <button class="ws-btn ghost" (click)="openAiTutor()">🤖 Hablar con IA</button>
+      <button class="ws-btn primary" (click)="goBack()">
+        {{ fromClassroom ? '← Volver al aula' : '← Mis misiones' }}
+      </button>
+      <button class="ws-btn ghost" (click)="openAiTutor()">🤖 Hablar con ByteBot</button>
     </div>
   </div>
 }
 
-<!-- WORK AREA (misión / tarea / proyecto / material) -->
+<!-- WORK AREA -->
 @if (screen === 'work' && content) {
-  <div class="ws-layout">
-    <!-- Header -->
-    <div class="ws-header">
-      <button class="ws-back" (click)="goBack()">← Misiones</button>
-      <div class="ws-header-info">
-        <div class="ws-type-badge">{{ typeLabel(content.type) }}</div>
-        <h1 class="ws-title">{{ content.title }}</h1>
-        <div class="ws-meta">
-          <span class="ws-subject">{{ content.subjectName }}</span>
-          <span class="ws-dot">·</span>
-          <span>{{ diffLabel(content.difficulty) }}</span>
-          <span class="ws-dot">·</span>
-          <span>⏱️ {{ content.estimatedMinutes }} min</span>
-          <span class="ws-xp">+{{ content.xpReward }} XP</span>
-        </div>
+  <div class="ws-root">
+
+    <!-- Banner de clase si viene del aula -->
+    @if (fromClassroom) {
+      <div class="ws-class-banner">
+        🏫 Misión lanzada por tu maestro en clase — complétala y regresa al aula
       </div>
+    }
+
+    <!-- Hero header -->
+    <div class="ws-hero" [style.--accent]="subjectColor">
+      <div class="ws-hero-inner">
+        <button class="ws-back" (click)="goBack()">← {{ fromClassroom ? 'Volver al aula' : 'Mis misiones' }}</button>
+
+        <div class="ws-hero-body">
+          <div class="ws-type-badge" [style.background]="subjectColor + '25'" [style.color]="subjectColor" [style.border-color]="subjectColor + '55'">
+            {{ typeLabel(content.type) }}
+          </div>
+          <h1 class="ws-title">{{ content.title }}</h1>
+          <div class="ws-meta">
+            @if (content.subjectIcon) { <span>{{ content.subjectIcon }}</span> }
+            <span class="ws-subject" [style.color]="subjectColor">{{ content.subjectName }}</span>
+            <span class="ws-dot">·</span>
+            <span>{{ diffLabel(content.difficulty) }}</span>
+            <span class="ws-dot">·</span>
+            <span>⏱️ {{ content.estimatedMinutes }} min</span>
+            <div class="ws-xp">+{{ content.xpReward }} XP</div>
+          </div>
+        </div>
+
+        <!-- Estado si ya entregó -->
+        @if (submitted && !alreadyDone) {
+          <div class="ws-submitted-badge">⏳ Entregada — esperando revisión</div>
+        } @else if (alreadyDone) {
+          <div class="ws-submitted-badge ws-submitted-badge--ok">
+            ✅ Aprobada
+            @if (existingSub?.score != null) { <span style="margin-left:8px;font-weight:900">{{ (existingSub.score / 10).toFixed(1) }}/10</span> }
+          </div>
+        }
+        <!-- Fecha límite -->
+        @if (dueLabel) {
+          <div class="ws-due-badge" [class.ws-due-badge--urgent]="dueUrgent">{{ dueLabel }}</div>
+        }
+      </div>
+      <div class="ws-hero-glow" [style.background]="subjectColor + '18'"></div>
     </div>
 
+    <!-- Cuerpo -->
     <div class="ws-body">
+
       <!-- Instrucciones -->
-      <div class="ws-panel instructions">
-        <h3>📋 Instrucciones</h3>
+      <div class="ws-panel ws-instructions">
+        <div class="ws-panel-head">
+          <span class="ws-panel-icon">📋</span>
+          <span class="ws-panel-title">Instrucciones</span>
+        </div>
         <p class="ws-desc">{{ content.description }}</p>
         @if (content.contentBody) {
           <div class="ws-content-body">{{ content.contentBody }}</div>
         }
+
+        <!-- Tip según materia -->
+        <div class="ws-tip" [style.border-color]="subjectColor + '40'" [style.background]="subjectColor + '0a'">
+          @if (isCodeSubject) {
+            <span [style.color]="subjectColor">💡</span>
+            <span>Puedes ejecutar tu código mentalmente o probarlo antes de entregarlo.</span>
+          } @else if (content.type === 'proyecto') {
+            <span [style.color]="subjectColor">💡</span>
+            <span>Describe detalladamente tu proceso — el esfuerzo cuenta tanto como el resultado.</span>
+          } @else {
+            <span [style.color]="subjectColor">💡</span>
+            <span>Tómate el tiempo necesario. No hay respuesta incorrecta si explicas tu razonamiento.</span>
+          }
+        </div>
       </div>
 
-      <!-- Editor de respuesta -->
-      <div class="ws-panel editor">
-        <h3>💻 Tu respuesta</h3>
+      <!-- Editor -->
+      <div class="ws-panel ws-editor-panel">
+        <div class="ws-panel-head">
+          <span class="ws-panel-icon">{{ isCodeSubject ? '💻' : '✏️' }}</span>
+          <span class="ws-panel-title">{{ responseLabel }}</span>
+          @if (codeAnswer.trim().length > 0) {
+            <span class="ws-char-count">{{ codeAnswer.trim().split('\n').length }} línea(s)</span>
+          }
+        </div>
+
+        <!-- Banner rechazo -->
+        @if (isRejected) {
+          <div class="ws-rejected-banner">
+            <div class="ws-rejected-title">❌ Tu entrega anterior fue rechazada</div>
+            @if (rejectedSub?.teacherFeedback) {
+              <div class="ws-rejected-feedback">
+                <span style="font-weight:700">Comentario del maestro:</span> {{ rejectedSub.teacherFeedback }}
+              </div>
+            }
+            <div class="ws-rejected-hint">Corrige tu respuesta y vuelve a enviarla. Intento {{ (rejectedSub?.attemptsCount ?? 0) + 1 }}.</div>
+          </div>
+        }
+
         <textarea
           class="ws-editor"
+          [class.ws-editor--code]="isCodeSubject"
           [(ngModel)]="codeAnswer"
-          placeholder="Escribe tu código o respuesta aquí…"
+          [placeholder]="responsePlaceholder"
+          [disabled]="alreadyDone"
           spellcheck="false">
         </textarea>
+
+        @if (alreadyDone) {
+          <div class="ws-locked-msg">✅ Ya fue aprobada. ¡Sigue así!</div>
+        }
+
         <div class="ws-actions">
-          <button class="ws-btn ghost" (click)="openAiTutor()">🤖 Pedir ayuda al Tutor IA</button>
-          <button class="ws-btn primary" [disabled]="!codeAnswer.trim() || submitting" (click)="submit()">
-            {{ submitting ? 'Enviando…' : '✅ Entregar' }}
+          <button class="ws-btn ghost" (click)="openAiTutor()">
+            🤖 Pedir ayuda a ByteBot
+          </button>
+          <button class="ws-btn primary"
+                  [style.background]="subjectColor"
+                  [disabled]="!codeAnswer.trim() || submitting || alreadyDone"
+                  (click)="submit()">
+            {{ submitting ? 'Enviando…' : isRejected ? '🔄 Reenviar corregida' : submitted ? '🔄 Reenviar' : '🚀 Entregar' }}
           </button>
         </div>
       </div>
@@ -93,81 +173,70 @@
 
 <!-- QUIZ AREA -->
 @if (screen === 'quiz' && content) {
-  <div class="ws-layout">
-    <!-- Header -->
-    <div class="ws-header">
-      <button class="ws-back" (click)="goBack()">← Misiones</button>
-      <div class="ws-header-info">
-        <div class="ws-type-badge quiz">Quiz</div>
-        <h1 class="ws-title">{{ content.title }}</h1>
-        <div class="ws-meta">
-          <span class="ws-subject">{{ content.subjectName }}</span>
-          <span class="ws-dot">·</span>
-          <span>{{ questions.length }} preguntas</span>
-          <span class="ws-xp">+{{ content.xpReward }} XP</span>
-        </div>
-      </div>
-    </div>
-
-    <!-- Progreso del quiz -->
-    <div class="ws-quiz-progress">
-      <div class="ws-qp-bar">
-        <div class="ws-qp-fill" [style.width]="progress + '%'"></div>
-      </div>
-      <span class="ws-qp-label">{{ Object.keys(answers).length }} / {{ questions.length }} respondidas</span>
-    </div>
-
-    @if (questions.length === 0) {
-      <div class="ws-center" style="padding:60px">
-        <p style="color:#6B7FBB">Este quiz no tiene preguntas configuradas aún.</p>
-        <button class="ws-btn ghost" style="margin-top:16px" (click)="goBack()">← Volver</button>
-      </div>
-    } @else {
-      <!-- Pregunta actual -->
-      <div class="ws-quiz-body">
-        <div class="ws-q-nav">
-          @for (q of questions; track q.id || q._id; let i = $index) {
-            <button class="ws-q-dot"
-              [class.answered]="isAnswered(q.id || q._id)"
-              [class.current]="i === currentQ"
-              (click)="currentQ = i">
-              {{ i + 1 }}
-            </button>
-          }
-        </div>
-
-        <div class="ws-question">
-          <div class="ws-q-num">Pregunta {{ currentQ + 1 }} de {{ questions.length }}</div>
-          <p class="ws-q-text">{{ questions[currentQ].questionText }}</p>
-
-          <div class="ws-options">
-            @for (opt of questions[currentQ].options ?? questions[currentQ].quizOptions ?? []; track opt.id || opt._id) {
-              <label class="ws-option"
-                [class.selected]="answers[questions[currentQ].id || questions[currentQ]._id] === (opt.id || opt._id)">
-                <input type="radio"
-                  [name]="'q-' + (questions[currentQ].id || questions[currentQ]._id)"
-                  [value]="opt.id || opt._id"
-                  [checked]="answers[questions[currentQ].id || questions[currentQ]._id] === (opt.id || opt._id)"
-                  (change)="selectOption(questions[currentQ].id || questions[currentQ]._id, opt.id || opt._id)">
-                <span class="ws-opt-text">{{ opt.optionText }}</span>
-              </label>
-            }
-          </div>
-
-          <div class="ws-q-actions">
-            <button class="ws-btn ghost" [disabled]="currentQ === 0" (click)="prevQ()">← Anterior</button>
-            @if (currentQ < questions.length - 1) {
-              <button class="ws-btn primary" (click)="nextQ()">Siguiente →</button>
-            } @else {
-              <button class="ws-btn success"
-                [disabled]="!allAnswered() || quizSubmitting"
-                (click)="submitQuiz()">
-                {{ quizSubmitting ? 'Enviando…' : '✅ Entregar Quiz' }}
-              </button>
-            }
+  <div class="ws-root">
+    <div class="ws-hero" [style.--accent]="'#2563EB'">
+      <div class="ws-hero-inner">
+        <button class="ws-back" (click)="goBack()">← {{ fromClassroom ? 'Volver al aula' : 'Mis misiones' }}</button>
+        <div class="ws-hero-body">
+          <div class="ws-type-badge" style="background:#2563EB25;color:#93C5FD;border-color:#2563EB55">Quiz</div>
+          <h1 class="ws-title">{{ content.title }}</h1>
+          <div class="ws-meta">
+            <span class="ws-subject" style="color:#93C5FD">{{ content.subjectName }}</span>
+            <span class="ws-dot">·</span>
+            <span>{{ questions.length }} preguntas</span>
+            <div class="ws-xp">+{{ content.xpReward }} XP</div>
           </div>
         </div>
       </div>
-    }
+      <div class="ws-hero-glow" style="background:rgba(37,99,235,.12)"></div>
+    </div>
+
+    <div class="ws-body" style="display:block;max-width:640px">
+      <div class="ws-quiz-progress">
+        <div class="ws-qp-bar"><div class="ws-qp-fill" [style.width]="progress + '%'" style="background:linear-gradient(90deg,#2563EB,#7C3AED)"></div></div>
+        <span class="ws-qp-label">{{ Object.keys(answers).length }} / {{ questions.length }}</span>
+      </div>
+
+      @if (!questions.length) {
+        <div class="ws-panel ws-instructions" style="text-align:center;padding:40px">
+          <p style="color:#6B7FBB">Este quiz no tiene preguntas configuradas aún.</p>
+          <button class="ws-btn ghost" style="margin-top:16px" (click)="goBack()">← Volver</button>
+        </div>
+      } @else {
+        <div class="ws-quiz-body">
+          <div class="ws-q-nav">
+            @for (q of questions; track q.id || q._id; let i = $index) {
+              <button class="ws-q-dot" [class.answered]="isAnswered(q.id || q._id)" [class.current]="i === currentQ" (click)="currentQ = i">{{ i + 1 }}</button>
+            }
+          </div>
+          <div class="ws-question">
+            <div class="ws-q-num">Pregunta {{ currentQ + 1 }} de {{ questions.length }}</div>
+            <p class="ws-q-text">{{ questions[currentQ].questionText }}</p>
+            <div class="ws-options">
+              @for (opt of questions[currentQ].options ?? questions[currentQ].quizOptions ?? []; track opt.id || opt._id) {
+                <label class="ws-option" [class.selected]="answers[questions[currentQ].id || questions[currentQ]._id] === (opt.id || opt._id)">
+                  <input type="radio"
+                    [name]="'q-' + (questions[currentQ].id || questions[currentQ]._id)"
+                    [value]="opt.id || opt._id"
+                    [checked]="answers[questions[currentQ].id || questions[currentQ]._id] === (opt.id || opt._id)"
+                    (change)="selectOption(questions[currentQ].id || questions[currentQ]._id, opt.id || opt._id)">
+                  <span class="ws-opt-text">{{ opt.optionText }}</span>
+                </label>
+              }
+            </div>
+            <div class="ws-q-actions">
+              <button class="ws-btn ghost" [disabled]="currentQ === 0" (click)="prevQ()">← Anterior</button>
+              @if (currentQ < questions.length - 1) {
+                <button class="ws-btn primary" (click)="nextQ()">Siguiente →</button>
+              } @else {
+                <button class="ws-btn success" [disabled]="!allAnswered() || quizSubmitting" (click)="submitQuiz()">
+                  {{ quizSubmitting ? 'Enviando…' : '✅ Entregar Quiz' }}
+                </button>
+              }
+            </div>
+          </div>
+        </div>
+      }
+    </div>
   </div>
 }

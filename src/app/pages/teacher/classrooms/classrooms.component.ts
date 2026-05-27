@@ -1,7 +1,8 @@
 import { Component, OnInit, ViewChild, ElementRef } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { RouterLink } from '@angular/router';
-import { ShellComponent, NavItem } from '../../../shared/shell/shell.component';
+import { ShellComponent } from '../../../shared/shell/shell.component';
+import { TEACHER_NAV } from '../shared/teacher-nav';
 import { ClassroomApiService } from '../../../services/api/classroom-api.service';
 import { ProgressApiService } from '../../../services/api/progress-api.service';
 import { AuthService } from '../../../services/auth.service';
@@ -9,17 +10,6 @@ import { forkJoin, of } from 'rxjs';
 import { catchError, map, switchMap } from 'rxjs/operators';
 import { Chart, registerables } from 'chart.js';
 Chart.register(...registerables);
-
-const NAV: NavItem[] = [
-  {label:'Mi Panel',        icon:'🏠', route:'/teacher'},
-  {label:'Mis Salones',     icon:'🏫', route:'/teacher/classrooms'},
-  {label:'Alumnos',         icon:'👨‍🎓', route:'/teacher/students'},
-  {label:'Crear Contenido', icon:'📝', route:'/teacher/create'},
-  {label:'Asistente IA',    icon:'🤖', route:'/teacher/ai-assistant', badge:'IA'},
-  {label:'Reportes',        icon:'📊', route:'/teacher/reports'},
-  {label:'Calendario',      icon:'📅', route:'/teacher/calendar'},
-  {label:'Mensajes',        icon:'💬', route:'/teacher/messages'},
-];
 
 @Component({
   selector: 'app-teacher-classrooms',
@@ -30,7 +20,7 @@ const NAV: NavItem[] = [
 })
 export class ClassroomsComponent implements OnInit {
   @ViewChild('radC') radC!: ElementRef;
-  navItems = NAV;
+  navItems = TEACHER_NAV;
 
   teacher: any = null;
   rooms: any[] = [];
@@ -97,15 +87,16 @@ export class ClassroomsComponent implements OnInit {
       ? Math.round(studentProgs.reduce((s, p) => s + p, 0) / studentProgs.length) : 0;
 
     const active = enriched.filter(e =>
-      e.activity.some((a: any) => now - new Date(a.createdAt).getTime() < 48 * 3600000)
+      e.activity.some((a: any) => now - new Date(a.activityDate).getTime() < 48 * 3600000)
     ).length;
 
-    const missions = enriched.reduce((s, e) => s + e.activity.length, 0);
+    const missions = enriched.reduce((s, e) =>
+      s + e.activity.reduce((acc: number, a: any) => acc + (a.missionsCompleted ?? 0), 0), 0);
 
     // Aggregate subjects with avg progress
     const subjectMap = new Map<string, number[]>();
     enriched.forEach(e => e.subjects.forEach((sub: any) => {
-      const name = sub.subjectName || sub.name || 'Sin nombre';
+      const name = sub.subject?.name || sub.subjectName || sub.name || 'Sin nombre';
       const p = this.subjectProgress(sub);
       if (!subjectMap.has(name)) subjectMap.set(name, []);
       subjectMap.get(name)!.push(p);
@@ -123,8 +114,8 @@ export class ClassroomsComponent implements OnInit {
     // Weekly activity (last 7 days), scaled 0-100
     const weekly = Array(7).fill(0);
     enriched.forEach(e => e.activity.forEach((a: any) => {
-      const d = Math.floor((now - new Date(a.createdAt).getTime()) / 86400000);
-      if (d >= 0 && d < 7) weekly[6 - d]++;
+      const d = Math.floor((now - new Date(a.activityDate).getTime()) / 86400000);
+      if (d >= 0 && d < 7) weekly[6 - d] += (a.missionsCompleted ?? 1);
     }));
     const maxW = Math.max(...weekly, 1);
     const weeklyScaled = weekly.map(v => Math.round((v / maxW) * 100));
@@ -153,10 +144,8 @@ export class ClassroomsComponent implements OnInit {
   }
 
   private subjectProgress(sub: any): number {
-    const p = typeof sub.progress === 'number' ? sub.progress
-      : (sub.completedMissions != null && sub.totalMissions
-        ? Math.round((sub.completedMissions / sub.totalMissions) * 100) : 0);
-    return Math.min(100, Math.max(0, p));
+    // xpInSubject de la API: 500 XP = 100%
+    return Math.min(100, Math.round((sub.xpInSubject ?? 0) / 5));
   }
 
   select(r: any): void {

@@ -2,23 +2,13 @@ import { Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { RouterLink, Router } from '@angular/router';
-import { ShellComponent, NavItem } from '../../../shared/shell/shell.component';
+import { ShellComponent } from '../../../shared/shell/shell.component';
+import { TEACHER_NAV } from '../shared/teacher-nav';
 import { ClassroomApiService } from '../../../services/api/classroom-api.service';
 import { ProgressApiService } from '../../../services/api/progress-api.service';
 import { AuthService } from '../../../services/auth.service';
 import { forkJoin, of } from 'rxjs';
 import { catchError, map } from 'rxjs/operators';
-
-const NAV: NavItem[] = [
-  {label:'Mi Panel',        icon:'🏠', route:'/teacher'},
-  {label:'Mis Salones',     icon:'🏫', route:'/teacher/classrooms'},
-  {label:'Alumnos',         icon:'👨‍🎓', route:'/teacher/students'},
-  {label:'Crear Contenido', icon:'📝', route:'/teacher/create'},
-  {label:'Asistente IA',    icon:'🤖', route:'/teacher/ai-assistant', badge:'IA'},
-  {label:'Reportes',        icon:'📊', route:'/teacher/reports'},
-  {label:'Calendario',      icon:'📅', route:'/teacher/calendar'},
-  {label:'Mensajes',        icon:'💬', route:'/teacher/messages'},
-];
 
 @Component({
   selector: 'app-teacher-students',
@@ -28,7 +18,7 @@ const NAV: NavItem[] = [
   styleUrls: ['./students.component.scss']
 })
 export class StudentsComponent implements OnInit {
-  navItems = NAV;
+  navItems = TEACHER_NAV;
   search = ''; filt = 'Todos'; view: 'table' | 'cards' = 'table';
   filters = ['Todos', 'Excelente', 'Regular', 'Necesita apoyo'];
   selected: any = null;
@@ -120,10 +110,10 @@ export class StudentsComponent implements OnInit {
     const status = prog >= 80 ? 'Excelente' : prog >= 50 ? 'Regular' : 'Necesita apoyo';
     const subjects = r.subjects.map((sub: any) => sub.subjectName || sub.name).filter(Boolean).slice(0, 4);
     const last = this.lastAccess(r.activity);
-    const missions = r.activity
-      .sort((a: any, b: any) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime())
+    const missions = [...r.activity]
+      .sort((a: any, b: any) => new Date(b.activityDate).getTime() - new Date(a.activityDate).getTime())
       .slice(0, 5)
-      .map((a: any) => a.contentTitle || a.missionTitle || a.description || 'Actividad completada');
+      .map((a: any) => a.contentTitle || a.missionTitle || a.description || `${a.missionsCompleted ?? 1} misión(es) el ${a.activityDate ?? ''}`);
     const av = s.initials || (s.displayName || '').split(' ').map((w: string) => w[0] || '').join('').slice(0, 2).toUpperCase();
 
     return {
@@ -145,20 +135,20 @@ export class StudentsComponent implements OnInit {
 
   private calcProg(subjects: any[]): number {
     if (!subjects.length) return 0;
+    // xpInSubject de la API: 500 XP = 100% por materia
     const sum = subjects.reduce((acc: number, sub: any) => {
-      const p = typeof sub.progress === 'number' ? sub.progress
-        : (sub.completedMissions != null && sub.totalMissions
-          ? Math.round((sub.completedMissions / sub.totalMissions) * 100) : 0);
-      return acc + Math.min(100, Math.max(0, p));
+      const xp = sub.xpInSubject ?? sub.xp ?? 0;
+      return acc + Math.min(100, Math.round(xp / 5));
     }, 0);
     return Math.round(sum / subjects.length);
   }
 
   private lastAccess(activity: any[]): string {
     if (!activity.length) return '—';
+    // DailyActivity usa activityDate (LocalDate), no createdAt
     const latest = activity.reduce((a: any, b: any) =>
-      new Date(a.createdAt) > new Date(b.createdAt) ? a : b);
-    const days = Math.floor((Date.now() - new Date(latest.createdAt).getTime()) / 86400000);
+      new Date(a.activityDate) > new Date(b.activityDate) ? a : b);
+    const days = Math.floor((Date.now() - new Date(latest.activityDate).getTime()) / 86400000);
     if (days === 0) return 'Hoy';
     if (days === 1) return 'Ayer';
     return `Hace ${days} días`;

@@ -48,6 +48,8 @@ import { AdministratorUsersPageComponent } from './pages/administrator/users-pag
 import { AdministratorClassroomsPageComponent } from './pages/administrator/classrooms-page/administrator-classrooms-page.component';
 import { AdministratorSubjectsPageComponent } from './pages/administrator/subjects-page/administrator-subjects-page.component';
 import { AdministratorAssignmentsPageComponent } from './pages/administrator/assignments-page/administrator-assignments-page.component';
+import { AdministratorParentsPageComponent } from './pages/administrator/parents-page/administrator-parents-page.component';
+import { GradebookComponent } from './pages/teacher/gradebook/gradebook.component';
 
 const AUTH = [authGuard];
 const STUDENT = [authGuard, roleGuard(['alumno'])];
@@ -77,8 +79,9 @@ export const routes: Routes = [
 
   { path: 'teacher', component: TeacherDashboardComponent, canActivate: TEACHER },
   { path: 'teacher/classrooms', component: TClassrooms, canActivate: TEACHER },
-  { path: 'teacher/students', component: TStudents, canActivate: TEACHER },
-  { path: 'teacher/create', component: CreateContentComponent, canActivate: TEACHER },
+  { path: 'teacher/students',   component: TStudents,          canActivate: TEACHER },
+  { path: 'teacher/gradebook',  component: GradebookComponent,  canActivate: TEACHER },
+  { path: 'teacher/create',     component: CreateContentComponent, canActivate: TEACHER },
   { path: 'teacher/ai-assistant', component: TAiAssist, canActivate: TEACHER },
   { path: 'teacher/reports', component: ReportsComponent, canActivate: TEACHER },
   { path: 'teacher/calendar',              component: TCalendar,              canActivate: TEACHER },
@@ -107,6 +110,7 @@ export const routes: Routes = [
   { path: 'administrator/assignments', component: AdministratorAssignmentsPageComponent, canActivate: ADMINISTRATOR },
   { path: 'administrator/teachers', component: AdministratorUsersPageComponent, canActivate: ADMINISTRATOR, data: { mode: 'teachers' } },
   { path: 'administrator/students', component: AdministratorUsersPageComponent, canActivate: ADMINISTRATOR, data: { mode: 'students' } },
+  { path: 'administrator/parents', component: AdministratorParentsPageComponent, canActivate: ADMINISTRATOR },
   { path: 'administrator/classrooms', component: AdministratorClassroomsPageComponent, canActivate: ADMINISTRATOR },
   { path: 'administrator/subjects', component: AdministratorSubjectsPageComponent, canActivate: ADMINISTRATOR },
 

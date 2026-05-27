@@ -2,7 +2,8 @@ import { Component, ViewChild, ElementRef, AfterViewChecked } from '@angular/cor
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { RouterLink } from '@angular/router';
-import { ShellComponent, NavItem } from '../../../shared/shell/shell.component';
+import { ShellComponent } from '../../../shared/shell/shell.component';
+import { TEACHER_NAV } from '../shared/teacher-nav';
 import { AiTutorService, ChatMessage } from '../../../services/ai-tutor.service';
 
 @Component({ selector: 'app-ai-assistant-teacher', standalone: true,
@@ -12,16 +13,7 @@ import { AiTutorService, ChatMessage } from '../../../services/ai-tutor.service'
 export class AiAssistantComponent implements AfterViewChecked {
   @ViewChild('chatEnd') chatEnd!: ElementRef;
 
-  navItems: NavItem[] = [
-    { label:'Dashboard',       icon:'🏠', route:'/teacher' },
-    { label:'Mis Salones',     icon:'🏫', route:'/teacher/classrooms', badge:3 },
-    { label:'Alumnos',         icon:'👨‍🎓', route:'/teacher/students' },
-    { label:'Crear Contenido', icon:'📝', route:'/teacher/create' },
-    { label:'Tutor IA',        icon:'🤖', route:'/teacher/ai-assistant', badge:'✨' },
-    { label:'Reportes',        icon:'📊', route:'/teacher/reports' },
-    { label:'Calendario',      icon:'📅', route:'/teacher/calendar' },
-    { label:'Mensajes',        icon:'💬', route:'/teacher/messages', badge:5 },
-  ];
+  navItems = TEACHER_NAV;
 
   messages: ChatMessage[] = [{
     role: 'assistant',

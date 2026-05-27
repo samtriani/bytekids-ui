@@ -237,6 +237,50 @@
   &:hover { opacity: 1; }
 }
 
+/* ── Botón editar entrada de horario ── */
+.btn-edit-sched {
+  background: transparent; border: 1px solid var(--border);
+  border-radius: 6px; padding: 0 6px; height: 22px;
+  font-size: .75rem; cursor: pointer; color: var(--tx2);
+  transition: all .15s; line-height: 1;
+  &:hover { background: var(--guinda-lt); border-color: var(--guinda-border); }
+}
+
+/* ── Modal editar horario ── */
+.edit-sched-modal {
+  background: var(--bg-card, #fff);
+  border-radius: 18px;
+  width: 100%;
+  max-width: 560px;
+  box-shadow: 0 24px 64px rgba(0,0,0,.3);
+  overflow: hidden;
+  animation: popIn .2s cubic-bezier(.34,1.56,.64,1);
+}
+.edit-sched-header {
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 16px 20px; border-bottom: 1px solid var(--border);
+  font-size: .9rem; font-weight: 700; color: var(--tx1);
+}
+.modal-close-btn {
+  background: transparent; border: none; font-size: 1rem;
+  color: var(--tx3); cursor: pointer; padding: 4px 8px;
+  border-radius: 6px; transition: all .12s;
+  &:hover { background: var(--danger-lt); color: var(--danger); }
+}
+.edit-sched-body {
+  padding: 20px; display: flex; flex-direction: column; gap: 14px;
+}
+.edit-sched-row {
+  display: flex; gap: 12px; flex-wrap: wrap;
+  .fg { flex: 1; min-width: 140px; }
+}
+.edit-sched-footer {
+  display: flex; justify-content: flex-end; gap: 10px;
+  padding: 14px 20px; border-top: 1px solid var(--border);
+  background: var(--bg2);
+  .btn { min-width: 110px; display: flex; align-items: center; justify-content: center; }
+}
+
 /* ── Modal de confirmación ── */
 .confirm-overlay {
   position: fixed;

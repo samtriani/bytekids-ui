@@ -1,39 +1,56 @@
-<app-shell role="parent" userName="Sam Partida" userAvatar="SP"
+<app-shell role="parent" [userName]="parentName" [userAvatar]="parentInitials"
   [navItems]="navItems" pageTitle="Progreso"></app-shell>
 <div class="page-wrap">
-  <div class="ph"><div class="ph-left"><h1>Progreso de aprendizaje</h1><p>Evolución semana a semana de Axel y Antonella</p></div></div>
+  <div class="ph"><div class="ph-left"><h1>Progreso de aprendizaje</h1><p>Evolución semana a semana de cada hijo</p></div></div>
 
-  <div class="card mb14" style="overflow:hidden">
-    <div class="card-h"><span class="card-title">Tendencia de progreso — últimas 6 semanas</span></div>
-    <div class="card-p"><div style="height:200px"><canvas #trendC></canvas></div></div>
-  </div>
+  @if (loading) {
+    <div style="text-align:center;padding:60px 0;color:var(--tx3)">Cargando datos…</div>
+  } @else if (!children.length) {
+    <div style="text-align:center;padding:60px 0;color:var(--tx3)">
+      <p>No hay hijos vinculados a tu cuenta aún.</p>
+    </div>
+  } @else {
+    <div class="card mb14" style="overflow:hidden">
+      <div class="card-h"><span class="card-title">XP ganado por semana — últimas 6 semanas</span></div>
+      <div class="card-p"><div style="height:200px"><canvas #trendC></canvas></div></div>
+    </div>
 
-  <!-- Switch hijo -->
-  <div class="child-sw mb14">
-    <button class="csw-btn" [class.active]="sel==='axel'" (click)="sel='axel'">
-      <span class="csw-av">AX</span> Axel <span class="csw-pct">78%</span>
-    </button>
-    <button class="csw-btn" [class.active]="sel==='ant'" (click)="sel='ant'">
-      <span class="csw-av" style="background:var(--info-lt);color:var(--info)">AN</span> Antonella <span class="csw-pct">45%</span>
-    </button>
-  </div>
-
-  <div class="card card-p">
-    <div class="section-hd" style="margin-bottom:14px">Detalle por materia</div>
-    <div style="display:flex;flex-direction:column;gap:14px">
-      @for (s of subs; track s.name) {
-        <div class="subj-row">
-          <div class="sr-ico" [style.background]="s.c+'12'">{{ s.icon }}</div>
-          <div style="flex:1">
-            <div style="display:flex;justify-content:space-between;margin-bottom:4px">
-              <span style="font-weight:700;font-size:.88rem">{{ s.name }}</span>
-              <span style="font-weight:800;font-size:.88rem" [style.color]="s.c">{{ s.pct }}%</span>
-            </div>
-            <div class="prog" style="height:8px"><div class="prog-bar" [style.width]="s.pct+'%'" [style.background]="s.c"></div></div>
-          </div>
-        </div>
+    <!-- Switch hijo -->
+    <div class="child-sw mb14">
+      @for (c of children; track c.id; let i = $index) {
+        <button class="csw-btn" [class.active]="selIndex===i" (click)="selectChild(i)">
+          <span class="csw-av" [style.background]="c.color+'18'" [style.color]="c.color">{{ c.av }}</span>
+          {{ c.name.split(' ')[0] }}
+          @if (subs.length && selIndex===i) {
+            <span class="csw-pct">{{ subs[0]?.pct ?? 0 }}%</span>
+          }
+        </button>
       }
     </div>
-    <a routerLink="/parent/ai-assistant" class="btn btn-primary btn-block" style="margin-top:16px">🤖 Consultar Asistente IA</a>
-  </div>
+
+    @if (sel) {
+      <div class="card card-p">
+        <div class="section-hd" style="margin-bottom:14px">Detalle por materia — {{ sel.name.split(' ')[0] }}</div>
+        @if (subs.length) {
+          <div style="display:flex;flex-direction:column;gap:14px">
+            @for (s of subs; track s.name) {
+              <div class="subj-row">
+                <div class="sr-ico" [style.background]="s.c+'12'">{{ s.icon }}</div>
+                <div style="flex:1">
+                  <div style="display:flex;justify-content:space-between;margin-bottom:4px">
+                    <span style="font-weight:700;font-size:.88rem">{{ s.name }}</span>
+                    <span style="font-weight:800;font-size:.88rem" [style.color]="s.c">{{ s.pct }}%</span>
+                  </div>
+                  <div class="prog" style="height:8px"><div class="prog-bar" [style.width]="s.pct+'%'" [style.background]="s.c"></div></div>
+                </div>
+              </div>
+            }
+          </div>
+        } @else {
+          <p style="text-align:center;padding:24px 0;font-size:.85rem;color:var(--tx3)">Sin materias registradas aún.</p>
+        }
+        <a routerLink="/parent/ai-assistant" class="btn btn-primary btn-block" style="margin-top:16px">🤖 Consultar Asistente IA</a>
+      </div>
+    }
+  }
 </div>
