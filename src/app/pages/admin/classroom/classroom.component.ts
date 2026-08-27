@@ -1,8 +1,9 @@
 import { Component, OnDestroy, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { ActivatedRoute, Router } from '@angular/router';
-import { ShellComponent } from '../../../shared/shell/shell.component';
+import { Role, ShellComponent } from '../../../shared/shell/shell.component';
 import { ADMIN_NAV } from '../shared/admin-nav';
+import { ADMINISTRATOR_NAV_ITEMS } from '../../administrator/shared/administrator-nav';
 import { SessionApiService } from '../../../services/api/session-api.service';
 import { AuthService } from '../../../services/auth.service';
 import { catchError, of } from 'rxjs';
@@ -18,7 +19,11 @@ const POLL_MS     = 10000;
   styleUrls: ['./classroom.component.scss']
 })
 export class AdminClassroomComponent implements OnInit, OnDestroy {
-  navItems   = ADMIN_NAV;
+  /** La pantalla vive en dos modulos: Panel Ejecutivo y Coordinador. */
+  private readonly base: string;
+  readonly navItems:  typeof ADMIN_NAV;
+  readonly shellRole: Role;
+
   userName   = 'Director';
   userAvatar = 'DR';
 
@@ -48,6 +53,11 @@ export class AdminClassroomComponent implements OnInit, OnDestroy {
     private sessionApi: SessionApiService,
     private auth:       AuthService,
   ) {
+    const isCoordinator = this.router.url.startsWith('/administrator');
+    this.base      = isCoordinator ? '/administrator' : '/admin';
+    this.navItems  = isCoordinator ? ADMINISTRATOR_NAV_ITEMS : ADMIN_NAV;
+    this.shellRole = isCoordinator ? 'administrator' : 'admin';
+
     const u = this.auth.getUser();
     if (u) { this.userName = u.displayName; this.userAvatar = u.initials; }
   }
@@ -174,7 +184,7 @@ export class AdminClassroomComponent implements OnInit, OnDestroy {
 
   exit() {
     this.destroyJitsi();
-    this.router.navigate(['/admin/live']);
+    this.router.navigate([`${this.base}/live`]);
   }
 
   // ── Helpers de presentación ─────────────────────────────────────────────

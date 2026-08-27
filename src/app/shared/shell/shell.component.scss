@@ -1,9 +1,12 @@
-.shell { display: flex; min-height: 100vh; }
+/* El shell solo pinta el cromo (sidebar + topbar), ambos fijos. No ocupa
+   altura en el flujo: el contenido de cada pagina va en .page-wrap, que es
+   hermano de <app-shell> y se posiciona con var(--sw) / var(--th). */
+.shell { display: flex; }
 
 /* ── SIDEBAR ── */
 .sidebar {
   position: fixed; top: 0; left: 0;
-  width: 265px; height: 100vh;
+  width: var(--sw); height: 100vh;
   background: var(--bk-bg-card);
   border-right: 1px solid var(--bk-border);
   display: flex; flex-direction: column;
@@ -63,13 +66,13 @@
 
 /* ── MAIN ── */
 .shell-main {
-  flex: 1; margin-left: 265px;
-  display: flex; flex-direction: column; min-height: 100vh;
+  flex: 1; margin-left: var(--sw);
+  display: flex; flex-direction: column;
 }
 
 .topbar {
-  position: sticky; top: 0;
-  height: 62px;
+  position: fixed; top: 0; left: var(--sw); right: 0;
+  height: var(--th);
   background: rgba(13,21,48,0.92); backdrop-filter: blur(12px);
   border-bottom: 1px solid var(--bk-border);
   display: flex; align-items: center; justify-content: space-between;
@@ -83,7 +86,9 @@
 .tb-avatar { width: 32px; height: 32px; border-radius: 9px; display: flex; align-items: center; justify-content: center; font-weight: 800; font-size: .78rem; }
 .tb-uname  { font-size: .83rem; font-weight: 700; color: var(--bk-text); }
 
-.shell-content { flex: 1; padding: 24px 28px; overflow-y: auto; }
+/* .shell-content se elimino: su <router-outlet> nunca recibia nada (todas
+   las rutas son de primer nivel) y su flex:1 reservaba una pantalla completa
+   en blanco por encima del contenido real. */
 
 /* ── NOTIFICATION BELL ── */
 .tb-bell-icon { font-size: 1.05rem; }

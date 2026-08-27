@@ -1,8 +1,9 @@
 import { Component, OnDestroy, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { Router } from '@angular/router';
-import { ShellComponent } from '../../../shared/shell/shell.component';
+import { Role, ShellComponent } from '../../../shared/shell/shell.component';
 import { ADMIN_NAV } from '../shared/admin-nav';
+import { ADMINISTRATOR_NAV_ITEMS } from '../../administrator/shared/administrator-nav';
 import { SessionApiService } from '../../../services/api/session-api.service';
 import { AuthService } from '../../../services/auth.service';
 import { catchError, of } from 'rxjs';
@@ -17,7 +18,11 @@ const REFRESH_MS = 15000;
   styleUrls: ['./live.component.scss']
 })
 export class AdminLiveComponent implements OnInit, OnDestroy {
-  navItems   = ADMIN_NAV;
+  /** La pantalla vive en dos modulos: Panel Ejecutivo y Coordinador. */
+  private readonly base: string;
+  readonly navItems:  typeof ADMIN_NAV;
+  readonly shellRole: Role;
+
   loading    = true;
   userName   = 'Director';
   userAvatar = 'DR';
@@ -32,6 +37,11 @@ export class AdminLiveComponent implements OnInit, OnDestroy {
     private auth:       AuthService,
     private router:     Router,
   ) {
+    const isCoordinator = this.router.url.startsWith('/administrator');
+    this.base      = isCoordinator ? '/administrator' : '/admin';
+    this.navItems  = isCoordinator ? ADMINISTRATOR_NAV_ITEMS : ADMIN_NAV;
+    this.shellRole = isCoordinator ? 'administrator' : 'admin';
+
     const u = this.auth.getUser();
     if (u) { this.userName = u.displayName; this.userAvatar = u.initials; }
   }
@@ -60,7 +70,7 @@ export class AdminLiveComponent implements OnInit, OnDestroy {
   }
 
   observe(scheduleId: string) {
-    this.router.navigate(['/admin/classroom', scheduleId]);
+    this.router.navigate([`${this.base}/classroom`, scheduleId]);
   }
 
   remaining(secondsLeft: number): string {
