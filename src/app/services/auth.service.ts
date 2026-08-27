@@ -13,6 +13,8 @@ export interface AppUser {
   role: string;
   panels: string[];
   initials: string;
+  /** Puede crear/modificar cuentas de coordinador y director. */
+  owner: boolean;
 }
 
 const TOKEN_KEY = 'bk_token';
@@ -52,6 +54,7 @@ export class AuthService {
         displayName: data.displayName,
         role: data.role,
         panels: roleToPanels(data.role),
+        owner: data.owner === true,
         initials: data.displayName
           .split(' ')
           .map((word: string) => word[0])

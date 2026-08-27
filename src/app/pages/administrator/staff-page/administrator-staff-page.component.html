@@ -1,0 +1,139 @@
+<app-shell role="administrator" [userName]="userName" [userAvatar]="userAvatar"
+  [navItems]="navItems" pageTitle="Coordinadores y direccion"></app-shell>
+
+<div class="page-wrap">
+
+  <header class="stf-head">
+    <h1>Coordinadores y dirección</h1>
+    <p>Da de alta las cuentas con acceso administrativo a la plataforma.</p>
+  </header>
+
+  <!-- Aviso de privilegio -->
+  <div class="stf-warn">
+    <span class="stf-warn-icon">🔑</span>
+    <p>
+      <strong>Estas cuentas son privilegiadas.</strong>
+      Un coordinador puede administrar maestros, alumnos, padres, salones y materias.
+      Solo los usuarios dueños pueden crear, editar o desactivar cuentas de esta pantalla
+      — y por eso nadie más puede quitarte el acceso.
+    </p>
+  </div>
+
+  <!-- Feedback -->
+  @if (okMsg) {
+    <div class="stf-alert stf-alert--ok" role="status">
+      <span>✅ {{ okMsg }}</span>
+      <button (click)="dismiss()" aria-label="Cerrar aviso">✕</button>
+    </div>
+  }
+  @if (errorMsg) {
+    <div class="stf-alert stf-alert--err" role="alert">
+      <span>⚠️ {{ errorMsg }}</span>
+      <button (click)="dismiss()" aria-label="Cerrar aviso">✕</button>
+    </div>
+  }
+
+  <div class="stf-body">
+
+    <!-- Alta -->
+    <section class="stf-card">
+      <h2 class="stf-card-title">Alta de cuenta</h2>
+
+      <label class="stf-field">
+        <span>Nombre completo</span>
+        <input type="text" [(ngModel)]="form.displayName" placeholder="Monserrat Partida"
+               autocomplete="off" maxlength="80">
+      </label>
+
+      <label class="stf-field">
+        <span>Usuario</span>
+        <input type="text" [(ngModel)]="form.username" placeholder="monze"
+               autocomplete="off" maxlength="50">
+        <small>Mínimo 3 caracteres. Se guarda en minúsculas.</small>
+      </label>
+
+      <label class="stf-field">
+        <span>Contraseña</span>
+        <input type="password" [(ngModel)]="form.password" placeholder="••••••••"
+               autocomplete="new-password">
+        <small [class.stf-bad]="form.password.length > 0 && form.password.length < 6">
+          Mínimo 6 caracteres.
+        </small>
+      </label>
+
+      <fieldset class="stf-roles">
+        <legend>Rol</legend>
+        @for (r of roles; track r) {
+          <label class="stf-radio" [class.on]="form.role === r">
+            <input type="radio" name="role" [value]="r" [(ngModel)]="form.role">
+            <span class="stf-radio-name">{{ ROLE_LABEL[r] }}</span>
+            <span class="stf-radio-desc">
+              {{ r === 'admin'
+                 ? 'Administra usuarios, salones y materias'
+                 : 'Consulta métricas, reportes y clases en vivo' }}
+            </span>
+          </label>
+        }
+      </fieldset>
+
+      <button class="stf-btn" [disabled]="!canSubmit" (click)="submit()">
+        {{ saving ? 'Dando de alta…' : 'Dar de alta' }}
+      </button>
+    </section>
+
+    <!-- Listado -->
+    <section class="stf-card">
+      <h2 class="stf-card-title">
+        Cuentas activas <span class="stf-count">{{ staff.length }}</span>
+      </h2>
+
+      @if (loading) {
+        <p class="stf-empty">Cargando…</p>
+      } @else if (!staff.length) {
+        <p class="stf-empty">Todavía no hay cuentas administrativas.</p>
+      } @else {
+        <ul class="stf-list">
+          @for (p of staff; track p.id) {
+            <li>
+              <span class="stf-av">{{ p.initials || '?' }}</span>
+              <div class="stf-info">
+                <p class="stf-name">
+                  {{ p.displayName }}
+                  @if (p.username === currentUsername) {
+                    <span class="stf-you">tú</span>
+                  }
+                </p>
+                <p class="stf-meta">
+                  &#64;{{ p.username }} · {{ roleLabel(p.role) }}
+                </p>
+              </div>
+              @if (p.username !== currentUsername) {
+                <button class="stf-remove" (click)="askRemove(p)"
+                        [attr.aria-label]="'Desactivar a ' + p.displayName">Desactivar</button>
+              }
+            </li>
+          }
+        </ul>
+      }
+    </section>
+  </div>
+</div>
+
+<!-- Confirmación de baja -->
+@if (pendingRemoval) {
+  <div class="stf-modal-bg" (click)="cancelRemove()">
+    <div class="stf-modal" role="dialog" aria-modal="true"
+         aria-labelledby="stf-modal-title" (click)="$event.stopPropagation()">
+      <div class="stf-modal-icon">⚠️</div>
+      <h2 id="stf-modal-title">Desactivar cuenta</h2>
+      <p>
+        <strong>{{ pendingRemoval.displayName }}</strong> perderá el acceso a la
+        plataforma de inmediato. La cuenta no se borra: se puede reactivar después.
+      </p>
+      <div class="stf-modal-actions">
+        <button class="stf-btn-ghost" (click)="cancelRemove()">Cancelar</button>
+        <button class="stf-btn stf-btn--danger" (click)="confirmRemove()">Desactivar</button>
+      </div>
+    </div>
+  </div>
+}

@@ -9,6 +9,8 @@ export interface NavItem {
   icon: string;
   route?: string;
   badge?: string | number;
+  /** Solo visible para usuarios dueños (ver OWNER_USERNAMES en el backend). */
+  ownerOnly?: boolean;
 }
 
 export type Role = 'student' | 'teacher' | 'parent' | 'admin' | 'administrator';
@@ -34,6 +36,12 @@ export class ShellComponent implements OnInit, OnDestroy {
   @Input() userAvatar = 'U';
   @Input() navItems: NavItem[] = [];
   @Input() pageTitle = 'ByteKids Academy';
+
+  /** Oculta del menu lo que este usuario no puede usar. */
+  get visibleNavItems(): NavItem[] {
+    const isOwner = this.auth.getUser()?.owner === true;
+    return this.navItems.filter(i => !i.ownerOnly || isOwner);
+  }
 
   unreadCount = 0;
   notifications: any[] = [];
