@@ -39,6 +39,42 @@ export class WorkspaceComponent implements OnInit {
 
   readonly Object = Object;
   get isQuiz(): boolean { return this.content?.type === 'quiz'; }
+
+  // ── content_body ────────────────────────────────────────────────────────
+  // Se guarda como JSON con forma distinta por tipo. Antes se volcaba crudo en
+  // la pantalla, lo que ademas le enseñaba al alumno los campos de respuesta
+  // (expected_output, solution_check). Aqui se descompone y esos NUNCA se
+  // exponen: son para el maestro al calificar.
+  private get body(): any {
+    const raw = this.content?.contentBody;
+    if (!raw) return null;
+    if (typeof raw === 'object') return raw;
+    try { return JSON.parse(raw); } catch { return null; }
+  }
+
+  /** Texto plano cuando content_body no es JSON valido (contenido viejo). */
+  get bodyTexto(): string {
+    const raw = this.content?.contentBody;
+    return (raw && !this.body) ? String(raw) : '';
+  }
+
+  get instrucciones(): string { return this.body?.instructions ?? ''; }
+  get starterCode():   string { return this.body?.starter_code ?? ''; }
+  get materialUrl():   string { return this.body?.url ?? ''; }
+
+  get materialTipo(): string {
+    const t = this.body?.resource_type ?? '';
+    return ({ video: '🎬 Video', documento: '📄 Documento', enlace: '🔗 Enlace' } as any)[t] ?? '🔗 Recurso';
+  }
+
+  get checklist(): string[] {
+    return Array.isArray(this.body?.checklist) ? this.body.checklist : [];
+  }
+
+  get tieneDetalle(): boolean {
+    return !!(this.instrucciones || this.starterCode || this.materialUrl
+              || this.checklist.length || this.bodyTexto);
+  }
   get alreadyDone(): boolean { return this.existingSub?.status === 'aprobado'; }
   get submitted(): boolean { return !!this.existingSub && this.existingSub.status !== 'rechazado'; }
   get progress(): number {

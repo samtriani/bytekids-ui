@@ -38,3 +38,12 @@
 .mc-btn { display:block; text-align:center; padding:10px; border-radius:10px; font-weight:800; font-size:.85rem; color:#fff; cursor:pointer; transition:all .2s; text-decoration:none; border:none; font-family:'Nunito',sans-serif; }
 .mc-btn:hover { transform:translateY(-1px); opacity:.9; }
 .locked-btn { background:var(--bk-bg-card2); color:var(--bk-text-muted); border:1px solid var(--bk-border); cursor:not-allowed; }
+
+/* Filtro por tipo de actividad */
+.filters--tipo { margin-top: -6px; }
+.filter-btn--tipo { font-size: .78rem; }
+.filter-n {
+  display: inline-block; margin-left: 5px; padding: 1px 6px;
+  border-radius: 999px; font-size: .68rem; font-weight: 800;
+  background: rgba(255,255,255,.18);
+}

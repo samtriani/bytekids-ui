@@ -8,6 +8,13 @@ import { SubmissionApiService } from '../../../services/api/submission-api.servi
 import { AuthService } from '../../../services/auth.service';
 import { forkJoin } from 'rxjs';
 
+const TIPO_LABEL: Record<string, string> = {
+  mision: 'Misión', tarea: 'Tarea', quiz: 'Quiz', proyecto: 'Proyecto', material: 'Material',
+};
+const TIPO_ICON: Record<string, string> = {
+  mision: '🚀', tarea: '📋', quiz: '❓', proyecto: '🏗️', material: '📚',
+};
+
 const SUBJECT_META: Record<string, { icon: string; color: string }> = {
   'Python':        { icon: '🐍', color: '#06B6D4' },
   'HTML/CSS/JS':   { icon: '🌐', color: '#7C3AED' },
@@ -55,6 +62,20 @@ export class MissionsComponent implements OnInit {
 
   private submissionMap: Record<string, any> = {};
 
+  // Filtro por tipo: sin esto materiales, quizzes y proyectos se veian igual
+  // que una mision y el alumno no sabia que le estaban pidiendo.
+  tipoFiltro = '';
+  readonly TIPOS = [
+    { k: 'mision',   label: '🚀 Misiones' },
+    { k: 'tarea',    label: '📋 Tareas' },
+    { k: 'quiz',     label: '❓ Quizzes' },
+    { k: 'proyecto', label: '🏗️ Proyectos' },
+    { k: 'material', label: '📚 Materiales' },
+  ];
+
+  contarTipo(k: string): number { return this.missions.filter(m => m.type === k).length; }
+  setTipo(k: string) { this.tipoFiltro = this.tipoFiltro === k ? '' : k; }
+
   ngOnInit() {
     forkJoin({
       feed: this.contentApi.getMyFeed(),
@@ -89,6 +110,9 @@ export class MissionsComponent implements OnInit {
       id:         c.id,
       title:      c.title,
       subject:    c.subjectName ?? '',
+      type:       c.type ?? 'mision',
+      typeLabel:  TIPO_LABEL[c.type] ?? 'Actividad',
+      typeIcon:   TIPO_ICON[c.type]  ?? '🎯',
       xp:         c.xpReward ?? 50,
       progress:   saved?.progress ?? progress,
       status:     saved?.status ?? status,
@@ -125,8 +149,10 @@ export class MissionsComponent implements OnInit {
   }
 
   get filtered() {
-    if (this.activeFilter === 'Todas') return this.missions;
-    return this.missions.filter(m => m.subject.includes(this.activeFilter));
+    return this.missions.filter(m =>
+      (this.activeFilter === 'Todas' || m.subject.includes(this.activeFilter)) &&
+      (!this.tipoFiltro || m.type === this.tipoFiltro)
+    );
   }
 
   setFilter(f: string) { this.activeFilter = f; }

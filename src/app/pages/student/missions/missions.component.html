@@ -21,6 +21,18 @@
     }
   </div>
 
+  <!-- Filtro por tipo de actividad -->
+  <div class="filters filters--tipo">
+    @for (t of TIPOS; track t.k) {
+      @if (contarTipo(t.k)) {
+        <button class="filter-btn filter-btn--tipo" [class.active]="tipoFiltro === t.k"
+                (click)="setTipo(t.k)">
+          {{ t.label }} <span class="filter-n">{{ contarTipo(t.k) }}</span>
+        </button>
+      }
+    }
+  </div>
+
   <!-- Missions grid -->
   <div class="missions-grid">
     @for (m of filtered; track m.title) {
@@ -29,7 +41,7 @@
           <div class="mc-icon" [style.background]="m.color+'18'">{{ m.icon }}</div>
           <div class="mc-meta">
             <span class="mc-subj" [style.color]="m.color">{{ m.subject }}</span>
-            <span class="mc-diff">{{ m.difficulty }}</span>
+            <span class="mc-diff">{{ m.typeIcon }} {{ m.typeLabel }} · {{ m.difficulty }}</span>
           </div>
           <div class="mc-xp">+{{ m.xp }} XP</div>
         </div>
