@@ -87,7 +87,39 @@
 
 /* ── Instructions ── */
 .ws-desc { font-size:.88rem; color:#94A3B8; line-height:1.7; margin:0; white-space:pre-line; }
-.ws-content-body { padding:12px; background:#0F1117; border-radius:8px; font-size:.8rem; color:#6B7FBB; white-space:pre-wrap; font-family:monospace; border:1px solid #2A2D3E; }
+/* Instrucciones en prosa: se lee, no es codigo. */
+.ws-content-body { padding:14px; background:#0F1117; border-radius:8px; font-size:.86rem; line-height:1.65; color:#A9B4D0; white-space:pre-wrap; border:1px solid #2A2D3E; }
+
+/* Enlace del material: lo primero que debe ver el alumno. */
+.ws-recurso {
+  display:flex; align-items:center; gap:10px;
+  padding:14px 16px; margin-bottom:12px;
+  background:#151A2E; border:1.5px solid #3B4a7a; border-radius:10px;
+  text-decoration:none; transition:background .15s, border-color .15s, transform .1s;
+}
+.ws-recurso:hover { background:#1B2240; border-color:#5A6DB0; }
+.ws-recurso:active { transform:translateY(1px); }
+.ws-recurso-tipo   { font-size:.74rem; font-weight:800; color:#8FA2E0; white-space:nowrap; }
+.ws-recurso-txt    { flex:1; font-size:.9rem; font-weight:700; color:#E8ECF8; }
+.ws-recurso-flecha { font-size:1rem; color:#8FA2E0; }
+
+/* Checklist del proyecto */
+.ws-checklist { margin:12px 0 0; padding:0 0 0 4px; list-style:none; display:grid; gap:8px; }
+.ws-checklist li {
+  position:relative; padding-left:26px;
+  font-size:.85rem; line-height:1.55; color:#A9B4D0;
+}
+.ws-checklist li::before {
+  content:'☐'; position:absolute; left:0; top:-1px;
+  font-size:1rem; color:#6B7FBB;
+}
+
+.ws-sub { margin:14px 0 6px; font-size:.78rem; font-weight:800; color:#8FA2E0; text-transform:uppercase; letter-spacing:.4px; }
+.ws-starter {
+  margin:0; padding:12px; background:#0B0D14; border:1px solid #2A2D3E;
+  border-radius:8px; overflow-x:auto;
+}
+.ws-starter code { font-family:monospace; font-size:.78rem; color:#7FD1A8; white-space:pre; }
 .ws-tip {
   display:flex; gap:8px; align-items:flex-start;
   padding:10px 14px; border-radius:10px; border-left:3px solid;

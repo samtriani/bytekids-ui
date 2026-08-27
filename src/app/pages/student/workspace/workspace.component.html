@@ -100,8 +100,34 @@
           <span class="ws-panel-title">Instrucciones</span>
         </div>
         <p class="ws-desc">{{ content.description }}</p>
-        @if (content.contentBody) {
-          <div class="ws-content-body">{{ content.contentBody }}</div>
+
+        @if (materialUrl) {
+          <a class="ws-recurso" [href]="materialUrl" target="_blank" rel="noopener noreferrer">
+            <span class="ws-recurso-tipo">{{ materialTipo }}</span>
+            <span class="ws-recurso-txt">Abrir el recurso</span>
+            <span class="ws-recurso-flecha">↗</span>
+          </a>
+        }
+
+        @if (instrucciones) {
+          <div class="ws-content-body">{{ instrucciones }}</div>
+        }
+
+        @if (checklist.length) {
+          <ul class="ws-checklist">
+            @for (paso of checklist; track paso) {
+              <li>{{ paso }}</li>
+            }
+          </ul>
+        }
+
+        @if (starterCode) {
+          <p class="ws-sub">Para empezar:</p>
+          <pre class="ws-starter"><code>{{ starterCode }}</code></pre>
+        }
+
+        @if (bodyTexto) {
+          <div class="ws-content-body">{{ bodyTexto }}</div>
         }
 
         <!-- Tip según materia -->
