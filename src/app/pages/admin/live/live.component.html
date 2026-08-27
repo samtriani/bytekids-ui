@@ -1,0 +1,97 @@
+<app-shell
+  role="admin"
+  [userName]="userName"
+  [userAvatar]="userAvatar"
+  [navItems]="navItems"
+  pageTitle="Clases en Vivo">
+
+  <div class="live">
+
+    <!-- Encabezado -->
+    <header class="live-head">
+      <div class="live-head-txt">
+        <h1 class="live-title">
+          <span class="live-dot" [class.live-dot--off]="!sessions.length"></span>
+          Clases transmitiendo ahora
+        </h1>
+        <p class="live-sub">
+          @if (sessions.length) {
+            {{ sessions.length }} {{ sessions.length === 1 ? 'clase activa' : 'clases activas' }}
+          } @else {
+            Ninguna clase con videollamada encendida
+          }
+          @if (lastUpdate) {
+            <span class="live-stamp">· Actualizado {{ lastUpdate | date:'HH:mm:ss' }}</span>
+          }
+        </p>
+      </div>
+      <button class="live-btn-ghost" (click)="refreshNow()" [disabled]="loading">
+        {{ loading ? 'Actualizando…' : '↻ Actualizar' }}
+      </button>
+    </header>
+
+    <!-- Cargando -->
+    @if (loading && !sessions.length) {
+      <div class="live-state">
+        <div class="live-spinner"></div>
+        <p>Buscando clases activas…</p>
+      </div>
+    } @else if (!sessions.length) {
+      <div class="live-state">
+        <div class="live-state-icon">📭</div>
+        <h2>No hay clases en vivo</h2>
+        <p>
+          Cuando un maestro inicie la videollamada de su clase, aparecerá aquí.<br>
+          Esta vista se actualiza sola cada 15 segundos.
+        </p>
+      </div>
+    } @else {
+      <div class="live-grid">
+        @for (s of sessions; track s.scheduleId) {
+          <article class="live-card">
+            <div class="live-card-top">
+              <span class="live-badge">
+                <span class="live-dot live-dot--sm"></span> EN VIVO
+              </span>
+              <span class="live-time">{{ hhmm(s.startTime) }} – {{ hhmm(s.endTime) }}</span>
+            </div>
+
+            <div class="live-card-title">
+              <span class="live-icon">{{ s.subjectIcon }}</span>
+              <div>
+                <h3>{{ s.subjectName }}</h3>
+                <p>{{ s.classroomName }}</p>
+              </div>
+            </div>
+
+            <dl class="live-meta">
+              <div>
+                <dt>Maestro</dt>
+                <dd>{{ s.teacherName }}</dd>
+              </div>
+              <div>
+                <dt>Conectados</dt>
+                <dd>
+                  {{ s.studentCount }}
+                  {{ s.studentCount === 1 ? 'alumno' : 'alumnos' }}
+                </dd>
+              </div>
+              <div>
+                <dt>Tiempo</dt>
+                <dd [class.live-warn]="!s.withinSchedule">{{ remaining(s.secondsLeft) }}</dd>
+              </div>
+            </dl>
+
+            @if (!s.withinSchedule) {
+              <p class="live-note">⚠️ La videollamada sigue encendida fuera del horario programado.</p>
+            }
+
+            <button class="live-btn" (click)="observe(s.scheduleId)">
+              👁 Observar clase
+            </button>
+          </article>
+        }
+      </div>
+    }
+  </div>
+</app-shell>

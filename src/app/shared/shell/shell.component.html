@@ -51,7 +51,40 @@
         <span class="tb-date">📅 {{ today }}</span>
       </div>
       <div class="tb-right">
-        <div class="tb-notif">🔔<span class="tb-dot"></span></div>
+        <div class="tb-notif" (click)="toggleNotif($event)">
+          <span class="tb-bell-icon">🔔</span>
+          @if (unreadCount > 0) {
+            <span class="tb-bell-count">{{ unreadCount > 9 ? '9+' : unreadCount }}</span>
+          }
+          @if (showNotif) {
+            <div class="notif-panel" (click)="$event.stopPropagation()">
+              <div class="notif-head">
+                <span class="notif-head-title">Notificaciones</span>
+                @if (unreadCount > 0) {
+                  <button class="notif-mark-all" (click)="markAllAsRead()">Marcar todas</button>
+                }
+              </div>
+              @if (notifications.length === 0) {
+                <div class="notif-empty">Sin notificaciones 🎉</div>
+              }
+              @for (n of notifications; track n.id) {
+                <div class="notif-item" [class.notif-unread]="!n.isRead" (click)="markAsRead(n)">
+                  <span class="notif-type-icon">{{ typeIcon(n.type) }}</span>
+                  <div class="notif-content">
+                    <div class="notif-title">{{ n.title }}</div>
+                    @if (n.body) {
+                      <div class="notif-body">{{ n.body }}</div>
+                    }
+                    <div class="notif-time">{{ timeAgo(n.createdAt) }}</div>
+                  </div>
+                  @if (!n.isRead) {
+                    <span class="notif-dot"></span>
+                  }
+                </div>
+              }
+            </div>
+          }
+        </div>
         <div class="tb-user">
           <div class="tb-avatar" [style.background]="cfg.color+'20'" [style.color]="cfg.color" [style.border]="'1px solid '+cfg.color+'40'">{{ userAvatar }}</div>
           <span class="tb-uname">{{ userName }}</span>
