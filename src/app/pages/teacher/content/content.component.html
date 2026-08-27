@@ -1,0 +1,172 @@
+<app-shell role="teacher" [userName]="userName" [userAvatar]="userAvatar"
+  [navItems]="navItems" pageTitle="Mis Contenidos"></app-shell>
+
+<div class="page-wrap">
+
+  <header class="mc-head">
+    <div>
+      <h1>Mis Contenidos</h1>
+      <p>Todo lo que has creado, en el orden en que lo verán tus alumnos.</p>
+    </div>
+    <button class="mc-btn" (click)="nuevo()">+ Nuevo contenido</button>
+  </header>
+
+  <!-- Feedback -->
+  @if (okMsg) {
+    <div class="mc-alert mc-alert--ok" role="status">
+      <span>✅ {{ okMsg }}</span>
+      <button (click)="descartar()" aria-label="Cerrar aviso">✕</button>
+    </div>
+  }
+  @if (errorMsg) {
+    <div class="mc-alert mc-alert--err" role="alert">
+      <span>⚠️ {{ errorMsg }}</span>
+      <button (click)="descartar()" aria-label="Cerrar aviso">✕</button>
+    </div>
+  }
+
+  @if (loading) {
+    <div class="mc-state">
+      <div class="mc-spinner"></div>
+      <p>Cargando tus contenidos…</p>
+    </div>
+  } @else if (!totalPiezas) {
+    <div class="mc-state">
+      <div class="mc-state-icon">📭</div>
+      <h2>Todavía no has creado contenido</h2>
+      <p>Cuando publiques misiones, tareas o materiales aparecerán aquí, agrupados por materia.</p>
+    </div>
+  } @else {
+
+    <!-- Resumen -->
+    <div class="mc-kpis">
+      <div class="mc-kpi">
+        <span class="mc-kpi-val">{{ totalPiezas }}</span>
+        <span class="mc-kpi-lbl">piezas</span>
+      </div>
+      <div class="mc-kpi">
+        <span class="mc-kpi-val">{{ totalXp }}</span>
+        <span class="mc-kpi-lbl">XP en total</span>
+      </div>
+      <div class="mc-kpi">
+        <span class="mc-kpi-val">{{ duracion(totalMinutos) }}</span>
+        <span class="mc-kpi-lbl">de trabajo estimado</span>
+      </div>
+      @if (sinPublicar) {
+        <div class="mc-kpi mc-kpi--warn">
+          <span class="mc-kpi-val">{{ sinPublicar }}</span>
+          <span class="mc-kpi-lbl">sin publicar</span>
+        </div>
+      }
+    </div>
+
+    <!-- Filtros -->
+    <div class="mc-filtros">
+      <input class="mc-buscar" type="search" [(ngModel)]="busqueda"
+             placeholder="Buscar por título o descripción…" aria-label="Buscar contenido">
+
+      <div class="mc-chips" role="group" aria-label="Filtrar por tipo">
+        <button class="mc-chip" [class.on]="!tipoFiltro" (click)="tipoFiltro = ''">
+          Todos <span class="mc-chip-n">{{ totalPiezas }}</span>
+        </button>
+        @for (t of tipos; track t) {
+          @if (conteo(t)) {
+            <button class="mc-chip" [class.on]="tipoFiltro === t" (click)="tipoFiltro = t">
+              {{ TIPO_META[t].icon }} {{ TIPO_META[t].label }}
+              <span class="mc-chip-n">{{ conteo(t) }}</span>
+            </button>
+          }
+        }
+      </div>
+
+      @if (materias.length > 1) {
+        <select class="mc-select" [(ngModel)]="matFiltro" aria-label="Filtrar por materia">
+          <option value="">Todas las materias</option>
+          @for (m of materias; track m) {
+            <option [value]="m">{{ m }}</option>
+          }
+        </select>
+      }
+
+      @if (hayFiltros) {
+        <button class="mc-btn-ghost" (click)="limpiarFiltros()">Limpiar filtros</button>
+      }
+    </div>
+
+    @if (!filtrado.length) {
+      <div class="mc-state">
+        <div class="mc-state-icon">🔍</div>
+        <h2>Nada coincide con ese filtro</h2>
+        <p>Prueba con otras palabras o quita los filtros.</p>
+      </div>
+    }
+
+    <!-- Listado agrupado por materia -->
+    @for (g of grupos; track g.materia) {
+      <section class="mc-grupo">
+        <h2 class="mc-grupo-titulo">
+          <span class="mc-grupo-icono">{{ g.icono }}</span>
+          {{ g.materia }}
+          <span class="mc-grupo-meta">{{ g.piezas.length }} piezas · {{ g.xp }} XP</span>
+        </h2>
+
+        <ul class="mc-lista">
+          @for (c of g.piezas; track c.id) {
+            <li class="mc-item" [class.mc-item--borrador]="!c.isPublished">
+              <span class="mc-orden" [attr.title]="c.orderIndex ? 'Posición en el currículo' : 'Sin orden asignado'">
+                {{ c.orderIndex ?? '—' }}
+              </span>
+
+              <div class="mc-cuerpo">
+                <p class="mc-titulo">
+                  <span class="mc-tipo">{{ tipoIcon(c.type) }} {{ tipoLabel(c.type) }}</span>
+                  {{ c.title }}
+                  @if (!c.isPublished) {
+                    <span class="mc-borrador">borrador</span>
+                  }
+                </p>
+                @if (c.description) {
+                  <p class="mc-desc">{{ c.description }}</p>
+                }
+                <p class="mc-meta">
+                  <span>{{ difLabel(c.difficulty) }}</span>
+                  <span>· {{ c.xpReward }} XP</span>
+                  <span>· {{ duracion(c.estimatedMinutes) }}</span>
+                  @if (c.dueDate) {
+                    <span>· entrega {{ c.dueDate | date:'d MMM' }}</span>
+                  }
+                </p>
+              </div>
+
+              <div class="mc-acciones">
+                <button class="mc-accion" (click)="editar(c)"
+                        [attr.aria-label]="'Editar ' + c.title">✏️ Editar</button>
+                <button class="mc-accion mc-accion--danger" (click)="pedirBaja(c)"
+                        [attr.aria-label]="'Quitar ' + c.title">🗑️ Quitar</button>
+              </div>
+            </li>
+          }
+        </ul>
+      </section>
+    }
+  }
+</div>
+
+<!-- Confirmación de baja -->
+@if (pendiente) {
+  <div class="mc-modal-bg" (click)="cancelarBaja()">
+    <div class="mc-modal" role="dialog" aria-modal="true"
+         aria-labelledby="mc-modal-title" (click)="$event.stopPropagation()">
+      <div class="mc-modal-icon">🗑️</div>
+      <h2 id="mc-modal-title">Quitar contenido</h2>
+      <p>
+        <strong>{{ pendiente.title }}</strong> dejará de aparecerles a tus alumnos.
+        No se borra de la base: las entregas que ya hicieron se conservan.
+      </p>
+      <div class="mc-modal-actions">
+        <button class="mc-btn-ghost" (click)="cancelarBaja()">Cancelar</button>
+        <button class="mc-btn mc-btn--danger" (click)="confirmarBaja()">Quitar</button>
+      </div>
+    </div>
+  </div>
+}
