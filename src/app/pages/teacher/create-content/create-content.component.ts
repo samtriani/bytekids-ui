@@ -108,7 +108,15 @@ export class CreateContentComponent implements OnInit {
           mins: c.estimatedMinutes ?? 0,
           desc: c.description ?? '',
           date: c.createdAt?.substring(0, 10) ?? '—',
+          subjectId: c.subjectId,
         }));
+
+        // Permite entrar directo a editar desde Mis Contenidos (?edit=<id>)
+        const editId = this.route.snapshot.queryParamMap.get('edit');
+        if (editId && !this.editingId) {
+          const target = this.published.find(p => p.id === editId);
+          if (target) this.startEdit(target);
+        }
       }
     });
   }

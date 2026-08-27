@@ -18,6 +18,7 @@ import { WorkspaceComponent } from './pages/student/workspace/workspace.componen
 import { StudentCalendarComponent } from './pages/student/calendar/calendar.component';
 import { StudentClassroomComponent } from './pages/student/classroom/classroom.component';
 import { TeacherClassroomComponent } from './pages/teacher/classroom/classroom.component';
+import { TeacherContentComponent } from './pages/teacher/content/content.component';
 
 import { TeacherDashboardComponent } from './pages/teacher-dashboard/teacher-dashboard.component';
 import { ClassroomsComponent as TClassrooms } from './pages/teacher/classrooms/classrooms.component';
@@ -90,6 +91,7 @@ export const routes: Routes = [
   { path: 'teacher/reports', component: ReportsComponent, canActivate: TEACHER },
   { path: 'teacher/calendar',              component: TCalendar,              canActivate: TEACHER },
   { path: 'teacher/classroom/:scheduleId', component: TeacherClassroomComponent, canActivate: TEACHER },
+  { path: 'teacher/content', component: TeacherContentComponent, canActivate: TEACHER },
   { path: 'teacher/messages', component: TMessages, canActivate: TEACHER },
 
   { path: 'parent', component: ParentDashboardComponent, canActivate: PARENT },
