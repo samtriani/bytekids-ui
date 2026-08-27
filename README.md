@@ -1,5 +1,13 @@
 # ByteKids AI Platform
 
+> 📌 **¿Retomando el trabajo?** La bitácora de en qué se quedó el proyecto está en
+> el repo de la API: **`bytekids-api/ESTADO.md`**. Ahí está el estado de los deploys,
+> los pendientes por probar y las trampas de este código.
+>
+> Antes de tocar una pantalla, lee de ese archivo la sección **"Trampas de este
+> proyecto"** — sobre todo la de que el shell **no tiene `<ng-content>`**: si metes
+> el contenido dentro de `<app-shell>`, Angular lo descarta sin dar error.
+
 ## 🚀 Cómo levantar la app
 
 ### Prerrequisitos
