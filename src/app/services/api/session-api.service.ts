@@ -13,6 +13,11 @@ export class SessionApiService {
     return this.http.get<any>(`${BASE}/schedule/${scheduleId}/status`).pipe(map(r => r.data));
   }
 
+  /** Solo ADMIN/DIRECTOR: clases con videollamada encendida en este momento. */
+  getLiveSessions(): Observable<any[]> {
+    return this.http.get<any>(`${BASE}/live`).pipe(map(r => r.data ?? []));
+  }
+
   join(scheduleId: string): Observable<void> {
     return this.http.post<any>(`${BASE}/schedule/${scheduleId}/join`, {}).pipe(map(() => void 0));
   }

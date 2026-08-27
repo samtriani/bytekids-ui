@@ -13,6 +13,7 @@ import { catchError } from 'rxjs/operators';
 
 const NAV: NavItem[] = [
   {label:'Panel Ejecutivo', icon:'🏫', route:'/admin'},
+    {label:'En Vivo',         icon:'🔴', route:'/admin/live'},
   {label:'Salones',         icon:'🎓', route:'/admin/classrooms'},
   {label:'Maestros',        icon:'👩‍🏫', route:'/admin/teachers'},
   {label:'Estudiantes',     icon:'👨‍🎓', route:'/admin/students'},
