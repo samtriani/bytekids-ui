@@ -1,6 +1,6 @@
 import { Component, Input, OnInit, OnDestroy, HostListener } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { Router, RouterLink, RouterLinkActive, RouterOutlet } from '@angular/router';
+import { Router, RouterLink, RouterLinkActive } from '@angular/router';
 import { AuthService } from '../../services/auth.service';
 import { NotificationApiService } from '../../services/api/notification-api.service';
 
@@ -24,7 +24,7 @@ const ROLE_CFG: Record<string, { label: string; emoji: string; color: string }> 
 @Component({
   selector: 'app-shell',
   standalone: true,
-  imports: [CommonModule, RouterLink, RouterLinkActive, RouterOutlet],
+  imports: [CommonModule, RouterLink, RouterLinkActive],
   templateUrl: './shell.component.html',
   styleUrls: ['./shell.component.scss']
 })

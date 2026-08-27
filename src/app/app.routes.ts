@@ -117,6 +117,8 @@ export const routes: Routes = [
   { path: 'administrator/parents', component: AdministratorParentsPageComponent, canActivate: ADMINISTRATOR },
   { path: 'administrator/classrooms', component: AdministratorClassroomsPageComponent, canActivate: ADMINISTRATOR },
   { path: 'administrator/subjects', component: AdministratorSubjectsPageComponent, canActivate: ADMINISTRATOR },
+  { path: 'administrator/live', component: AdminLiveComponent, canActivate: ADMINISTRATOR },
+  { path: 'administrator/classroom/:scheduleId', component: AdminClassroomComponent, canActivate: ADMINISTRATOR },
 
   { path: '**', redirectTo: 'login' }
 ];

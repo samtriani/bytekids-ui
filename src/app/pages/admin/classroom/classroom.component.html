@@ -1,199 +1,188 @@
-<app-shell
-  role="admin"
-  [userName]="userName"
-  [userAvatar]="userAvatar"
-  [navItems]="navItems"
-  pageTitle="Observar clase">
+<app-shell [role]="shellRole" [userName]="userName" [userAvatar]="userAvatar"
+  [navItems]="navItems" pageTitle="Observar clase"></app-shell>
 
-  <div class="obs">
+<div class="page-wrap">
 
-    @if (loading) {
-      <div class="obs-state">
-        <div class="obs-spinner"></div>
-        <p>Cargando la clase…</p>
-      </div>
-    }
-
-    @else if (loadError && !status) {
-      <div class="obs-state">
-        <div class="obs-state-icon">⚠️</div>
-        <h2>No se pudo abrir la clase</h2>
-        <p>{{ loadError }}</p>
-        <button class="obs-btn-ghost" (click)="exit()">← Volver a En Vivo</button>
-      </div>
-    }
-
-    @else {
-      <!-- Encabezado -->
-      <header class="obs-head">
-        <button class="obs-back" (click)="exit()" aria-label="Volver">←</button>
-        <span class="obs-icon">{{ status?.subjectIcon }}</span>
-        <div class="obs-head-txt">
-          <h1>{{ status?.subjectName }}</h1>
-          <p>
-            {{ status?.classroomName }} · {{ status?.teacherName }}
-            · {{ hhmm(status?.startTime) }}–{{ hhmm(status?.endTime) }}
-          </p>
-        </div>
-        <span class="obs-pill" [class.obs-pill--off]="!teacherVideoActive">
-          {{ teacherVideoActive ? '🔴 Transmitiendo' : '⏸ Sin videollamada' }}
-        </span>
-      </header>
-
-      <!-- Aviso de modo observador -->
-      <div class="obs-banner">
-        <span class="obs-banner-icon">👁</span>
+  @if (loading) {
+    <div class="obs-state">
+      <div class="obs-spinner"></div>
+      <p>Cargando la clase…</p>
+    </div>
+  } @else if (loadError && !status) {
+    <div class="obs-state">
+      <div class="obs-state-icon">⚠️</div>
+      <h2>No se pudo abrir la clase</h2>
+      <p>{{ loadError }}</p>
+      <button class="obs-btn-ghost" (click)="exit()">← Volver a En Vivo</button>
+    </div>
+  } @else {
+    <!-- Encabezado -->
+    <header class="obs-head">
+      <button class="obs-back" (click)="exit()" aria-label="Volver">←</button>
+      <span class="obs-icon">{{ status?.subjectIcon }}</span>
+      <div class="obs-head-txt">
+        <h1>{{ status?.subjectName }}</h1>
         <p>
-          <strong>Modo supervisión.</strong>
-          No quedas registrado en la asistencia de la clase, pero
-          <strong>los participantes sí te verán</strong> si entras a la videollamada.
-          Entrarás con micrófono y cámara apagados.
+          {{ status?.classroomName }} · {{ status?.teacherName }}
+          · {{ hhmm(status?.startTime) }}–{{ hhmm(status?.endTime) }}
         </p>
       </div>
+      <span class="obs-pill" [class.obs-pill--off]="!teacherVideoActive">
+        {{ teacherVideoActive ? '🔴 Transmitiendo' : '⏸ Sin videollamada' }}
+      </span>
+    </header>
 
-      @if (loadError) {
-        <div class="obs-alert">{{ loadError }}</div>
-      }
+    <!-- Aviso de modo observador -->
+    <div class="obs-banner">
+      <span class="obs-banner-icon">👁</span>
+      <p>
+        <strong>Modo supervisión.</strong>
+        No quedas registrado en la asistencia de la clase, pero
+        <strong>los participantes sí te verán</strong> si entras a la videollamada.
+        Entrarás con micrófono y cámara apagados.
+      </p>
+    </div>
 
-      <div class="obs-body">
+    @if (loadError) {
+      <div class="obs-alert">{{ loadError }}</div>
+    }
 
-        <!-- Columna principal -->
-        <section class="obs-main">
-          <nav class="obs-tabs" role="tablist">
-            <button role="tab" [attr.aria-selected]="activeTab==='video'"
-                    [class.on]="activeTab==='video'" (click)="activeTab='video'">
-              📹 Video
-            </button>
-            <button role="tab" [attr.aria-selected]="activeTab==='chat'"
-                    [class.on]="activeTab==='chat'" (click)="activeTab='chat'">
-              💬 Chat <span class="obs-count">{{ chatMessages.length }}</span>
-            </button>
-          </nav>
+    <div class="obs-body">
 
-          <!-- Video -->
-          @if (activeTab === 'video') {
-            <div class="obs-panel">
-              @if (videoMounted) {
-                <div class="obs-video"><div id="jitsi-admin"></div></div>
-                <button class="obs-btn-ghost obs-btn-block" (click)="leaveVideo()">
-                  Salir de la videollamada
-                </button>
-              } @else if (videoLoading) {
-                <div class="obs-state obs-state--flat">
-                  <div class="obs-spinner"></div>
-                  <p>Conectando a la videollamada…</p>
-                </div>
-              } @else if (!teacherVideoActive) {
-                <div class="obs-state obs-state--flat">
-                  <div class="obs-state-icon">📷</div>
-                  <h2>El maestro no ha iniciado la videollamada</h2>
-                  <p>Esta vista se actualiza cada 10 segundos.</p>
-                </div>
-              } @else {
-                <div class="obs-state obs-state--flat">
-                  <div class="obs-state-icon">🔴</div>
-                  <h2>La clase está transmitiendo</h2>
-                  <p>Puedes entrar como observador para supervisar la sesión.</p>
-                  <button class="obs-btn" (click)="askJoinVideo()">Entrar a la videollamada</button>
-                </div>
-              }
-            </div>
-          }
+      <!-- Columna principal -->
+      <section class="obs-main">
+        <nav class="obs-tabs" role="tablist">
+          <button role="tab" [attr.aria-selected]="activeTab==='video'"
+                  [class.on]="activeTab==='video'" (click)="activeTab='video'">
+            📹 Video
+          </button>
+          <button role="tab" [attr.aria-selected]="activeTab==='chat'"
+                  [class.on]="activeTab==='chat'" (click)="activeTab='chat'">
+            💬 Chat <span class="obs-count">{{ chatMessages.length }}</span>
+          </button>
+        </nav>
 
-          <!-- Chat (solo lectura) -->
-          @if (activeTab === 'chat') {
-            <div class="obs-panel">
-              @if (!chatMessages.length) {
-                <div class="obs-state obs-state--flat">
-                  <div class="obs-state-icon">💬</div>
-                  <h2>Sin mensajes hoy</h2>
-                  <p>Aquí aparecerá el chat del aula conforme se use.</p>
-                </div>
-              } @else {
-                <ul class="obs-chat">
-                  @for (m of chatMessages; track m.id) {
-                    <li class="obs-msg">
-                      <span class="obs-av" [class.obs-av--teacher]="m.senderRole === 'teacher'">
-                        {{ m.senderInit }}
-                      </span>
-                      <div>
-                        <p class="obs-msg-head">
-                          <span class="obs-msg-name" [class.teacher]="m.senderRole === 'teacher'">
-                            {{ m.senderRole === 'teacher' ? '👩‍🏫 ' : '' }}{{ m.senderName }}
-                          </span>
-                          <span class="obs-msg-time">{{ m.sentAt | date:'HH:mm' }}</span>
-                        </p>
-                        <p class="obs-msg-text">{{ m.content }}</p>
-                      </div>
-                    </li>
-                  }
-                </ul>
-                <p class="obs-readonly">Solo lectura — la supervisión no participa en el chat.</p>
-              }
-            </div>
-          }
-        </section>
-
-        <!-- Barra lateral -->
-        <aside class="obs-side">
-          <div class="obs-card">
-            <h2 class="obs-card-title">
-              Conectados <span class="obs-count">{{ attendance.length }}</span>
-            </h2>
-            @if (!attendance.length) {
-              <p class="obs-empty">Nadie en el aula por ahora.</p>
+        @if (activeTab === 'video') {
+          <div class="obs-panel">
+            @if (videoMounted) {
+              <div class="obs-video"><div id="jitsi-admin"></div></div>
+              <button class="obs-btn-ghost obs-btn-block" (click)="leaveVideo()">
+                Salir de la videollamada
+              </button>
+            } @else if (videoLoading) {
+              <div class="obs-state obs-state--flat">
+                <div class="obs-spinner"></div>
+                <p>Conectando a la videollamada…</p>
+              </div>
+            } @else if (!teacherVideoActive) {
+              <div class="obs-state obs-state--flat">
+                <div class="obs-state-icon">📷</div>
+                <h2>El maestro no ha iniciado la videollamada</h2>
+                <p>Esta vista se actualiza cada 10 segundos.</p>
+              </div>
             } @else {
-              <ul class="obs-people">
-                @for (p of attendance; track p.userId) {
-                  <li>
-                    <span class="obs-av" [class.obs-av--teacher]="p.role === 'teacher'">{{ p.initials }}</span>
+              <div class="obs-state obs-state--flat">
+                <div class="obs-state-icon">🔴</div>
+                <h2>La clase está transmitiendo</h2>
+                <p>Puedes entrar como observador para supervisar la sesión.</p>
+                <button class="obs-btn" (click)="askJoinVideo()">Entrar a la videollamada</button>
+              </div>
+            }
+          </div>
+        }
+
+        @if (activeTab === 'chat') {
+          <div class="obs-panel">
+            @if (!chatMessages.length) {
+              <div class="obs-state obs-state--flat">
+                <div class="obs-state-icon">💬</div>
+                <h2>Sin mensajes hoy</h2>
+                <p>Aquí aparecerá el chat del aula conforme se use.</p>
+              </div>
+            } @else {
+              <ul class="obs-chat">
+                @for (m of chatMessages; track m.id) {
+                  <li class="obs-msg">
+                    <span class="obs-av" [class.obs-av--teacher]="m.senderRole === 'teacher'">
+                      {{ m.senderInit }}
+                    </span>
                     <div>
-                      <p class="obs-person">{{ p.displayName }}</p>
-                      <p class="obs-role">{{ roleLabel(p.role) }}</p>
+                      <p class="obs-msg-head">
+                        <span class="obs-msg-name" [class.teacher]="m.senderRole === 'teacher'">
+                          {{ m.senderRole === 'teacher' ? '👩‍🏫 ' : '' }}{{ m.senderName }}
+                        </span>
+                        <span class="obs-msg-time">{{ m.sentAt | date:'HH:mm' }}</span>
+                      </p>
+                      <p class="obs-msg-text">{{ m.content }}</p>
                     </div>
                   </li>
                 }
               </ul>
+              <p class="obs-readonly">Solo lectura — la supervisión no participa en el chat.</p>
             }
           </div>
+        }
+      </section>
 
-          <div class="obs-card">
-            <h2 class="obs-card-title">Misión del día</h2>
-            @if (activeMission) {
-              <p class="obs-mission">{{ activeMission.subjectIcon }} {{ activeMission.title }}</p>
-              <p class="obs-role">
-                {{ activeMission.xpReward }} XP · lanzada por {{ activeMission.launchedBy }}
-              </p>
-            } @else {
-              <p class="obs-empty">El maestro no ha lanzado misión hoy.</p>
-            }
-          </div>
-        </aside>
-      </div>
-    }
-  </div>
-
-  <!-- Modal de confirmación -->
-  @if (showJoinModal) {
-    <div class="obs-modal-bg" (click)="cancelJoin()">
-      <div class="obs-modal" role="dialog" aria-modal="true"
-           aria-labelledby="obs-modal-title" (click)="$event.stopPropagation()">
-        <div class="obs-modal-icon">👁</div>
-        <h2 id="obs-modal-title">Entrar como observador</h2>
-        <p>
-          Entrarás a la videollamada de <strong>{{ status?.subjectName }}</strong>
-          con el nombre <strong>{{ observerName }} (Supervisión)</strong>.
-        </p>
-        <ul class="obs-modal-list">
-          <li>✅ No cuentas como asistencia de la clase</li>
-          <li>🔇 Entras con micrófono y cámara apagados</li>
-          <li>👀 El maestro y los alumnos te verán en la llamada</li>
-        </ul>
-        <div class="obs-modal-actions">
-          <button class="obs-btn-ghost" (click)="cancelJoin()">Cancelar</button>
-          <button class="obs-btn" (click)="confirmJoin()">Entrar</button>
+      <!-- Barra lateral -->
+      <aside class="obs-side">
+        <div class="obs-card">
+          <h2 class="obs-card-title">
+            Conectados <span class="obs-count">{{ attendance.length }}</span>
+          </h2>
+          @if (!attendance.length) {
+            <p class="obs-empty">Nadie en el aula por ahora.</p>
+          } @else {
+            <ul class="obs-people">
+              @for (p of attendance; track p.userId) {
+                <li>
+                  <span class="obs-av" [class.obs-av--teacher]="p.role === 'teacher'">{{ p.initials }}</span>
+                  <div>
+                    <p class="obs-person">{{ p.displayName }}</p>
+                    <p class="obs-role">{{ roleLabel(p.role) }}</p>
+                  </div>
+                </li>
+              }
+            </ul>
+          }
         </div>
-      </div>
+
+        <div class="obs-card">
+          <h2 class="obs-card-title">Misión del día</h2>
+          @if (activeMission) {
+            <p class="obs-mission">{{ activeMission.subjectIcon }} {{ activeMission.title }}</p>
+            <p class="obs-role">
+              {{ activeMission.xpReward }} XP · lanzada por {{ activeMission.launchedBy }}
+            </p>
+          } @else {
+            <p class="obs-empty">El maestro no ha lanzado misión hoy.</p>
+          }
+        </div>
+      </aside>
     </div>
   }
-</app-shell>
+</div>
+
+<!-- Modal de confirmación -->
+@if (showJoinModal) {
+  <div class="obs-modal-bg" (click)="cancelJoin()">
+    <div class="obs-modal" role="dialog" aria-modal="true"
+         aria-labelledby="obs-modal-title" (click)="$event.stopPropagation()">
+      <div class="obs-modal-icon">👁</div>
+      <h2 id="obs-modal-title">Entrar como observador</h2>
+      <p>
+        Entrarás a la videollamada de <strong>{{ status?.subjectName }}</strong>
+        con el nombre <strong>{{ observerName }} (Supervisión)</strong>.
+      </p>
+      <ul class="obs-modal-list">
+        <li>✅ No cuentas como asistencia de la clase</li>
+        <li>🔇 Entras con micrófono y cámara apagados</li>
+        <li>👀 El maestro y los alumnos te verán en la llamada</li>
+      </ul>
+      <div class="obs-modal-actions">
+        <button class="obs-btn-ghost" (click)="cancelJoin()">Cancelar</button>
+        <button class="obs-btn" (click)="confirmJoin()">Entrar</button>
+      </div>
+    </div>
+  </div>
+}

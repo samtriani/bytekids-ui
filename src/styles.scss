@@ -44,9 +44,9 @@
   --info:   #0A4D7A;
   --info-lt:#E8F2FA;
 
-  /* Layout */
-  --sw: 252px;   /* sidebar width */
-  --th: 56px;    /* topbar height */
+  /* Layout — deben coincidir con el cromo real que pinta app-shell */
+  --sw: 265px;   /* sidebar width */
+  --th: 62px;    /* topbar height */
 
   /* Radios */
   --r1: 5px;  --r2: 8px;  --r3: 12px;  --r4: 16px;
