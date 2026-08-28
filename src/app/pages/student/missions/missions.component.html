@@ -38,7 +38,12 @@
     @for (m of filtered; track m.title) {
       <div class="mission-card" [class.locked]="m.locked" [class.done]="m.status==='Completado'">
         <div class="mc-header">
-          <div class="mc-icon" [style.background]="m.color+'18'">{{ m.icon }}</div>
+          <div class="mc-icon" [style.background]="m.color+'18'">
+            @if (m.paso) {
+              <span class="mc-paso" [style.background]="m.color">{{ m.paso }}</span>
+            }
+            {{ m.icon }}
+          </div>
           <div class="mc-meta">
             <span class="mc-subj" [style.color]="m.color">{{ m.subject }}</span>
             <span class="mc-diff">{{ m.typeIcon }} {{ m.typeLabel }} · {{ m.difficulty }}</span>

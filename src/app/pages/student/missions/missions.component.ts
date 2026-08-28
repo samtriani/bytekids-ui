@@ -111,6 +111,7 @@ export class MissionsComponent implements OnInit {
       title:      c.title,
       subject:    c.subjectName ?? '',
       type:       c.type ?? 'mision',
+      paso:       c.orderIndex ?? null,
       typeLabel:  TIPO_LABEL[c.type] ?? 'Actividad',
       typeIcon:   TIPO_ICON[c.type]  ?? '🎯',
       xp:         c.xpReward ?? 50,
