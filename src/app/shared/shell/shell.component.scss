@@ -164,3 +164,58 @@
   width: 7px; height: 7px; border-radius: 50%;
   background: var(--bk-purple); flex-shrink: 0; margin-top: 6px;
 }
+
+/* ── MENU DE CUENTA ── */
+.tb-user { position: relative; cursor: pointer; user-select: none; border-radius: 8px; padding: 4px 6px; transition: background .15s; }
+.tb-user:hover  { background: var(--bk-bg-hover); }
+.tb-user:focus-visible { outline: 2px solid var(--bk-purple); outline-offset: 2px; }
+.tb-caret { font-size: .7rem; color: var(--bk-text-muted); transition: transform .15s; }
+.tb-caret.open { transform: rotate(180deg); }
+
+.tb-menu {
+  position: absolute; top: calc(100% + 10px); right: 0;
+  min-width: 214px; z-index: 200;
+  background: var(--bk-bg-card); border: 1px solid var(--bk-border);
+  border-radius: 12px; box-shadow: 0 8px 32px rgba(0,0,0,.4);
+  overflow: hidden;
+}
+.tb-menu-head { padding: 12px 14px; border-bottom: 1px solid var(--bk-border); display: flex; flex-direction: column; gap: 2px; }
+.tb-menu-name { font-size: .84rem; font-weight: 800; color: var(--bk-text); }
+.tb-menu-role { font-size: .72rem; color: var(--bk-text-muted); }
+
+.tb-menu-item {
+  display: block; width: 100%; text-align: left;
+  padding: 11px 14px; border: none; background: none;
+  font-family: inherit; font-size: .82rem; font-weight: 700;
+  color: var(--bk-text); cursor: pointer; transition: background .15s;
+}
+.tb-menu-item:hover { background: var(--bk-bg-hover); }
+.tb-menu-item--exit { color: #E86A6A; border-top: 1px solid var(--bk-border); }
+
+/* ── MODAL DE SALIDA ── */
+.sh-modal-bg {
+  position: fixed; inset: 0; z-index: 1000;
+  background: rgba(10,14,26,.62);
+  display: grid; place-items: center; padding: 20px;
+  animation: sh-fade .15s ease-out;
+}
+.sh-modal {
+  background: var(--bk-bg-card); border: 1px solid var(--bk-border);
+  border-radius: 16px; box-shadow: 0 12px 40px rgba(0,0,0,.5);
+  padding: 28px 26px; width: 100%; max-width: 380px; text-align: center;
+  animation: sh-pop .18s ease-out;
+}
+.sh-modal-icon { font-size: 34px; margin-bottom: 10px; }
+.sh-modal h2 { font-size: 1.05rem; font-weight: 800; color: var(--bk-text); margin: 0 0 9px; }
+.sh-modal p  { font-size: .84rem; color: var(--bk-text-muted); margin: 0 0 20px; line-height: 1.6; }
+.sh-modal-actions { display: flex; gap: 10px; }
+.sh-modal-actions button { flex: 1; font-family: inherit; font-size: .84rem; font-weight: 700; padding: 11px 16px; border-radius: 9px; cursor: pointer; transition: background .15s, transform .1s; }
+.sh-btn { background: var(--bk-purple); color: #fff; border: none; }
+.sh-btn:hover { filter: brightness(1.12); }
+.sh-btn:active { transform: translateY(1px); }
+.sh-btn-ghost { background: none; color: var(--bk-text); border: 1px solid var(--bk-border); }
+.sh-btn-ghost:hover { background: var(--bk-bg-hover); }
+
+@keyframes sh-fade { from { opacity: 0; } }
+@keyframes sh-pop  { from { opacity: 0; transform: scale(.95); } }
+@media (prefers-reduced-motion: reduce) { .sh-modal-bg, .sh-modal { animation: none; } }

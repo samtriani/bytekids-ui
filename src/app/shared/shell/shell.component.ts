@@ -47,6 +47,10 @@ export class ShellComponent implements OnInit, OnDestroy {
   notifications: any[] = [];
   showNotif = false;
 
+  /** Menu de la cuenta en el topbar y confirmacion de salida. */
+  showUserMenu = false;
+  confirmarSalida = false;
+
   readonly today = new Date().toLocaleDateString('es-MX', { weekday: 'long', day: 'numeric', month: 'long' });
 
   private pollInterval: any;
@@ -73,10 +77,33 @@ export class ShellComponent implements OnInit, OnDestroy {
   @HostListener('document:click')
   onDocumentClick(): void {
     this.showNotif = false;
+    this.showUserMenu = false;
   }
 
+  /** Portal de perfiles: NO cierra sesion, solo cambia de panel. */
   goHome(): void {
+    this.showUserMenu = false;
     this.router.navigate(['/portal']);
+  }
+
+  toggleUserMenu(e: Event): void {
+    e.stopPropagation();
+    this.showUserMenu = !this.showUserMenu;
+    this.showNotif = false;
+  }
+
+  pedirSalida(e?: Event): void {
+    e?.stopPropagation();
+    this.showUserMenu = false;
+    this.confirmarSalida = true;
+  }
+
+  cancelarSalida(): void { this.confirmarSalida = false; }
+
+  /** Borra token y usuario de localStorage y manda al login. */
+  salir(): void {
+    this.confirmarSalida = false;
+    this.auth.logout();
   }
 
   toggleNotif(e: Event): void {
