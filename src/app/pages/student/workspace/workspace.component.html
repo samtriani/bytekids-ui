@@ -25,6 +25,9 @@
       </div>
       <h2 class="ws-done-title">{{ (quizResult.scorePercent ?? quizResult.score ?? 0) >= 80 ? '¡Excelente resultado!' : '¡Completado!' }}</h2>
       <p class="ws-done-sub">{{ quizResult.correctAnswers ?? '—' }} de {{ quizResult.totalQuestions ?? questions.length }} respuestas correctas</p>
+    } @else if (existingSub?.status === 'aprobado') {
+      <h2 class="ws-done-title">¡Ya completaste esta actividad!</h2>
+      <p class="ws-done-sub">Aquí abajo puedes repasar lo que entregaste, {{ student?.displayName?.split(' ')[0] }} 👇</p>
     } @else {
       <h2 class="ws-done-title">¡Entregado!</h2>
       <p class="ws-done-sub">Tu maestro revisará tu trabajo pronto. ¡Buen trabajo, {{ student?.displayName?.split(' ')[0] }}! 💪</p>
@@ -32,6 +35,59 @@
     <div class="ws-done-xp-wrap">
       <div class="ws-done-xp">⭐ +{{ content?.xpReward ?? 0 }} XP</div>
     </div>
+
+    <!-- Repaso: que hice, que me pusieron y que me dijo el maestro -->
+    @if (existingSub && !quizResult) {
+      <div class="ws-repaso">
+        <div class="ws-repaso-head">
+          <span class="ws-repaso-titulo">📄 Tu entrega</span>
+          @if (existingSub.score !== null && existingSub.score !== undefined) {
+            <span class="ws-repaso-cal" [style.color]="scoreColor(existingSub.score * 10)">
+              ⭐ {{ existingSub.score }}/10
+            </span>
+          }
+        </div>
+
+        @if (existingSub.submittedAt) {
+          <p class="ws-repaso-fecha">Entregado el {{ existingSub.submittedAt | date:'d MMM, HH:mm' }}</p>
+        }
+
+        @if (existingSub.codeSubmitted) {
+          <pre class="ws-repaso-texto">{{ existingSub.codeSubmitted }}</pre>
+        } @else {
+          <p class="ws-repaso-vacio">No quedó registrado el texto de esta entrega.</p>
+        }
+
+        @if (existingSub.teacherFeedback) {
+          <div class="ws-repaso-fb">
+            <span class="ws-repaso-fb-titulo">💬 Lo que te dijo tu maestro</span>
+            <p>{{ existingSub.teacherFeedback }}</p>
+          </div>
+        }
+
+        @if (instrucciones || materialUrl || checklist.length) {
+          <details class="ws-repaso-inst">
+            <summary>Ver de nuevo las instrucciones</summary>
+            @if (materialUrl) {
+              <a class="ws-recurso" [href]="materialUrl" target="_blank" rel="noopener noreferrer">
+                <span class="ws-recurso-tipo">{{ materialTipo }}</span>
+                <span class="ws-recurso-txt">Abrir el recurso</span>
+                <span class="ws-recurso-flecha">↗</span>
+              </a>
+            }
+            @if (instrucciones) {
+              <div class="ws-content-body">{{ instrucciones }}</div>
+            }
+            @if (checklist.length) {
+              <ul class="ws-checklist">
+                @for (paso of checklist; track paso) { <li>{{ paso }}</li> }
+              </ul>
+            }
+          </details>
+        }
+      </div>
+    }
+
     <div class="ws-done-actions">
       <button class="ws-btn primary" (click)="goBack()">
         {{ fromClassroom ? '← Volver al aula' : '← Mis misiones' }}
