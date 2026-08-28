@@ -39,7 +39,8 @@
         <span class="sb-uname">{{ userName }}</span>
         <span class="sb-urole">{{ cfg.label }}</span>
       </div>
-      <button class="sb-logout" (click)="goHome()" title="Cambiar perfil">⟵</button>
+      <button class="sb-logout" (click)="pedirSalida($event)"
+              title="Cerrar sesión" aria-label="Cerrar sesión">⏻</button>
     </div>
   </aside>
 
@@ -85,11 +86,44 @@
             </div>
           }
         </div>
-        <div class="tb-user">
+        <div class="tb-user" (click)="toggleUserMenu($event)" role="button" tabindex="0"
+             [attr.aria-expanded]="showUserMenu" aria-haspopup="menu"
+             (keydown.enter)="toggleUserMenu($event)">
           <div class="tb-avatar" [style.background]="cfg.color+'20'" [style.color]="cfg.color" [style.border]="'1px solid '+cfg.color+'40'">{{ userAvatar }}</div>
           <span class="tb-uname">{{ userName }}</span>
+          <span class="tb-caret" [class.open]="showUserMenu">▾</span>
+
+          @if (showUserMenu) {
+            <div class="tb-menu" role="menu" (click)="$event.stopPropagation()">
+              <div class="tb-menu-head">
+                <span class="tb-menu-name">{{ userName }}</span>
+                <span class="tb-menu-role">{{ cfg.emoji }} {{ cfg.label }}</span>
+              </div>
+              <button class="tb-menu-item" role="menuitem" (click)="goHome()">
+                🔄 Cambiar perfil
+              </button>
+              <button class="tb-menu-item tb-menu-item--exit" role="menuitem" (click)="pedirSalida($event)">
+                ⏻ Cerrar sesión
+              </button>
+            </div>
+          }
         </div>
       </div>
     </header>
   </div>
 </div>
+
+@if (confirmarSalida) {
+  <div class="sh-modal-bg" (click)="cancelarSalida()">
+    <div class="sh-modal" role="dialog" aria-modal="true"
+         aria-labelledby="sh-salir-title" (click)="$event.stopPropagation()">
+      <div class="sh-modal-icon">👋</div>
+      <h2 id="sh-salir-title">¿Cerrar sesión?</h2>
+      <p>Vas a salir de la cuenta de <strong>{{ userName }}</strong>. Tu trabajo guardado no se pierde.</p>
+      <div class="sh-modal-actions">
+        <button class="sh-btn-ghost" (click)="cancelarSalida()">Quedarme</button>
+        <button class="sh-btn" (click)="salir()">Cerrar sesión</button>
+      </div>
+    </div>
+  </div>
+}
