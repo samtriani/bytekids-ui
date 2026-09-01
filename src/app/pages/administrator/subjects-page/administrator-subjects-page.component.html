@@ -75,12 +75,97 @@
             <div class="temario">
               <div class="temario-head">
                 <span class="temario-title">📖 Temario</span>
-                @if (contenido.length) {
-                  <span class="temario-meta">
+                <span class="temario-meta">
+                  @if (contenido.length) {
                     {{ contenido.length }} piezas · {{ xpTotal }} XP · {{ duracionTotal }}
-                  </span>
-                }
+                  }
+                  @if (!mostrarAlta) {
+                    <button class="temario-btn" (click)="abrirAlta()">+ Agregar al plan base</button>
+                  }
+                </span>
               </div>
+
+              <!-- Alta de plan base -->
+              @if (mostrarAlta) {
+                <div class="alta-base">
+                  <p class="alta-base-nota">
+                    🏛️ Esto es <strong>plan base</strong>: lo mantiene coordinación y el
+                    maestro no lo edita. Él puede complementar con contenido propio desde su panel.
+                  </p>
+
+                  <label class="alta-campo">
+                    <span>Título</span>
+                    <input type="text" [(ngModel)]="nuevaPieza.title" maxlength="200"
+                           placeholder="Ej. ¿Qué es un algoritmo?">
+                  </label>
+
+                  <label class="alta-campo">
+                    <span>Descripción</span>
+                    <textarea [(ngModel)]="nuevaPieza.description" rows="2"
+                              placeholder="¿Qué van a aprender?"></textarea>
+                  </label>
+
+                  <div class="alta-fila">
+                    <label class="alta-campo">
+                      <span>Tipo</span>
+                      <select [(ngModel)]="nuevaPieza.type">
+                        @for (t of TIPOS_ALTA; track t) {
+                          <option [value]="t">{{ tipoIcon(t) }} {{ tipoLabel(t) }}</option>
+                        }
+                      </select>
+                    </label>
+                    <label class="alta-campo">
+                      <span>Dificultad</span>
+                      <select [(ngModel)]="nuevaPieza.difficulty">
+                        @for (d of DIFICULTADES; track d.k) {
+                          <option [value]="d.k">{{ d.label }}</option>
+                        }
+                      </select>
+                    </label>
+                    <label class="alta-campo alta-campo--corto">
+                      <span>Orden</span>
+                      <input type="number" [(ngModel)]="nuevaPieza.orderIndex" min="1">
+                    </label>
+                    <label class="alta-campo alta-campo--corto">
+                      <span>XP</span>
+                      <input type="number" [(ngModel)]="nuevaPieza.xpReward" min="0">
+                    </label>
+                    <label class="alta-campo alta-campo--corto">
+                      <span>Minutos</span>
+                      <input type="number" [(ngModel)]="nuevaPieza.estimatedMinutes" min="1">
+                    </label>
+                  </div>
+
+                  <div class="alta-campo">
+                    <span>Salones que lo reciben</span>
+                    @if (!salones.length) {
+                      <p class="temario-vacio">Cargando salones…</p>
+                    } @else {
+                      <div class="alta-salones">
+                        @for (s of salones; track s.id) {
+                          <button type="button" class="alta-salon" [class.on]="esSalonElegido(s.id)"
+                                  [attr.aria-pressed]="esSalonElegido(s.id)" (click)="toggleSalon(s.id)">
+                            {{ s.name }}
+                          </button>
+                        }
+                      </div>
+                      @if (!salonesElegidos.length) {
+                        <small class="alta-aviso">
+                          Sin salones seleccionados queda en el catálogo de la materia,
+                          pero ningún alumno lo verá.
+                        </small>
+                      }
+                    }
+                  </div>
+
+                  <div class="alta-acciones">
+                    <button class="btn" (click)="cancelarAlta()">Cancelar</button>
+                    <button class="btn btn-primary" [disabled]="!puedeGuardarPieza" (click)="guardarPieza()">
+                      {{ guardandoPieza ? 'Guardando…' : 'Agregar al plan base' }}
+                    </button>
+                  </div>
+                </div>
+              }
 
               @if (cargandoTemario) {
                 <p class="temario-vacio">Cargando temario…</p>

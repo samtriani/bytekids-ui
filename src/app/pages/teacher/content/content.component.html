@@ -121,6 +121,11 @@
                 <p class="mc-titulo">
                   <span class="mc-tipo">{{ tipoIcon(c.type) }} {{ tipoLabel(c.type) }}</span>
                   {{ c.title }}
+                  @if (c.basePlan) {
+                    <span class="mc-base" title="Plan base de la escuela: lo mantiene coordinación">
+                      🏛️ Plan base
+                    </span>
+                  }
                   @if (!c.isPublished) {
                     <span class="mc-borrador">borrador</span>
                   }
@@ -139,10 +144,14 @@
               </div>
 
               <div class="mc-acciones">
-                <button class="mc-accion" (click)="editar(c)"
-                        [attr.aria-label]="'Editar ' + c.title">✏️ Editar</button>
-                <button class="mc-accion mc-accion--danger" (click)="pedirBaja(c)"
-                        [attr.aria-label]="'Quitar ' + c.title">🗑️ Quitar</button>
+                @if (c.basePlan) {
+                  <span class="mc-solo-lectura">Lo mantiene coordinación</span>
+                } @else {
+                  <button class="mc-accion" (click)="editar(c)"
+                          [attr.aria-label]="'Editar ' + c.title">✏️ Editar</button>
+                  <button class="mc-accion mc-accion--danger" (click)="pedirBaja(c)"
+                          [attr.aria-label]="'Quitar ' + c.title">🗑️ Quitar</button>
+                }
               </div>
             </li>
           }

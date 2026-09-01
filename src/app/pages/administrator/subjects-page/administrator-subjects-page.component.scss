@@ -60,3 +60,50 @@
   margin: 12px 0 0; padding-top: 10px; border-top: 1px solid var(--border2);
   font-size: 11px; color: var(--tx4);
 }
+
+/* ── ALTA DE PLAN BASE ── */
+.temario-btn {
+  font-family: inherit; font-size: 11.5px; font-weight: 800;
+  padding: 6px 12px; margin-left: 10px; border-radius: var(--r2);
+  background: var(--guinda); color: #fff; border: none; cursor: pointer;
+}
+.temario-btn:hover { background: var(--guinda-md); }
+
+.alta-base {
+  margin-bottom: 14px; padding: 14px;
+  border: 1.5px solid var(--guinda-border); border-radius: var(--r2);
+  background: var(--guinda-lt);
+}
+.alta-base-nota {
+  margin: 0 0 14px; font-size: 11.5px; line-height: 1.6; color: var(--guinda);
+}
+
+.alta-campo { display: block; margin-bottom: 11px; }
+.alta-campo > span {
+  display: block; font-size: 11px; font-weight: 800; color: var(--tx3);
+  text-transform: uppercase; letter-spacing: .4px; margin-bottom: 5px;
+}
+.alta-campo input, .alta-campo select, .alta-campo textarea {
+  width: 100%; font-family: inherit; font-size: 13px; color: var(--tx1);
+  padding: 8px 10px; border: 1.5px solid var(--border);
+  border-radius: var(--r2); background: var(--surface);
+}
+.alta-campo input:focus, .alta-campo select:focus, .alta-campo textarea:focus {
+  outline: none; border-color: var(--guinda); box-shadow: 0 0 0 3px var(--guinda-a10);
+}
+.alta-fila { display: flex; flex-wrap: wrap; gap: 10px; }
+.alta-fila .alta-campo { flex: 1 1 150px; }
+.alta-campo--corto { flex: 0 0 88px !important; }
+
+.alta-salones { display: flex; flex-wrap: wrap; gap: 6px; }
+.alta-salon {
+  font-family: inherit; font-size: 12px; font-weight: 700;
+  padding: 7px 12px; border-radius: 999px;
+  border: 1.5px solid var(--border); background: var(--surface);
+  color: var(--tx3); cursor: pointer; transition: all .15s;
+}
+.alta-salon:hover { background: var(--surface2); }
+.alta-salon.on { background: var(--guinda); border-color: var(--guinda); color: #fff; }
+.alta-aviso { display: block; margin-top: 6px; font-size: 11px; color: var(--warn); }
+
+.alta-acciones { display: flex; gap: 8px; justify-content: flex-end; margin-top: 6px; }
