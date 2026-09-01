@@ -172,17 +172,27 @@
                 <option [value]="t.id">{{ t.displayName }}</option>
               }
             </select>
-            <select class="select" [(ngModel)]="scheduleForm.dayOfWeek">
-              @for (d of DAYS; track d) { <option [value]="d">{{ d | titlecase }}</option> }
-            </select>
+            <div class="dias-picker" role="group" aria-label="Días de la clase">
+              @for (d of DAYS; track d) {
+                <button type="button" class="dia-chip" [class.on]="esDiaActivo(d)"
+                        [attr.aria-pressed]="esDiaActivo(d)" (click)="toggleDia(d)">
+                  {{ d.substring(0, 3) | titlecase }}
+                </button>
+              }
+            </div>
             <input class="input" type="time" [(ngModel)]="scheduleForm.startTime">
             <input class="input" type="time" [(ngModel)]="scheduleForm.endTime">
             <input class="input" type="date" [(ngModel)]="scheduleForm.startDate" [min]="today" placeholder="Fecha inicio">
             <input class="input" type="date" [(ngModel)]="scheduleForm.endDate"   [min]="scheduleForm.startDate || today" placeholder="Fecha fin">
             <button class="btn btn-primary"
                     (click)="addSchedule()"
-                    [disabled]="saving || !scheduleForm.subjectId || !scheduleForm.teacherId || !scheduleForm.startDate || !scheduleForm.endDate">
-              + Agregar
+                    [disabled]="saving || !scheduleForm.subjectId || !scheduleForm.teacherId
+                                || !diasSeleccionados.length || !scheduleForm.startDate || !scheduleForm.endDate">
+              {{ saving
+                 ? 'Guardando…'
+                 : diasSeleccionados.length > 1
+                   ? '+ Agregar ' + diasSeleccionados.length + ' clases'
+                   : '+ Agregar' }}
             </button>
           </div>
 
