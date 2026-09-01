@@ -1,7 +1,7 @@
 import { Component, OnInit } from '@angular/core';
 import { CommonModule, TitleCasePipe } from '@angular/common';
 import { FormsModule } from '@angular/forms';
-import { forkJoin } from 'rxjs';
+import { catchError, forkJoin, of } from 'rxjs';
 import { ShellComponent } from '../../../shared/shell/shell.component';
 import { AuthService } from '../../../services/auth.service';
 import { UserApiService } from '../../../services/api/user-api.service';
@@ -43,7 +43,23 @@ export class AdministratorAssignmentsPageComponent implements OnInit {
   // Horario
   schedules: any[] = [];
   readonly DAYS = ['lunes','martes','miercoles','jueves','viernes','sabado'];
-  scheduleForm = { subjectId: '', teacherId: '', dayOfWeek: 'lunes', startTime: '08:00', endTime: '09:00', startDate: '', endDate: '' };
+  // Alta: varios dias a la vez. Una clase de lunes/miercoles/viernes son tres
+  // registros en class_schedules, y antes habia que capturarla tres veces.
+  scheduleForm = { subjectId: '', teacherId: '', startTime: '08:00', endTime: '09:00', startDate: '', endDate: '' };
+  diasSeleccionados: string[] = ['lunes'];
+
+  toggleDia(dia: string) {
+    this.diasSeleccionados = this.diasSeleccionados.includes(dia)
+      ? this.diasSeleccionados.filter(d => d !== dia)
+      : [...this.diasSeleccionados, dia];
+  }
+
+  esDiaActivo(dia: string): boolean { return this.diasSeleccionados.includes(dia); }
+
+  /** Los ordena como la semana, no como el usuario les fue dando clic. */
+  private get diasEnOrden(): string[] {
+    return this.DAYS.filter(d => this.diasSeleccionados.includes(d));
+  }
   today = new Date().toISOString().split('T')[0];
 
   // Edición de horario
@@ -166,27 +182,44 @@ export class AdministratorAssignmentsPageComponent implements OnInit {
 
   addSchedule() {
     const f = this.scheduleForm;
-    if (!f.subjectId || !f.teacherId || !f.dayOfWeek || !f.startTime || !f.endTime || !f.startDate || !f.endDate) return;
+    const dias = this.diasEnOrden;
+    if (!f.subjectId || !f.teacherId || !dias.length || !f.startTime || !f.endTime || !f.startDate || !f.endDate) return;
+
     this.saving = true;
-    this.scheduleApi.create({
+    const peticiones = dias.map(dia => this.scheduleApi.create({
       classroomId: this.selectedClassroom.id,
       subjectId:   f.subjectId,
       teacherId:   f.teacherId,
-      dayOfWeek:   f.dayOfWeek,
+      dayOfWeek:   dia,
       startTime:   f.startTime,
       endTime:     f.endTime,
       startDate:   f.startDate,
       endDate:     f.endDate,
-    }).subscribe({
-      next: entry => {
-        this.schedules = [...this.schedules, entry];
-        this.scheduleForm = { subjectId: '', teacherId: '', dayOfWeek: 'lunes', startTime: '08:00', endTime: '09:00', startDate: '', endDate: '' };
+    }).pipe(catchError(() => of(null))));   // un dia que falle no tumba a los demas
+
+    forkJoin(peticiones).subscribe({
+      next: (resultados: any[]) => {
+        const creados = resultados.filter(Boolean);
+        this.schedules = [...this.schedules, ...creados];
         this.saving = false;
-        this.showToast('Horario agregado');
+
+        if (!creados.length) {
+          this.showToast('No se pudo guardar el horario');
+          return;
+        }
+        this.scheduleForm = { subjectId: '', teacherId: '', startTime: '08:00', endTime: '09:00', startDate: '', endDate: '' };
+        this.diasSeleccionados = ['lunes'];
+
+        const fallidos = resultados.length - creados.length;
+        this.showToast(fallidos
+          ? `Se agregaron ${creados.length} de ${resultados.length} dias`
+          : creados.length === 1
+            ? 'Horario agregado'
+            : `Se agregaron ${creados.length} clases`);
       },
-      error: (e: any) => {
+      error: () => {
         this.saving = false;
-        this.showToast(e?.error?.message ?? 'Error al guardar el horario');
+        this.showToast('Error al guardar el horario');
       }
     });
   }
