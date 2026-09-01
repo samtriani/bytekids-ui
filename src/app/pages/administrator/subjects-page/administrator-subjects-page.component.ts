@@ -58,6 +58,10 @@ export class AdministratorSubjectsPageComponent implements OnInit {
   // ── Alta de plan base ───────────────────────────────────────────────────
   // Coordinacion es dueña del plan base de cada materia; el maestro complementa
   // desde su panel. Por eso el alta vive aqui, junto al temario de la materia.
+  mostrarAltaMateria = false;
+  abrirAltaMateria()   { this.mostrarAltaMateria = true; }
+  cerrarAltaMateria()  { this.mostrarAltaMateria = false; }
+
   mostrarAlta = false;
   salones: any[] = [];
   salonesElegidos: string[] = [];
@@ -124,6 +128,58 @@ export class AdministratorSubjectsPageComponent implements OnInit {
         this.guardandoPieza = false;
         this.showToast(e?.error?.message ?? 'No se pudo guardar la pieza');
       },
+    });
+  }
+
+  // ── Edicion de piezas del plan base ─────────────────────────────────────
+  piezaEnEdicion: any = null;
+  piezaEnBaja: any = null;
+
+  editarPieza(c: any) {
+    this.piezaEnEdicion = { ...c };
+    this.mostrarAlta = false;
+  }
+
+  cancelarEdicionPieza() { this.piezaEnEdicion = null; }
+
+  guardarEdicionPieza() {
+    const p = this.piezaEnEdicion;
+    if (!p?.title?.trim()) return;
+    this.guardandoPieza = true;
+
+    this.contentApi.update(p.id, {
+      title: p.title.trim(), description: p.description,
+      type: p.type, subjectId: this.selected.id,
+      xpReward: p.xpReward, difficulty: p.difficulty,
+      estimatedMinutes: p.estimatedMinutes, orderIndex: p.orderIndex,
+      contentBody: p.contentBody,          // se conserva tal cual
+    }).subscribe({
+      next: () => {
+        this.guardandoPieza = false;
+        this.piezaEnEdicion = null;
+        this.cargarTemario(this.selected.id);
+        this.showToast('Pieza actualizada');
+      },
+      error: (e: any) => {
+        this.guardandoPieza = false;
+        this.showToast(e?.error?.message ?? 'No se pudo actualizar la pieza');
+      },
+    });
+  }
+
+  pedirBajaPieza(c: any) { this.piezaEnBaja = c; }
+  cancelarBajaPieza()    { this.piezaEnBaja = null; }
+
+  confirmarBajaPieza() {
+    const c = this.piezaEnBaja;
+    if (!c) return;
+    this.piezaEnBaja = null;
+    this.contentApi.delete(c.id).subscribe({
+      next: () => {
+        this.cargarTemario(this.selected.id);
+        this.showToast(`"${c.title}" se quitó del plan base`);
+      },
+      error: (e: any) => this.showToast(e?.error?.message ?? 'No se pudo quitar la pieza'),
     });
   }
 

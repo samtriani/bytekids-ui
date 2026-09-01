@@ -4,8 +4,9 @@
   <div class="ph">
     <div class="ph-left">
       <h1>Materias</h1>
-      <p>Administra el catalogo academico y edita iconos, color y descripcion de cada materia.</p>
+      <p>El catálogo académico y el plan base de cada materia.</p>
     </div>
+    <button class="btn btn-primary" (click)="abrirAltaMateria()">+ Nueva materia</button>
   </div>
 
   @if (toast) {
@@ -13,20 +14,6 @@
   }
 
   <div class="layout">
-    <div class="card card-p">
-      <div class="section-head">
-        <h3>Alta de materia</h3>
-        <span class="tag tag-oro">Catalogo</span>
-      </div>
-      <div class="fg"><label class="label">Nombre</label><input class="input" [(ngModel)]="createForm.name"></div>
-      <div class="fg-row">
-        <div class="fg"><label class="label">Icono</label><input class="input" [(ngModel)]="createForm.icon"></div>
-        <div class="fg"><label class="label">Color</label><input class="input" type="color" [(ngModel)]="createForm.color"></div>
-      </div>
-      <div class="fg"><label class="label">Descripcion</label><textarea class="textarea" rows="3" [(ngModel)]="createForm.description"></textarea></div>
-      <button class="btn btn-primary btn-block" (click)="create()" [disabled]="saving">Crear materia</button>
-    </div>
-
     <div class="card card-p">
       <div class="section-head">
         <h3>Detalle y edicion</h3>
@@ -189,6 +176,12 @@
                           @if (c.createdByName) { · {{ c.createdByName }} }
                         </span>
                       </span>
+                      <span class="temario-acciones">
+                        <button class="temario-accion" (click)="editarPieza(c)"
+                                [attr.aria-label]="'Editar ' + c.title">✏️</button>
+                        <button class="temario-accion temario-accion--danger" (click)="pedirBajaPieza(c)"
+                                [attr.aria-label]="'Quitar ' + c.title">🗑️</button>
+                      </span>
                     </li>
                   }
                 </ol>
@@ -217,3 +210,81 @@
     </div>
   </div>
 </div>
+
+<!-- Modal: nueva materia -->
+@if (mostrarAltaMateria) {
+  <div class="mm-bg" (click)="cerrarAltaMateria()">
+    <div class="mm" role="dialog" aria-modal="true" aria-labelledby="mm-mat" (click)="$event.stopPropagation()">
+      <h2 id="mm-mat">Nueva materia</h2>
+      <p class="mm-sub">Se agrega al catálogo. Después le defines su plan base.</p>
+
+      <div class="fg"><label class="label">Nombre</label><input class="input" [(ngModel)]="createForm.name" placeholder="Ej. Robótica"></div>
+      <div class="fg-row">
+        <div class="fg"><label class="label">Icono</label><input class="input" [(ngModel)]="createForm.icon"></div>
+        <div class="fg"><label class="label">Color</label><input class="input" type="color" [(ngModel)]="createForm.color"></div>
+      </div>
+      <div class="fg"><label class="label">Descripcion</label><textarea class="textarea" rows="3" [(ngModel)]="createForm.description"></textarea></div>
+
+      <div class="mm-acciones">
+        <button class="btn" (click)="cerrarAltaMateria()">Cancelar</button>
+        <button class="btn btn-primary" (click)="create(); cerrarAltaMateria()"
+                [disabled]="saving || !createForm.name">Crear materia</button>
+      </div>
+    </div>
+  </div>
+}
+
+<!-- Modal: editar pieza del plan base -->
+@if (piezaEnEdicion) {
+  <div class="mm-bg" (click)="cancelarEdicionPieza()">
+    <div class="mm" role="dialog" aria-modal="true" aria-labelledby="mm-pieza" (click)="$event.stopPropagation()">
+      <h2 id="mm-pieza">Editar pieza</h2>
+      <p class="mm-sub">Cambia lo del plan base. Las instrucciones y el cuerpo se conservan.</p>
+
+      <div class="fg"><label class="label">Titulo</label><input class="input" [(ngModel)]="piezaEnEdicion.title" maxlength="200"></div>
+      <div class="fg"><label class="label">Descripcion</label><textarea class="textarea" rows="2" [(ngModel)]="piezaEnEdicion.description"></textarea></div>
+      <div class="fg-row">
+        <div class="fg"><label class="label">Tipo</label>
+          <select class="input" [(ngModel)]="piezaEnEdicion.type">
+            @for (t of TIPOS_ALTA; track t) { <option [value]="t">{{ tipoLabel(t) }}</option> }
+          </select>
+        </div>
+        <div class="fg"><label class="label">Dificultad</label>
+          <select class="input" [(ngModel)]="piezaEnEdicion.difficulty">
+            @for (d of DIFICULTADES; track d.k) { <option [value]="d.k">{{ d.label }}</option> }
+          </select>
+        </div>
+      </div>
+      <div class="fg-row">
+        <div class="fg"><label class="label">Orden</label><input class="input" type="number" min="1" [(ngModel)]="piezaEnEdicion.orderIndex"></div>
+        <div class="fg"><label class="label">XP</label><input class="input" type="number" min="0" [(ngModel)]="piezaEnEdicion.xpReward"></div>
+        <div class="fg"><label class="label">Minutos</label><input class="input" type="number" min="1" [(ngModel)]="piezaEnEdicion.estimatedMinutes"></div>
+      </div>
+
+      <div class="mm-acciones">
+        <button class="btn" (click)="cancelarEdicionPieza()">Cancelar</button>
+        <button class="btn btn-primary" [disabled]="guardandoPieza" (click)="guardarEdicionPieza()">
+          {{ guardandoPieza ? 'Guardando…' : 'Guardar cambios' }}
+        </button>
+      </div>
+    </div>
+  </div>
+}
+
+<!-- Modal: quitar pieza -->
+@if (piezaEnBaja) {
+  <div class="mm-bg" (click)="cancelarBajaPieza()">
+    <div class="mm mm--chico" role="dialog" aria-modal="true" aria-labelledby="mm-baja" (click)="$event.stopPropagation()">
+      <div class="mm-icono">🗑️</div>
+      <h2 id="mm-baja">Quitar del plan base</h2>
+      <p class="mm-sub">
+        <strong>{{ piezaEnBaja.title }}</strong> dejará de aparecerles a los alumnos.
+        No se borra: las entregas que ya hicieron se conservan.
+      </p>
+      <div class="mm-acciones">
+        <button class="btn" (click)="cancelarBajaPieza()">Cancelar</button>
+        <button class="btn btn-danger" (click)="confirmarBajaPieza()">Quitar</button>
+      </div>
+    </div>
+  </div>
+}
