@@ -1,3 +1,16 @@
+@if (backend.status() !== 'ok') {
+  <div class="sh-conn" [class.sh-conn--down]="backend.status() === 'down'" role="status">
+    @if (backend.status() === 'waking') {
+      <span class="sh-conn-spin"></span>
+      <span>Despertando el servidor… esto tarda unos segundos la primera vez.</span>
+    } @else {
+      <span>⚠️</span>
+      <span>No pudimos conectar con el servidor. Revisa tu internet o vuelve a intentar.</span>
+      <button class="sh-conn-btn" (click)="reintentar()">Reintentar</button>
+    }
+  </div>
+}
+
 <div class="shell">
   <!-- ══ SIDEBAR ══ -->
   <aside class="sidebar" [attr.data-role]="role">
