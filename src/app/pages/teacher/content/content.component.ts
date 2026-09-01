@@ -56,6 +56,19 @@ export class TeacherContentComponent implements OnInit {
     private router: Router,
   ) {}
 
+  private get miId(): string { return this.auth.getUser()?.userId ?? ''; }
+
+  /**
+   * Solo el autor edita. El plan base lo mantiene coordinacion, y el contenido
+   * de otro maestro es suyo: el backend rechaza ambos casos, asi que mostrar
+   * los botones solo llevaria a un error.
+   */
+  puedeEditar(c: any): boolean { return !c.basePlan && c.createdById === this.miId; }
+
+  motivoSoloLectura(c: any): string {
+    return c.basePlan ? 'Lo mantiene coordinación' : `Lo creó ${c.createdByName ?? 'otro maestro'}`;
+  }
+
   get userName():   string { return this.auth.getUser()?.displayName || 'Maestro'; }
   get userAvatar(): string { return this.auth.getUser()?.initials    || 'MA'; }
 

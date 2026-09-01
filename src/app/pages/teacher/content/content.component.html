@@ -6,7 +6,7 @@
   <header class="mc-head">
     <div>
       <h1>Mis Contenidos</h1>
-      <p>Todo lo que has creado, en el orden en que lo verán tus alumnos.</p>
+      <p>El plan base de tus materias y lo que tú has creado, en el orden en que lo verán tus alumnos.</p>
     </div>
     <button class="mc-btn" (click)="nuevo()">+ Nuevo contenido</button>
   </header>
@@ -33,8 +33,11 @@
   } @else if (!totalPiezas) {
     <div class="mc-state">
       <div class="mc-state-icon">📭</div>
-      <h2>Todavía no has creado contenido</h2>
-      <p>Cuando publiques misiones, tareas o materiales aparecerán aquí, agrupados por materia.</p>
+      <h2>Todavía no hay contenido</h2>
+      <p>
+        Aquí verás el plan base que coordinación asigne a tus salones y lo que
+        tú crees para tu grupo, agrupado por materia.
+      </p>
     </div>
   } @else {
 
@@ -144,8 +147,8 @@
               </div>
 
               <div class="mc-acciones">
-                @if (c.basePlan) {
-                  <span class="mc-solo-lectura">Lo mantiene coordinación</span>
+                @if (!puedeEditar(c)) {
+                  <span class="mc-solo-lectura">{{ motivoSoloLectura(c) }}</span>
                 } @else {
                   <button class="mc-accion" (click)="editar(c)"
                           [attr.aria-label]="'Editar ' + c.title">✏️ Editar</button>
