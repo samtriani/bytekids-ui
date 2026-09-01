@@ -6,6 +6,7 @@ import { AuthService } from '../../../services/auth.service';
 import { SubjectService } from '../../../services/api/subject-api.service';
 import { AdministratorApiService } from '../../../services/api/administrator-api.service';
 import { ContentApiService } from '../../../services/api/content-api.service';
+import { ClassroomApiService } from '../../../services/api/classroom-api.service';
 import { catchError, of } from 'rxjs';
 import { ADMINISTRATOR_NAV_ITEMS } from '../shared/administrator-nav';
 
@@ -54,6 +55,78 @@ export class AdministratorSubjectsPageComponent implements OnInit {
     return m < 60 ? `${m} min` : `${Math.floor(m / 60)} h ${m % 60 ? (m % 60) + ' min' : ''}`.trim();
   }
 
+  // ── Alta de plan base ───────────────────────────────────────────────────
+  // Coordinacion es dueña del plan base de cada materia; el maestro complementa
+  // desde su panel. Por eso el alta vive aqui, junto al temario de la materia.
+  mostrarAlta = false;
+  salones: any[] = [];
+  salonesElegidos: string[] = [];
+  guardandoPieza = false;
+
+  nuevaPieza = {
+    title: '', type: 'mision', difficulty: 'medio',
+    xpReward: 50, estimatedMinutes: 30, description: '', orderIndex: null as number | null,
+  };
+
+  readonly TIPOS_ALTA = ['mision', 'tarea', 'quiz', 'proyecto', 'material'];
+  readonly DIFICULTADES = [
+    { k: 'facil',   label: 'Fácil' },
+    { k: 'medio',   label: 'Medio' },
+    { k: 'dificil', label: 'Difícil' },
+  ];
+
+  toggleSalon(id: string) {
+    this.salonesElegidos = this.salonesElegidos.includes(id)
+      ? this.salonesElegidos.filter(s => s !== id)
+      : [...this.salonesElegidos, id];
+  }
+
+  esSalonElegido(id: string): boolean { return this.salonesElegidos.includes(id); }
+
+  abrirAlta() {
+    this.mostrarAlta = true;
+    // Sugiere la siguiente posicion del curriculo para no romper el orden.
+    const ultimo = this.contenido.reduce((m, c) => Math.max(m, c.orderIndex ?? 0), 0);
+    this.nuevaPieza.orderIndex = ultimo + 1;
+    if (!this.salones.length) {
+      this.classroomApi.getAll().pipe(catchError(() => of([]))).subscribe(c => this.salones = c ?? []);
+    }
+  }
+
+  cancelarAlta() {
+    this.mostrarAlta = false;
+    this.salonesElegidos = [];
+    this.nuevaPieza = { title: '', type: 'mision', difficulty: 'medio',
+                        xpReward: 50, estimatedMinutes: 30, description: '', orderIndex: null };
+  }
+
+  get puedeGuardarPieza(): boolean {
+    return !this.guardandoPieza && this.nuevaPieza.title.trim().length > 2 && !!this.selected?.id;
+  }
+
+  guardarPieza() {
+    if (!this.puedeGuardarPieza) return;
+    this.guardandoPieza = true;
+
+    this.contentApi.create({
+      ...this.nuevaPieza,
+      title:        this.nuevaPieza.title.trim(),
+      subjectId:    this.selected.id,
+      classroomIds: this.salonesElegidos,   // el backend asigna a estos salones
+    }).subscribe({
+      next: () => {
+        this.guardandoPieza = false;
+        this.cancelarAlta();
+        this.cargarTemario(this.selected.id);
+        this.showToast('Se agregó al plan base');
+      },
+      error: (e: any) => {
+        this.guardandoPieza = false;
+        this.showToast(e?.error?.message ?? 'No se pudo guardar la pieza');
+      },
+    });
+  }
+
   private cargarTemario(subjectId: string) {
     if (!subjectId) { this.contenido = []; return; }
     this.cargandoTemario = true;
@@ -71,7 +144,8 @@ export class AdministratorSubjectsPageComponent implements OnInit {
     private auth: AuthService,
     private subjectApi: SubjectService,
     private administratorApi: AdministratorApiService,
-    private contentApi: ContentApiService
+    private contentApi: ContentApiService,
+    private classroomApi: ClassroomApiService
   ) {
     const currentUser = this.auth.getUser();
     if (currentUser) {

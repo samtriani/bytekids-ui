@@ -203,3 +203,14 @@
 @media (prefers-reduced-motion: reduce) {
   .mc-modal-bg, .mc-modal { animation: none; }
 }
+
+/* Plan base: lo crea coordinacion, el maestro no lo edita */
+.mc-base {
+  font-size: 10px; font-weight: 800; letter-spacing: .3px;
+  background: var(--info-lt); color: var(--info);
+  padding: 2px 8px; border-radius: 999px; white-space: nowrap;
+}
+.mc-solo-lectura {
+  font-size: 11px; color: var(--tx4); font-style: italic;
+  max-width: 96px; line-height: 1.4; text-align: right;
+}
