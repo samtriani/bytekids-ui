@@ -182,8 +182,10 @@
             </div>
             <input class="input" type="time" [(ngModel)]="scheduleForm.startTime">
             <input class="input" type="time" [(ngModel)]="scheduleForm.endTime">
-            <input class="input" type="date" [(ngModel)]="scheduleForm.startDate" [min]="today" placeholder="Fecha inicio">
-            <input class="input" type="date" [(ngModel)]="scheduleForm.endDate"   [min]="scheduleForm.startDate || today" placeholder="Fecha fin">
+            <!-- Sin [min]: un curso en marcha empezo en el pasado, y volver a
+                 agregarle un dia debe poder usar su fecha de inicio original. -->
+            <input class="input" type="date" [(ngModel)]="scheduleForm.startDate" placeholder="Fecha inicio">
+            <input class="input" type="date" [(ngModel)]="scheduleForm.endDate"   [min]="scheduleForm.startDate" placeholder="Fecha fin">
             <button class="btn btn-primary"
                     (click)="addSchedule()"
                     [disabled]="saving || !scheduleForm.subjectId || !scheduleForm.teacherId

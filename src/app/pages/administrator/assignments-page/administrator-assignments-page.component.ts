@@ -56,6 +56,32 @@ export class AdministratorAssignmentsPageComponent implements OnInit {
 
   esDiaActivo(dia: string): boolean { return this.diasSeleccionados.includes(dia); }
 
+  /**
+   * Hereda materia, maestro, horas y fechas del horario que ya tiene el salon.
+   * Agregar un dia a un curso en marcha es lo mas comun —por ejemplo al volver
+   * a poner uno que se borro— y antes obligaba a recapturarlo todo identico.
+   * Solo llena lo que este vacio: nunca pisa algo que el usuario ya escribio.
+   */
+  private precargarDesdeHorarioExistente() {
+    const ref = this.schedules?.[0];
+    if (!ref) return;
+
+    const f = this.scheduleForm;
+    if (f.subjectId || f.teacherId || f.startDate || f.endDate) return;
+
+    f.subjectId = ref.subjectId ?? '';
+    f.teacherId = ref.teacherId ?? '';
+    f.startTime = (ref.startTime ?? '08:00').substring(0, 5);
+    f.endTime   = (ref.endTime   ?? '09:00').substring(0, 5);
+    f.startDate = ref.startDate ?? '';
+    f.endDate   = ref.endDate ?? '';
+
+    // Deja marcados solo los dias que al salon le faltan.
+    const yaCubiertos = new Set(this.schedules.map((s: any) => s.dayOfWeek));
+    const faltantes = this.DAYS.filter(d => !yaCubiertos.has(d));
+    if (faltantes.length) this.diasSeleccionados = [faltantes[0]];
+  }
+
   /** Los ordena como la semana, no como el usuario les fue dando clic. */
   private get diasEnOrden(): string[] {
     return this.DAYS.filter(d => this.diasSeleccionados.includes(d));
@@ -124,6 +150,7 @@ export class AdministratorAssignmentsPageComponent implements OnInit {
         this.selectedClassroomStudents = students;
         this.selectedClassroomSubjects = subjects;
         this.schedules = schedules;
+        this.precargarDesdeHorarioExistente();
       }
     });
   }
