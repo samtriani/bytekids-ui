@@ -26,3 +26,37 @@
   &:hover { opacity: 1; }
   &:disabled { opacity: 0.3; cursor: not-allowed; }
 }
+
+/* ── TEMARIO DE LA MATERIA ── */
+.temario {
+  margin-top: 16px; padding: 16px;
+  background: var(--surface); border: 1.5px solid var(--border);
+  border-radius: var(--r3);
+}
+.temario-head {
+  display: flex; align-items: baseline; justify-content: space-between;
+  gap: 12px; flex-wrap: wrap; margin-bottom: 12px;
+}
+.temario-title { font-size: 14px; font-weight: 800; color: var(--tx1); }
+.temario-meta  { font-size: 11.5px; font-weight: 700; color: var(--tx3); }
+.temario-vacio { margin: 0; font-size: 12.5px; color: var(--tx4); line-height: 1.6; }
+
+.temario-lista { list-style: none; margin: 0; padding: 0; display: grid; gap: 8px; }
+.temario-item {
+  display: flex; align-items: flex-start; gap: 11px;
+  padding: 10px 12px; border: 1.5px solid var(--border2);
+  border-radius: var(--r2); background: var(--surface2);
+}
+.temario-orden {
+  width: 24px; height: 24px; flex: none; border-radius: 50%;
+  background: var(--guinda-lt); color: var(--guinda);
+  font-size: 11px; font-weight: 800;
+  display: grid; place-items: center;
+}
+.temario-cuerpo { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 2px; }
+.temario-nombre { font-size: 13px; font-weight: 700; color: var(--tx1); }
+.temario-datos  { font-size: 11.5px; color: var(--tx3); }
+.temario-nota {
+  margin: 12px 0 0; padding-top: 10px; border-top: 1px solid var(--border2);
+  font-size: 11px; color: var(--tx4);
+}

@@ -70,6 +70,48 @@
               <div class="entity-card"><span>Icono</span><strong>{{ selected.icon || '--' }}</strong></div>
               <div class="entity-card"><span>Estatus</span><strong>{{ selected.isActive ? 'Activa' : 'Inactiva' }}</strong></div>
             </div>
+
+            <!-- Temario de la materia -->
+            <div class="temario">
+              <div class="temario-head">
+                <span class="temario-title">📖 Temario</span>
+                @if (contenido.length) {
+                  <span class="temario-meta">
+                    {{ contenido.length }} piezas · {{ xpTotal }} XP · {{ duracionTotal }}
+                  </span>
+                }
+              </div>
+
+              @if (cargandoTemario) {
+                <p class="temario-vacio">Cargando temario…</p>
+              } @else if (!contenido.length) {
+                <p class="temario-vacio">
+                  Esta materia todavía no tiene contenido publicado.
+                  Lo crea el maestro desde su panel, en Crear Contenido.
+                </p>
+              } @else {
+                <ol class="temario-lista">
+                  @for (c of contenido; track c.id) {
+                    <li class="temario-item">
+                      <span class="temario-orden">{{ c.orderIndex ?? '—' }}</span>
+                      <span class="temario-cuerpo">
+                        <span class="temario-nombre">{{ c.title }}</span>
+                        <span class="temario-datos">
+                          {{ tipoIcon(c.type) }} {{ tipoLabel(c.type) }}
+                          · {{ c.difficulty || '—' }}
+                          · {{ c.xpReward }} XP
+                          @if (c.estimatedMinutes) { · {{ c.estimatedMinutes }} min }
+                          @if (c.createdByName) { · {{ c.createdByName }} }
+                        </span>
+                      </span>
+                    </li>
+                  }
+                </ol>
+                <p class="temario-nota">
+                  Solo se muestra el contenido publicado. Los borradores del maestro no aparecen aquí.
+                </p>
+              }
+            </div>
             <div class="editor-card">
               <div class="editor-card-header">✏️ Editar materia</div>
               <div class="editor-card-body">
