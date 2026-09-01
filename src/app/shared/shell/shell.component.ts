@@ -1,8 +1,9 @@
-import { Component, Input, OnInit, OnDestroy, HostListener } from '@angular/core';
+import { Component, Input, OnInit, OnDestroy, HostListener, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { Router, RouterLink, RouterLinkActive } from '@angular/router';
 import { AuthService } from '../../services/auth.service';
 import { NotificationApiService } from '../../services/api/notification-api.service';
+import { BackendStatusService } from '../../services/backend-status.service';
 
 export interface NavItem {
   label: string;
@@ -47,6 +48,9 @@ export class ShellComponent implements OnInit, OnDestroy {
   notifications: any[] = [];
   showNotif = false;
 
+  /** Estado de conexion con la API, para avisar cuando esta despertando. */
+  readonly backend = inject(BackendStatusService);
+
   /** Menu de la cuenta en el topbar y confirmacion de salida. */
   showUserMenu = false;
   confirmarSalida = false;
@@ -78,6 +82,12 @@ export class ShellComponent implements OnInit, OnDestroy {
   onDocumentClick(): void {
     this.showNotif = false;
     this.showUserMenu = false;
+  }
+
+  /** Recarga la vista actual para volver a pedir los datos al backend. */
+  reintentar(): void {
+    this.backend.reiniciar();
+    window.location.reload();
   }
 
   /** Portal de perfiles: NO cierra sesion, solo cambia de panel. */
