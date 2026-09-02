@@ -40,6 +40,13 @@ export class WorkspaceComponent implements OnInit {
   readonly Object = Object;
   get isQuiz(): boolean { return this.content?.type === 'quiz'; }
 
+  /**
+   * Un material se consulta, no se entrega: el maestro no lo califica y ni
+   * siquiera aparece en su libreta. Antes le poniamos el mismo formulario de
+   * "Tu respuesta" que a una mision, y quedaba "En progreso" para siempre.
+   */
+  get isMaterial(): boolean { return this.content?.type === 'material'; }
+
   // ── content_body ────────────────────────────────────────────────────────
   // Se guarda como JSON con forma distinta por tipo. Antes se volcaba crudo en
   // la pantalla, lo que ademas le enseñaba al alumno los campos de respuesta
@@ -183,6 +190,13 @@ export class WorkspaceComponent implements OnInit {
   }
 
   // ── Misión / Tarea / Proyecto ─────────────────────────────────────────
+
+  /** Marca el material como consultado. El backend lo aprueba y paga el XP. */
+  marcarVisto(): void {
+    if (this.submitting || this.alreadyDone) return;
+    this.codeAnswer = 'Material consultado';
+    this.submit();
+  }
 
   submit(): void {
     if (!this.codeAnswer.trim() || this.submitting) return;

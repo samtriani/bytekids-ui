@@ -224,30 +224,49 @@
           </div>
         }
 
-        <textarea
-          class="ws-editor"
-          [class.ws-editor--code]="isCodeSubject"
-          [(ngModel)]="codeAnswer"
-          [placeholder]="responsePlaceholder"
-          [disabled]="alreadyDone"
-          spellcheck="false">
-        </textarea>
+        @if (isMaterial) {
+          <p class="ws-material-nota">
+            Este material es para consultar. Cuando termines de revisarlo, márcalo
+            como visto y ganas tus {{ content?.xpReward ?? 0 }} XP.
+          </p>
 
-        @if (alreadyDone) {
-          <div class="ws-locked-msg">✅ Ya fue aprobada. ¡Sigue así!</div>
+          <div class="ws-actions">
+            <button class="ws-btn ghost" (click)="openAiTutor()">
+              🤖 Pedir ayuda a ByteBot
+            </button>
+            <button class="ws-btn primary"
+                    [style.background]="subjectColor"
+                    [disabled]="submitting || alreadyDone"
+                    (click)="marcarVisto()">
+              {{ submitting ? 'Guardando…' : alreadyDone ? '✅ Ya lo viste' : '👀 Ya lo vi' }}
+            </button>
+          </div>
+        } @else {
+          <textarea
+            class="ws-editor"
+            [class.ws-editor--code]="isCodeSubject"
+            [(ngModel)]="codeAnswer"
+            [placeholder]="responsePlaceholder"
+            [disabled]="alreadyDone"
+            spellcheck="false">
+          </textarea>
+
+          @if (alreadyDone) {
+            <div class="ws-locked-msg">✅ Ya fue aprobada. ¡Sigue así!</div>
+          }
+
+          <div class="ws-actions">
+            <button class="ws-btn ghost" (click)="openAiTutor()">
+              🤖 Pedir ayuda a ByteBot
+            </button>
+            <button class="ws-btn primary"
+                    [style.background]="subjectColor"
+                    [disabled]="!codeAnswer.trim() || submitting || alreadyDone"
+                    (click)="submit()">
+              {{ submitting ? 'Enviando…' : isRejected ? '🔄 Reenviar corregida' : submitted ? '🔄 Reenviar' : '🚀 Entregar' }}
+            </button>
+          </div>
         }
-
-        <div class="ws-actions">
-          <button class="ws-btn ghost" (click)="openAiTutor()">
-            🤖 Pedir ayuda a ByteBot
-          </button>
-          <button class="ws-btn primary"
-                  [style.background]="subjectColor"
-                  [disabled]="!codeAnswer.trim() || submitting || alreadyDone"
-                  (click)="submit()">
-            {{ submitting ? 'Enviando…' : isRejected ? '🔄 Reenviar corregida' : submitted ? '🔄 Reenviar' : '🚀 Entregar' }}
-          </button>
-        </div>
       </div>
     </div>
   </div>

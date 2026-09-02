@@ -109,6 +109,58 @@
       <span class="gb-leg-item">— Sin entregar</span>
       <span class="gb-leg-item" style="color:var(--tx3)">×N = intentos</span>
     </div>
+
+    <!-- Materiales: no se califican, solo se consultan -->
+    @if (materials.length) {
+      <div class="gb-mat card card-p">
+        <div class="gb-mat-head">
+          <h3>📚 Materiales consultados</h3>
+          <span class="gb-mat-nota">
+            No se califican: el alumno los marca como vistos y gana su XP.
+          </span>
+        </div>
+
+        <div class="gb-scroll">
+          <table class="gb-table">
+            <thead>
+              <tr>
+                <th class="gb-th-student">Alumno</th>
+                @for (m of materials; track m.id) {
+                  <th class="gb-th">
+                    <div class="gb-th-title">{{ m.orderIndex }}. {{ m.title }}</div>
+                    <div class="gb-th-meta">
+                      +{{ m.xpReward }} XP · {{ leidosDe(m.id) }}/{{ students.length }}
+                    </div>
+                  </th>
+                }
+              </tr>
+            </thead>
+            <tbody>
+              @for (s of students; track s.id) {
+                <tr class="gb-row">
+                  <td class="gb-td-student">
+                    <div class="gb-student-cell">
+                      <span class="gb-avatar">{{ s.initials }}</span>
+                      <span>{{ s.name }}</span>
+                    </div>
+                  </td>
+                  @for (m of materials; track m.id) {
+                    <td class="gb-td" [class.gb-td--approved]="leyo(s.id, m.id)"
+                        [attr.title]="fechaLectura(s.id, m.id)
+                          ? 'Consultado el ' + (fechaLectura(s.id, m.id) | date:'d MMM, HH:mm')
+                          : 'Todavía no lo consulta'">
+                      <span class="gb-mat-mark" [class.si]="leyo(s.id, m.id)">
+                        {{ leyo(s.id, m.id) ? '✓' : '—' }}
+                      </span>
+                    </td>
+                  }
+                </tr>
+              }
+            </tbody>
+          </table>
+        </div>
+      </div>
+    }
   }
 </div>
 
