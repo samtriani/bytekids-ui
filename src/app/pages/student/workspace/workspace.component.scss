@@ -199,3 +199,9 @@
 .ws-repaso-inst summary::before { content: '▸ '; }
 .ws-repaso-inst[open] summary::before { content: '▾ '; }
 .ws-repaso-inst summary:hover { color: #B3C2F5; }
+
+.ws-material-nota {
+  margin: 0 0 16px; padding: 14px;
+  background: #151A2E; border: 1px solid #2A2D3E; border-radius: 8px;
+  font-size: .86rem; line-height: 1.6; color: #A9B4D0;
+}

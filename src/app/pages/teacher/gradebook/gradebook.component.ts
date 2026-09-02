@@ -30,6 +30,23 @@ export class GradebookComponent implements OnInit {
   content:   any[] = [];   // [{id, title, type, xpReward, dueDate}]
   grades:    Record<string, Record<string, any>> = {};  // studentId → contentId → {score,status,attempts,feedback}
 
+  // Los materiales no se califican, pero el maestro necesita saber quien ya los
+  // consulto. Van en tabla aparte para no ensuciar el promedio del salon.
+  materials: any[] = [];
+  reads:     Record<string, Record<string, any>> = {};
+
+  leyo(studentId: string, materialId: string): boolean {
+    return !!this.reads?.[studentId]?.[materialId];
+  }
+
+  fechaLectura(studentId: string, materialId: string): string | null {
+    return this.reads?.[studentId]?.[materialId]?.readAt ?? null;
+  }
+
+  leidosDe(materialId: string): number {
+    return this.students.filter(s => this.leyo(s.id, materialId)).length;
+  }
+
   filterStatus = 'Todos';
   readonly statusFilters = ['Todos', 'Aprobado', 'Rechazado', 'Pendiente', 'Sin entregar'];
 
@@ -140,6 +157,8 @@ export class GradebookComponent implements OnInit {
         this.students = data.students ?? [];
         this.content  = data.content  ?? [];
         this.grades   = data.grades   ?? {};
+        this.materials = data.materials ?? [];
+        this.reads     = data.reads     ?? {};
       }
       this.loading = false;
     });
