@@ -76,7 +76,10 @@
                 <td class="gb-td"
                     [class.gb-td--approved]="getGrade(s.id, c.id)?.status==='aprobado'"
                     [class.gb-td--rejected]="getGrade(s.id, c.id)?.status==='rechazado'"
-                    [class.gb-td--pending]="getGrade(s.id, c.id)?.status==='enviado'">
+                    [class.gb-td--pending]="getGrade(s.id, c.id)?.status==='enviado'"
+                    [class.gb-td--abrible]="getGrade(s.id, c.id)"
+                    [attr.title]="getGrade(s.id, c.id) ? 'Ver la entrega de ' + s.name : 'Sin entrega'"
+                    (click)="abrirCelda(s, c)">
                   <div class="gb-cell">
                     <span class="gb-score" [style.color]="scoreColor(getGrade(s.id, c.id))">{{ scoreLabel(getGrade(s.id, c.id)) }}</span>
                     @if (getGrade(s.id, c.id)?.attempts > 1) {
@@ -108,3 +111,70 @@
     </div>
   }
 </div>
+
+<!-- Revision de una entrega -->
+@if (revisando) {
+  <div class="rv-bg" (click)="cerrarRevision()">
+    <div class="rv" role="dialog" aria-modal="true" aria-labelledby="rv-t" (click)="$event.stopPropagation()">
+
+      <header class="rv-head">
+        <div>
+          <h2 id="rv-t">{{ revisando.pieza.title }}</h2>
+          <p class="rv-sub">{{ revisando.alumno.name }}</p>
+        </div>
+        <button class="rv-x" (click)="cerrarRevision()" aria-label="Cerrar">✕</button>
+      </header>
+
+      @if (cargandoEntrega) {
+        <p class="rv-vacio">Cargando la entrega…</p>
+      } @else if (!revisando.entrega) {
+        <p class="rv-vacio">No se encontró el detalle de esta entrega.</p>
+      } @else {
+        <div class="rv-meta">
+          <span class="rv-estado" [class]="'rv-estado--' + revisando.entrega.status">
+            {{ estadoLabel(revisando.entrega.status) }}
+          </span>
+          @if (revisando.entrega.submittedAt) {
+            <span>Entregado el {{ revisando.entrega.submittedAt | date:'d MMM, HH:mm' }}</span>
+          }
+          @if (revisando.entrega.attemptsCount > 1) {
+            <span>· Intento {{ revisando.entrega.attemptsCount }}</span>
+          }
+        </div>
+
+        <h3 class="rv-h3">📄 Lo que entregó</h3>
+        @if (revisando.entrega.codeSubmitted) {
+          <pre class="rv-texto">{{ revisando.entrega.codeSubmitted }}</pre>
+        } @else {
+          <p class="rv-vacio">La entrega no traía texto.</p>
+        }
+
+        <h3 class="rv-h3">✍️ Tu calificación</h3>
+        <div class="rv-form">
+          <label class="rv-campo rv-campo--corto">
+            <span>Nota (0-10)</span>
+            <input type="number" min="0" max="10" step="0.5" [(ngModel)]="formRevision.score">
+          </label>
+          <label class="rv-campo">
+            <span>Retroalimentación para el alumno</span>
+            <textarea rows="3" [(ngModel)]="formRevision.feedback"
+                      placeholder="Qué hizo bien y qué puede mejorar…"></textarea>
+          </label>
+        </div>
+
+        @if (errorRevision) {
+          <p class="rv-error">⚠️ {{ errorRevision }}</p>
+        }
+
+        <div class="rv-acciones">
+          <button class="rv-btn rv-btn--rechazar" [disabled]="guardandoRevision"
+                  (click)="calificar('rechazado')">Pedir correcciones</button>
+          <button class="rv-btn rv-btn--aprobar" [disabled]="guardandoRevision"
+                  (click)="calificar('aprobado')">
+            {{ guardandoRevision ? 'Guardando…' : 'Aprobar' }}
+          </button>
+        </div>
+      }
+    </div>
+  </div>
+}

@@ -40,6 +40,78 @@ export class GradebookComponent implements OnInit {
     );
   }
 
+  // ── Revision de una entrega ─────────────────────────────────────────────
+  // Calificar solo se podia dentro del aula en vivo, o sea durante la clase.
+  // Aqui el maestro abre cualquier celda y ve que entrego el alumno, con que
+  // se le califico y que se le respondio, a cualquier hora.
+  revisando: any = null;          // { alumno, pieza, entrega }
+  cargandoEntrega = false;
+  guardandoRevision = false;
+  errorRevision = '';
+
+  formRevision = { score: null as number | null, feedback: '' };
+
+  private cacheEntregas: Record<string, any[]> = {};
+
+  abrirCelda(alumno: any, pieza: any) {
+    const nota = this.getGrade(alumno.id, pieza.id);
+    if (!nota) return;                       // sin entrega no hay nada que ver
+
+    this.revisando = { alumno, pieza, entrega: null };
+    this.errorRevision = '';
+    this.cargandoEntrega = true;
+
+    const pintar = (entregas: any[]) => {
+      const e = entregas
+        .filter(x => x.contentId === pieza.id)
+        .sort((a, b) => (b.submittedAt ?? '').localeCompare(a.submittedAt ?? ''))[0] ?? null;
+      this.revisando = { alumno, pieza, entrega: e };
+      this.formRevision = {
+        score: e?.score != null ? e.score / 10 : null,
+        feedback: e?.teacherFeedback ?? '',
+      };
+      this.cargandoEntrega = false;
+    };
+
+    const cacheado = this.cacheEntregas[alumno.id];
+    if (cacheado) { pintar(cacheado); return; }
+
+    this.submissionApi.getByStudent(alumno.id).pipe(catchError(() => of([]))).subscribe(list => {
+      this.cacheEntregas[alumno.id] = list ?? [];
+      pintar(list ?? []);
+    });
+  }
+
+  cerrarRevision() { this.revisando = null; this.errorRevision = ''; }
+
+  calificar(status: 'aprobado' | 'rechazado') {
+    const e = this.revisando?.entrega;
+    if (!e || this.guardandoRevision) return;
+    this.guardandoRevision = true;
+    this.errorRevision = '';
+
+    this.submissionApi.review(e.id, {
+      status,
+      feedback: this.formRevision.feedback || undefined,
+      score: this.formRevision.score != null ? Math.round(this.formRevision.score * 10) : undefined,
+    }).subscribe({
+      next: () => {
+        this.guardandoRevision = false;
+        delete this.cacheEntregas[this.revisando.alumno.id];   // quedó viejo
+        this.cerrarRevision();
+        this.loadGradebook();
+      },
+      error: (err: any) => {
+        this.guardandoRevision = false;
+        this.errorRevision = err?.error?.message ?? 'No se pudo guardar la calificación.';
+      },
+    });
+  }
+
+  estadoLabel(st: string): string {
+    return ({ aprobado: 'Aprobada', rechazado: 'Necesita correcciones', enviado: 'Sin revisar' } as any)[st] ?? st;
+  }
+
   constructor(
     private classroomApi: ClassroomApiService,
     private submissionApi: SubmissionApiService,
