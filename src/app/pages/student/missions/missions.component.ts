@@ -82,7 +82,17 @@ export class MissionsComponent implements OnInit {
       subs: this.submissionApi.getMySubmissions(),
     }).subscribe({
       next: ({ feed, subs }) => {
-        subs.forEach((s: any) => { this.submissionMap[s.contentId] = s; });
+        // Nos quedamos con la entrega MAS RECIENTE de cada pieza. El backend las
+        // manda de la mas nueva a la mas vieja, asi que asignar en bucle dejaba
+        // ganando a la mas vieja: el alumno veia "En progreso" en algo que el
+        // maestro ya habia calificado. Se compara la fecha para no depender del
+        // orden en que lleguen.
+        subs.forEach((s: any) => {
+          const previa = this.submissionMap[s.contentId];
+          if (!previa || (s.submittedAt ?? '') > (previa.submittedAt ?? '')) {
+            this.submissionMap[s.contentId] = s;
+          }
+        });
         this.missions = feed.map((c: any) => this.mapContent(c));
 
         // Filtros derivados de las materias reales del alumno
