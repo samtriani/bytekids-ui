@@ -58,7 +58,16 @@ export class ProjectsComponent implements OnInit {
       subs: this.submissionApi.getMySubmissions(),
     }).subscribe({
       next: ({ projects, subs }) => {
-        const subMap = new Map(subs.map((s: any) => [s.contentId || s.content?.id, s]));
+        // Solo la entrega mas reciente por proyecto: construir el Map en bucle
+        // dejaba ganando a la mas vieja, porque el backend las manda al reves.
+        const subMap = new Map<string, any>();
+        subs.forEach((s: any) => {
+          const id = s.contentId || s.content?.id;
+          const previa = subMap.get(id);
+          if (!previa || (s.submittedAt ?? '') > (previa.submittedAt ?? '')) {
+            subMap.set(id, s);
+          }
+        });
 
         this.myProjects = projects
           .filter((p: any) => subMap.has(p.id || p._id) && p.type === 'proyecto')
