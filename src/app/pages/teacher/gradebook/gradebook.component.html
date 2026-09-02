@@ -166,12 +166,21 @@
           <p class="rv-error">⚠️ {{ errorRevision }}</p>
         }
 
+        @if (revisando.entrega.status === 'aprobado') {
+          <p class="rv-nota">
+            Ya la aprobaste. Puedes corregir la nota o el comentario: los
+            {{ revisando.pieza.xpReward }} XP ya se otorgaron y no se vuelven a sumar.
+          </p>
+        }
+
         <div class="rv-acciones">
           <button class="rv-btn rv-btn--rechazar" [disabled]="guardandoRevision"
                   (click)="calificar('rechazado')">Pedir correcciones</button>
           <button class="rv-btn rv-btn--aprobar" [disabled]="guardandoRevision"
                   (click)="calificar('aprobado')">
-            {{ guardandoRevision ? 'Guardando…' : 'Aprobar' }}
+            {{ guardandoRevision
+               ? 'Guardando…'
+               : revisando.entrega.status === 'aprobado' ? 'Actualizar calificación' : 'Aprobar' }}
           </button>
         </div>
       }
