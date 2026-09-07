@@ -135,9 +135,63 @@ export class AdministratorSubjectsPageComponent implements OnInit {
   piezaEnEdicion: any = null;
   piezaEnBaja: any = null;
 
+  /**
+   * El cuerpo de la pieza (enlace, instrucciones, checklist) desglosado para
+   * el formulario. Se guarda aparte del original porque content_body trae
+   * llaves que esta pantalla no edita y no debe perder: teacher_notes,
+   * starter_code y lo que se agregue despues.
+   */
+  cuerpo = { url: '', resource_type: 'enlace', instructions: '',
+             expected_output: '', checklist: '' };
+  private cuerpoOriginal: any = {};
+
   editarPieza(c: any) {
     this.piezaEnEdicion = { ...c };
+    this.leerCuerpo(c.contentBody);
     this.mostrarAlta = false;
+  }
+
+  private leerCuerpo(crudo: string | null) {
+    let o: any = {};
+    try { o = JSON.parse(crudo ?? '{}') ?? {}; } catch { o = {}; }
+    if (typeof o !== 'object' || Array.isArray(o)) o = {};
+    this.cuerpoOriginal = o;
+    this.cuerpo = {
+      url:             o.url ?? '',
+      resource_type:   o.resource_type ?? 'enlace',
+      instructions:    o.instructions ?? '',
+      expected_output: o.expected_output ?? '',
+      checklist:       Array.isArray(o.checklist) ? o.checklist.join('\n') : '',
+    };
+  }
+
+  /** Parte del original: quitar una llave del form no debe borrar las demas. */
+  private armarCuerpo(): string | null {
+    const o: any = { ...this.cuerpoOriginal };
+    const poner = (llave: string, valor: string) => {
+      const v = (valor ?? '').trim();
+      if (v) o[llave] = v; else delete o[llave];
+    };
+    poner('url',             this.cuerpo.url);
+    poner('instructions',    this.cuerpo.instructions);
+    poner('expected_output', this.cuerpo.expected_output);
+
+    const pasos = this.cuerpo.checklist.split('\n').map(x => x.trim()).filter(Boolean);
+    if (pasos.length) o.checklist = pasos; else delete o.checklist;
+
+    // resource_type solo tiene sentido si hay enlace.
+    if (o.url) o.resource_type = this.cuerpo.resource_type || 'enlace';
+    else delete o.resource_type;
+
+    return Object.keys(o).length ? JSON.stringify(o) : null;
+  }
+
+  /** Para avisar en el modal que la pieza trae guia y que no se va a perder. */
+  get piezaTieneGuia(): boolean { return !!this.cuerpoOriginal?.teacher_notes; }
+
+  get urlSospechosa(): boolean {
+    const u = this.cuerpo.url.trim();
+    return !!u && !/^https?:\/\//i.test(u);
   }
 
   cancelarEdicionPieza() { this.piezaEnEdicion = null; }
@@ -152,7 +206,7 @@ export class AdministratorSubjectsPageComponent implements OnInit {
       type: p.type, subjectId: this.selected.id,
       xpReward: p.xpReward, difficulty: p.difficulty,
       estimatedMinutes: p.estimatedMinutes, orderIndex: p.orderIndex,
-      contentBody: p.contentBody,          // se conserva tal cual
+      contentBody: this.armarCuerpo(),
     }).subscribe({
       next: () => {
         this.guardandoPieza = false;

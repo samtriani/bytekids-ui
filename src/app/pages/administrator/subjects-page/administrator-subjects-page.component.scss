@@ -128,3 +128,35 @@
 .temario-accion--danger:hover { background: var(--danger-lt); border-color: var(--danger); }
 
 /* Los estilos de modal ahora viven en users-page y se heredan por @import. */
+
+/* ── CUERPO DE LA PIEZA EN EL MODAL ──────────────────────────────────────
+   Coordinacion podia editar el titulo y el XP pero no el enlace al que
+   lleva la actividad, que es justo lo que se cambia mas seguido. */
+.mm-sep {
+  margin: 18px 0 10px; padding-top: 14px;
+  border-top: 1px solid var(--border2);
+  font-size: 11px; font-weight: 800; text-transform: uppercase;
+  letter-spacing: .05em; color: var(--tx3);
+}
+
+.fg--ancho { flex: 2; }
+
+.mm-nota {
+  display: block; margin-top: 5px;
+  font-size: 11px; line-height: 1.45; color: var(--tx4);
+}
+.mm-nota--ok {
+  margin-top: 14px; padding: 9px 12px;
+  background: var(--guinda-a10); border-radius: 8px;
+  color: var(--guinda); font-weight: 600;
+}
+.mm-aviso-err {
+  display: block; margin-top: 5px;
+  font-size: 11px; font-weight: 700; color: var(--danger, #c0392b);
+}
+
+.mm-solo-tu {
+  margin-left: 6px; padding: 1px 7px; border-radius: 999px;
+  background: var(--guinda-a10); color: var(--guinda);
+  font-size: 10px; font-weight: 800; text-transform: none; letter-spacing: 0;
+}

@@ -239,7 +239,7 @@
   <div class="mm-bg" (click)="cancelarEdicionPieza()">
     <div class="mm" role="dialog" aria-modal="true" aria-labelledby="mm-pieza" (click)="$event.stopPropagation()">
       <h2 id="mm-pieza">Editar pieza</h2>
-      <p class="mm-sub">Cambia lo del plan base. Las instrucciones y el cuerpo se conservan.</p>
+      <p class="mm-sub">Cambia lo del plan base, incluido el recurso al que lleva la actividad.</p>
 
       <div class="fg"><label class="label">Titulo</label><input class="input" [(ngModel)]="piezaEnEdicion.title" maxlength="200"></div>
       <div class="fg"><label class="label">Descripcion</label><textarea class="textarea" rows="2" [(ngModel)]="piezaEnEdicion.description"></textarea></div>
@@ -260,6 +260,56 @@
         <div class="fg"><label class="label">XP</label><input class="input" type="number" min="0" [(ngModel)]="piezaEnEdicion.xpReward"></div>
         <div class="fg"><label class="label">Minutos</label><input class="input" type="number" min="1" [(ngModel)]="piezaEnEdicion.estimatedMinutes"></div>
       </div>
+
+      <div class="mm-sep">Contenido de la actividad</div>
+
+      <div class="fg-row">
+        <div class="fg fg--ancho">
+          <label class="label">Enlace del recurso</label>
+          <input class="input" [(ngModel)]="cuerpo.url" placeholder="https://…">
+          @if (urlSospechosa) {
+            <small class="mm-aviso-err">Debe empezar con https:// o el botón no abrirá nada.</small>
+          } @else {
+            <small class="mm-nota">Es el botón "Abrir el recurso" que ve el alumno. Déjalo vacío si no lleva a ningún lado.</small>
+          }
+        </div>
+        <div class="fg">
+          <label class="label">Tipo de recurso</label>
+          <select class="input" [(ngModel)]="cuerpo.resource_type" [disabled]="!cuerpo.url.trim()">
+            <option value="enlace">🔗 Enlace</option>
+            <option value="video">🎬 Video</option>
+            <option value="documento">📄 Documento</option>
+          </select>
+        </div>
+      </div>
+
+      <div class="fg">
+        <label class="label">Instrucciones para el alumno</label>
+        <textarea class="textarea" rows="6" [(ngModel)]="cuerpo.instructions"
+                  placeholder="Los pasos que tiene que seguir, uno por línea."></textarea>
+      </div>
+
+      @if (piezaEnEdicion.type === 'proyecto') {
+        <div class="fg">
+          <label class="label">Checklist del proyecto</label>
+          <textarea class="textarea" rows="5" [(ngModel)]="cuerpo.checklist"
+                    placeholder="Un punto por línea."></textarea>
+          <small class="mm-nota">Un punto por línea. Es la rúbrica que ve el alumno.</small>
+        </div>
+      }
+
+      <div class="fg">
+        <label class="label">Respuesta esperada <span class="mm-solo-tu">solo la ves tú</span></label>
+        <textarea class="textarea" rows="3" [(ngModel)]="cuerpo.expected_output"
+                  placeholder="Qué debería contestar o lograr. Le sirve al maestro para calificar."></textarea>
+        <small class="mm-nota">El backend no se la manda al alumno.</small>
+      </div>
+
+      @if (piezaTieneGuia) {
+        <p class="mm-nota mm-nota--ok">
+          📘 Esta pieza tiene guía para dar la clase. No se toca desde aquí y se conserva al guardar.
+        </p>
+      }
 
       <div class="mm-acciones">
         <button class="btn" (click)="cancelarEdicionPieza()">Cancelar</button>
