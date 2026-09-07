@@ -38,6 +38,11 @@ export class AdministratorStaffPageComponent implements OnInit {
   };
   saving = false;
 
+  /** El alta vive en un modal: accion ocasional, no merece columna fija. */
+  mostrarAlta = false;
+  abrirAlta()  { this.mostrarAlta = true; }
+  cerrarAlta() { this.mostrarAlta = false; }
+
   // Feedback
   okMsg    = '';
   errorMsg = '';

@@ -294,3 +294,37 @@
     grid-template-columns: 1fr;
   }
 }
+
+/* ── ALTA EN MODAL ───────────────────────────────────────────────────────
+   El formulario de alta era una columna fija de 340px para una accion que
+   se hace de vez en cuando, y le comia un tercio del ancho al detalle, que
+   es lo que se consulta a diario. Pasa a boton en el encabezado + modal.
+   Estos estilos los heredan classrooms y subjects por @import. */
+.layout { grid-template-columns: 1fr; }
+.detail-layout { grid-template-columns: 300px 1fr; }
+@media (max-width: 1100px) { .detail-layout { grid-template-columns: 1fr; } }
+
+.ph { display: flex; align-items: flex-start; justify-content: space-between; gap: 16px; flex-wrap: wrap; }
+
+.mm-bg {
+  position: fixed; inset: 0; z-index: 1000;
+  background: rgba(26,16,32,.55);
+  display: grid; place-items: center; padding: 20px;
+  animation: mm-fade .15s ease-out;
+}
+.mm {
+  background: var(--surface); border-radius: var(--r4);
+  box-shadow: var(--sh3); padding: 26px;
+  width: 100%; max-width: 520px; max-height: 88vh; overflow-y: auto;
+  animation: mm-pop .18s ease-out;
+}
+.mm--chico { max-width: 400px; text-align: center; }
+.mm-icono { font-size: 32px; margin-bottom: 8px; }
+.mm h2 { font-size: 17px; font-weight: 800; color: var(--tx1); margin: 0 0 6px; }
+.mm-sub { font-size: 12.5px; color: var(--tx3); margin: 0 0 18px; line-height: 1.6; }
+.mm-acciones { display: flex; gap: 10px; justify-content: flex-end; margin-top: 18px; }
+.mm--chico .mm-acciones button { flex: 1; }
+
+@keyframes mm-fade { from { opacity: 0; } }
+@keyframes mm-pop  { from { opacity: 0; transform: scale(.96); } }
+@media (prefers-reduced-motion: reduce) { .mm-bg, .mm { animation: none; } }

@@ -23,6 +23,11 @@ export class AdministratorClassroomsPageComponent implements OnInit {
   toast = '';
   toastType = 'default';
   saving = false;
+
+  /** El alta vive en un modal: accion ocasional, no merece columna fija. */
+  mostrarAlta = false;
+  abrirAlta()  { this.mostrarAlta = true; }
+  cerrarAlta() { this.mostrarAlta = false; }
   loading = true;
   search = '';
 
