@@ -8,7 +8,7 @@ import { AuthService } from '../../../services/auth.service';
 
 const NAV: NavItem[] = [
   { label:'Mi Dashboard',  icon:'🏠', route:'/student' },
-  { label:'Mis Misiones',  icon:'🎯', route:'/student/missions' },
+  { label:'Mis Actividades',  icon:'🎯', route:'/student/missions' },
   { label:'Mi Progreso',   icon:'📈', route:'/student/progress' },
   { label:'Logros',        icon:'🏆', route:'/student/achievements' },
   { label:'Tutor IA',      icon:'🤖', route:'/student/ai-tutor', badge:'✨' },
