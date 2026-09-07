@@ -42,6 +42,8 @@ export class AdministratorAssignmentsPageComponent implements OnInit {
   contenidoDelSalon: any[] = [];
   cargandoContenido        = false;
   materiaAAsignar          = '';
+  catalogo: any[]          = [];      // todo el contenido publicado
+  piezasElegidas           = new Set<string>();
   piezaEnBaja: any         = null;
 
   teacherAssignment = { classroomId: '', teacherId: '' };
@@ -114,7 +116,7 @@ export class AdministratorAssignmentsPageComponent implements OnInit {
     if (u) { this.userName = u.displayName; this.userAvatar = u.initials; }
   }
 
-  ngOnInit() { this.load(); }
+  ngOnInit() { this.load(); this.cargarCatalogo(); }
 
   load() {
     forkJoin({
@@ -211,6 +213,7 @@ export class AdministratorAssignmentsPageComponent implements OnInit {
     this.studentAssignment.classroomId = classroom.id;
     this.subjectIdToAdd = '';
     this.materiaAAsignar = '';
+    this.piezasElegidas.clear();
     this.cargarContenido(classroom.id);
     forkJoin({
       students:  this.classroomApi.getStudents(classroom.id),
@@ -226,12 +229,65 @@ export class AdministratorAssignmentsPageComponent implements OnInit {
     });
   }
 
+  /**
+   * Piezas de la materia elegida que el salon TODAVIA no recibe.
+   * Para una clase muestra de una hora no quieres las 12: quieres las
+   * dos primeras.
+   */
+  get piezasDisponibles(): any[] {
+    if (!this.materiaAAsignar) return [];
+    const yaAsignadas = new Set(this.contenidoDelSalon.map(c => c.id));
+    return this.catalogo
+      .filter(c => c.subjectId === this.materiaAAsignar && !yaAsignadas.has(c.id))
+      .sort((a, b) => (a.orderIndex ?? 999) - (b.orderIndex ?? 999));
+  }
+
+  piezaElegida(id: string): boolean { return this.piezasElegidas.has(id); }
+
+  alternarPieza(id: string) {
+    this.piezasElegidas.has(id)
+      ? this.piezasElegidas.delete(id)
+      : this.piezasElegidas.add(id);
+  }
+
+  get totalElegidas(): number { return this.piezasElegidas.size; }
+
+  /** Asigna solo lo palomeado, una llamada por pieza. */
+  asignarPiezasElegidas() {
+    const salon = this.selectedClassroom?.id;
+    const ids = [...this.piezasElegidas];
+    if (!salon || !ids.length || this.saving) return;
+    this.saving = true;
+    forkJoin(ids.map(id => this.contentApi.assign(id, { classroomId: salon })))
+      .subscribe({
+        next: () => {
+          this.saving = false;
+          this.piezasElegidas.clear();
+          this.cargarContenido(salon);
+          this.showToast(ids.length === 1
+            ? 'Pieza asignada al salón'
+            : `${ids.length} piezas asignadas al salón`);
+        },
+        error: (e: any) => {
+          this.saving = false;
+          this.cargarContenido(salon);
+          this.showToast(e?.error?.message ?? 'No se pudieron asignar todas las piezas');
+        },
+      });
+  }
+
+  private cargarCatalogo() {
+    this.contentApi.getAll().pipe(catchError(() => of([])))
+      .subscribe(items => this.catalogo = items ?? []);
+  }
+
   private cargarContenido(classroomId: string) {
     this.cargandoContenido = true;
     this.contentApi.byClassroom(classroomId)
       .pipe(catchError(() => of([])))
       .subscribe(items => {
         this.contenidoDelSalon = items ?? [];
+        this.piezasElegidas.clear();
         this.cargandoContenido = false;
       });
   }

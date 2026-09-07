@@ -225,6 +225,49 @@
                 Asignar todo el temario
               </button>
             </div>
+
+            @if (materiaAAsignar) {
+              @if (!piezasDisponibles.length) {
+                <p class="cont-vacio">
+                  Este salón ya recibe todas las piezas publicadas de esa materia.
+                </p>
+              } @else {
+                <div class="cont-sueltas">
+                  <p class="cont-sueltas-titulo">
+                    …o elige solo algunas
+                    <span class="cont-sueltas-pista">
+                      Para una clase muestra de una hora bastan las dos primeras.
+                    </span>
+                  </p>
+
+                  <ul class="cont-check-lista">
+                    @for (c of piezasDisponibles; track c.id) {
+                      <li>
+                        <label class="cont-check">
+                          <input type="checkbox" [checked]="piezaElegida(c.id)"
+                                 (change)="alternarPieza(c.id)">
+                          <span class="cont-orden">{{ c.orderIndex ?? '—' }}</span>
+                          <span class="cont-info">
+                            <span class="cont-nombre">{{ c.title }}</span>
+                            <span class="cont-meta">
+                              {{ c.type }} · {{ c.xpReward }} XP · {{ c.estimatedMinutes }} min
+                            </span>
+                          </span>
+                        </label>
+                      </li>
+                    }
+                  </ul>
+
+                  <button class="btn btn-primary"
+                          (click)="asignarPiezasElegidas()"
+                          [disabled]="saving || !totalElegidas">
+                    {{ totalElegidas
+                       ? 'Asignar ' + totalElegidas + (totalElegidas === 1 ? ' pieza' : ' piezas')
+                       : 'Selecciona al menos una' }}
+                  </button>
+                </div>
+              }
+            }
           }
 
           @if (cargandoContenido) {
@@ -270,43 +313,79 @@
             <span class="tag tag-guinda">{{ schedules.length }} clases</span>
           </div>
 
-          <div class="schedule-form">
-            <select class="select" [(ngModel)]="scheduleForm.subjectId">
-              <option value="">Materia…</option>
-              @for (s of selectedClassroomSubjects; track s.id) {
-                <option [value]="s.id">{{ s.icon ?? '📚' }} {{ s.name }}</option>
-              }
-            </select>
-            <select class="select" [(ngModel)]="scheduleForm.teacherId">
-              <option value="">Maestro…</option>
-              @for (t of teachers; track t.id) {
-                <option [value]="t.id">{{ t.displayName }}</option>
-              }
-            </select>
-            <div class="dias-picker" role="group" aria-label="Días de la clase">
-              @for (d of DAYS; track d) {
-                <button type="button" class="dia-chip" [class.on]="esDiaActivo(d)"
-                        [attr.aria-pressed]="esDiaActivo(d)" (click)="toggleDia(d)">
-                  {{ d.substring(0, 3) | titlecase }}
-                </button>
-              }
+          <div class="hf">
+            <div class="hf-fila">
+              <label class="hf-campo">
+                <span class="hf-label">Materia</span>
+                <select class="select" [(ngModel)]="scheduleForm.subjectId">
+                  <option value="">Selecciona…</option>
+                  @for (s of selectedClassroomSubjects; track s.id) {
+                    <option [value]="s.id">{{ s.icon ?? '📚' }} {{ s.name }}</option>
+                  }
+                </select>
+              </label>
+              <label class="hf-campo">
+                <span class="hf-label">Maestro</span>
+                <select class="select" [(ngModel)]="scheduleForm.teacherId">
+                  <option value="">Selecciona…</option>
+                  @for (t of teachers; track t.id) {
+                    <option [value]="t.id">{{ t.displayName }}</option>
+                  }
+                </select>
+              </label>
             </div>
-            <input class="input" type="time" [(ngModel)]="scheduleForm.startTime">
-            <input class="input" type="time" [(ngModel)]="scheduleForm.endTime">
-            <!-- Sin [min]: un curso en marcha empezo en el pasado, y volver a
-                 agregarle un dia debe poder usar su fecha de inicio original. -->
-            <input class="input" type="date" [(ngModel)]="scheduleForm.startDate" placeholder="Fecha inicio">
-            <input class="input" type="date" [(ngModel)]="scheduleForm.endDate"   [min]="scheduleForm.startDate" placeholder="Fecha fin">
-            <button class="btn btn-primary"
-                    (click)="addSchedule()"
-                    [disabled]="saving || !scheduleForm.subjectId || !scheduleForm.teacherId
-                                || !diasSeleccionados.length || !scheduleForm.startDate || !scheduleForm.endDate">
-              {{ saving
-                 ? 'Guardando…'
-                 : diasSeleccionados.length > 1
-                   ? '+ Agregar ' + diasSeleccionados.length + ' clases'
-                   : '+ Agregar' }}
-            </button>
+
+            <div class="hf-campo">
+              <span class="hf-label">Días de la clase</span>
+              <div class="dias-picker" role="group" aria-label="Días de la clase">
+                @for (d of DAYS; track d) {
+                  <button type="button" class="dia-chip" [class.on]="esDiaActivo(d)"
+                          [attr.aria-pressed]="esDiaActivo(d)" (click)="toggleDia(d)">
+                    {{ d.substring(0, 3) | titlecase }}
+                  </button>
+                }
+              </div>
+            </div>
+
+            <div class="hf-fila">
+              <label class="hf-campo hf-campo--chico">
+                <span class="hf-label">Hora de inicio</span>
+                <input class="input" type="time" [(ngModel)]="scheduleForm.startTime">
+              </label>
+              <label class="hf-campo hf-campo--chico">
+                <span class="hf-label">Hora de fin</span>
+                <input class="input" type="time" [(ngModel)]="scheduleForm.endTime">
+              </label>
+              <label class="hf-campo hf-campo--chico">
+                <span class="hf-label">Primer día del curso</span>
+                <!-- Sin [min]: un curso en marcha empezo en el pasado, y volver a
+                     agregarle un dia debe poder usar su fecha de inicio original. -->
+                <input class="input" type="date" [(ngModel)]="scheduleForm.startDate">
+              </label>
+              <label class="hf-campo hf-campo--chico">
+                <span class="hf-label">Último día del curso</span>
+                <input class="input" type="date" [(ngModel)]="scheduleForm.endDate"
+                       [min]="scheduleForm.startDate">
+              </label>
+            </div>
+
+            <div class="hf-pie">
+              @if (diasSeleccionados.length > 1) {
+                <span class="hf-resumen">
+                  Se crearán {{ diasSeleccionados.length }} clases, una por día.
+                </span>
+              }
+              <button class="btn btn-primary"
+                      (click)="addSchedule()"
+                      [disabled]="saving || !scheduleForm.subjectId || !scheduleForm.teacherId
+                                  || !diasSeleccionados.length || !scheduleForm.startDate || !scheduleForm.endDate">
+                {{ saving
+                   ? 'Guardando…'
+                   : diasSeleccionados.length > 1
+                     ? '+ Agregar ' + diasSeleccionados.length + ' clases'
+                     : '+ Agregar' }}
+              </button>
+            </div>
           </div>
 
           @if (schedules.length) {

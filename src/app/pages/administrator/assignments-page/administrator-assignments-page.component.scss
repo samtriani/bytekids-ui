@@ -440,3 +440,47 @@
 .cont-info   { flex: 1; min-width: 0; }
 .cont-nombre { display: block; font-size: 12.5px; font-weight: 600; color: var(--tx1); }
 .cont-meta   { display: block; font-size: 11px; color: var(--tx4); text-transform: capitalize; }
+
+/* ── PIEZAS SUELTAS ──────────────────────────────────────────────────────
+   Todo o nada no sirve para una clase muestra: en una hora no le vas a dar
+   al nino un curso de 7 horas, quieres las dos primeras piezas. */
+.cont-sueltas {
+  margin-top: 6px; padding: 12px 14px;
+  border: 1px solid var(--border2); border-radius: 10px;
+}
+.cont-sueltas-titulo {
+  margin: 0 0 8px; font-size: 12px; font-weight: 800; color: var(--tx2);
+}
+.cont-sueltas-pista {
+  display: block; margin-top: 2px;
+  font-size: 11px; font-weight: 500; color: var(--tx4);
+}
+.cont-check-lista { list-style: none; margin: 0 0 12px; padding: 0; }
+.cont-check {
+  display: flex; align-items: center; gap: 10px;
+  padding: 6px 4px; border-radius: 8px; cursor: pointer;
+}
+.cont-check:hover { background: var(--surface2); }
+.cont-check input { width: 15px; height: 15px; accent-color: var(--guinda); cursor: pointer; }
+
+/* ── HORARIO ─────────────────────────────────────────────────────────────
+   Era un solo renglon flex con 8 controles: los selects se cortaban y las
+   dos fechas se veian identicas —"mm/dd/yyyy" las dos—, porque el
+   placeholder de un input date no se pinta. Ahora van con etiqueta. */
+.hf { margin-bottom: 18px; }
+.hf-fila { display: flex; flex-wrap: wrap; gap: 12px; margin-bottom: 12px; }
+.hf-campo { display: block; flex: 1 1 200px; min-width: 0; }
+.hf-campo--chico { flex: 1 1 140px; }
+.hf-campo .select, .hf-campo .input { width: 100%; max-width: none; }
+
+.hf-label {
+  display: block; margin-bottom: 4px;
+  font-size: 11px; font-weight: 800; text-transform: uppercase;
+  letter-spacing: .04em; color: var(--tx3);
+}
+
+.hf-pie {
+  display: flex; align-items: center; justify-content: flex-end;
+  gap: 12px; flex-wrap: wrap; margin-top: 14px;
+}
+.hf-resumen { font-size: 12px; color: var(--tx3); }
