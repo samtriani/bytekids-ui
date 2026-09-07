@@ -195,16 +195,19 @@
 
 /* ── Responsive ── */
 /* ── Botón Entrar a clase ── */
+/* Verde, igual que "Dar clase ahora" del maestro: entrar a la videollamada es
+   la accion de arranque, no una accion de marca. Ademas el guinda se confundia
+   con el borde de la tarjeta EN CURSO. */
 .sc-enter-btn {
   display: flex; align-items: center; justify-content: center;
   width: 100%; margin-top: 10px; padding: 9px 16px;
-  background: linear-gradient(135deg, #7A1535, #a01f47);
+  background: linear-gradient(135deg, #1a6b3c, #27a85e);
   color: #fff; border: none; border-radius: 10px;
   font-size: .82rem; font-weight: 800; cursor: pointer;
   transition: transform .12s, box-shadow .12s;
-  box-shadow: 0 3px 12px rgba(122,21,53,.35);
+  box-shadow: 0 3px 12px rgba(26,107,60,.35);
   gap: 6px;
-  &:hover { transform: translateY(-1px); box-shadow: 0 6px 18px rgba(122,21,53,.45); }
+  &:hover { transform: translateY(-1px); box-shadow: 0 6px 18px rgba(26,107,60,.45); }
   &:active { transform: translateY(0); }
 }
 
