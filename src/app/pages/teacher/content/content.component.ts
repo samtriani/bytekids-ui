@@ -24,6 +24,19 @@ const DIF_LABEL: Record<string, string> = {
 
 interface Grupo { materia: string; icono: string; piezas: any[]; xp: number; }
 
+/**
+ * Guia para dar la clase. Vive dentro de content_body bajo la llave
+ * teacher_notes, que el backend no le manda al alumno.
+ */
+export interface Guia {
+  objetivo?: string;
+  duracion?: string;
+  explicar?: string[];
+  preguntas?: string[];
+  errores?: string[];
+  cierre?: string;
+}
+
 @Component({
   selector: 'app-teacher-content',
   standalone: true,
@@ -112,12 +125,36 @@ export class TeacherContentComponent implements OnInit {
 
   conteo(t: Tipo): number { return this.todo.filter(c => c.type === t).length; }
 
+  // ── Guia del maestro ────────────────────────────────────────────────────
+  private guiasAbiertas = new Set<string>();
+
+  /** Cache: el getter se llama en cada ciclo de deteccion de cambios. */
+  private guiaCache = new Map<string, Guia | null>();
+
+  guia(c: any): Guia | null {
+    if (this.guiaCache.has(c.id)) return this.guiaCache.get(c.id)!;
+    let g: Guia | null = null;
+    try {
+      const notas = JSON.parse(c.contentBody ?? '{}')?.teacher_notes;
+      if (notas && typeof notas === 'object') g = notas as Guia;
+    } catch { /* content_body en texto plano: no hay guia */ }
+    this.guiaCache.set(c.id, g);
+    return g;
+  }
+
+  guiaAbierta(id: string): boolean { return this.guiasAbiertas.has(id); }
+
+  alternarGuia(id: string) {
+    this.guiasAbiertas.has(id) ? this.guiasAbiertas.delete(id) : this.guiasAbiertas.add(id);
+  }
+
   ngOnInit() { this.cargar(); }
 
   private cargar() {
     this.loading = true;
     this.contentApi.getMyContent().pipe(catchError(() => of([]))).subscribe(items => {
       this.todo = items ?? [];
+      this.guiaCache.clear();
       this.loading = false;
     });
   }
