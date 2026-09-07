@@ -88,7 +88,7 @@
 
                   <label class="alta-campo">
                     <span>Descripción</span>
-                    <textarea [(ngModel)]="nuevaPieza.description" rows="2"
+                    <textarea [(ngModel)]="nuevaPieza.description" rows="5"
                               placeholder="¿Qué van a aprender?"></textarea>
                   </label>
 
@@ -242,7 +242,7 @@
       <p class="mm-sub">Cambia lo del plan base, incluido el recurso al que lleva la actividad.</p>
 
       <div class="fg"><label class="label">Titulo</label><input class="input" [(ngModel)]="piezaEnEdicion.title" maxlength="200"></div>
-      <div class="fg"><label class="label">Descripcion</label><textarea class="textarea" rows="2" [(ngModel)]="piezaEnEdicion.description"></textarea></div>
+      <div class="fg"><label class="label">Descripcion</label><textarea class="textarea" rows="5" [(ngModel)]="piezaEnEdicion.description"></textarea></div>
       <div class="fg-row">
         <div class="fg"><label class="label">Tipo</label>
           <select class="input" [(ngModel)]="piezaEnEdicion.type">
