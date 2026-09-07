@@ -18,23 +18,65 @@
     <div class="card card-p">
       <div class="section-head">
         <h3>Salones</h3>
-        <span class="tag tag-green">{{ classrooms.length }} activos</span>
+        <span class="tag tag-green">{{ filteredClassrooms.length }} de {{ classrooms.length }}</span>
       </div>
+
+      @if (ciclos.length > 1) {
+        <div class="fg">
+          <label class="label">Ciclo escolar</label>
+          <select class="input" [(ngModel)]="cicloFiltro">
+            @for (c of ciclos; track c) { <option [value]="c">{{ c }}</option> }
+            <option value="">Todos los ciclos</option>
+          </select>
+        </div>
+      }
+
       <div class="fg">
         <label class="label">Buscar salón</label>
         <input class="input" [(ngModel)]="classroomSearch" placeholder="Nombre o sección…">
+        @if (classroomSearch.trim()) {
+          <small class="sal-aviso">
+            Buscando en todos los ciclos ·
+            <button class="sal-limpiar" (click)="limpiarBusqueda()">limpiar</button>
+          </small>
+        }
       </div>
+
       <div class="detail-menu">
-        @for (classroom of filteredClassrooms; track classroom.id) {
-          <div class="detail-menu-item-wrap">
-            <button class="detail-menu-item"
-                    [class.selected]="selectedClassroom?.id === classroom.id"
-                    (click)="selectClassroom(classroom)">
-              <strong>{{ classroom.name }}</strong>
-              <small>{{ classroom.schoolYear }}</small>
+        @if (!filteredClassrooms.length) {
+          <p class="sal-vacio">
+            {{ classroomSearch.trim()
+               ? 'Ningún salón coincide con esa búsqueda.'
+               : 'No hay salones en este ciclo escolar.' }}
+          </p>
+        }
+
+        @for (g of gruposDeSalones; track g.grado) {
+          <div class="sal-grupo">
+            <button class="sal-grupo-head" (click)="alternarGrupo(g.grado)"
+                    [attr.aria-expanded]="grupoAbierto(g.grado)">
+              <span class="sal-caret" [class.abierto]="grupoAbierto(g.grado)">▸</span>
+              <span class="sal-grupo-nombre">{{ g.etiqueta }}</span>
+              <span class="sal-grupo-conteo">{{ g.salones.length }}</span>
             </button>
-            <button class="btn-baja" title="Dar de baja salón"
-                    (click)="deactivateClassroom(classroom.id, classroom.name)">✕</button>
+
+            @if (grupoAbierto(g.grado)) {
+              @for (classroom of g.salones; track classroom.id) {
+                <div class="detail-menu-item-wrap">
+                  <button class="detail-menu-item"
+                          [class.selected]="selectedClassroom?.id === classroom.id"
+                          (click)="selectClassroom(classroom)">
+                    <strong>{{ classroom.name }}</strong>
+                    <small>
+                      @if (classroom.section) { Sección {{ classroom.section }} · }
+                      {{ classroom.schoolYear }}
+                    </small>
+                  </button>
+                  <button class="btn-baja" title="Dar de baja salón"
+                          (click)="deactivateClassroom(classroom.id, classroom.name)">✕</button>
+                </div>
+              }
+            }
           </div>
         }
       </div>
