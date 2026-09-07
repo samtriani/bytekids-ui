@@ -164,3 +164,21 @@
 /* La descripcion de una pieza es un parrafo, no una linea: que se pueda
    estirar si hace falta y que no encoja abajo de 5 renglones. */
 .mm .textarea { min-height: 96px; resize: vertical; line-height: 1.5; }
+
+/* Campos del cuerpo dentro del panel de alta, con el mismo lenguaje que el
+   modal de edicion: se da de alta y se edita lo mismo. */
+.alta-sep {
+  margin: 16px 0 4px; padding-top: 14px;
+  border-top: 1px solid var(--border2);
+  font-size: 11px; font-weight: 800; text-transform: uppercase;
+  letter-spacing: .05em; color: var(--tx3);
+}
+.alta-pista { display: block; margin-top: 4px; font-size: 11px; line-height: 1.45; color: var(--tx4); }
+.alta-mal   { display: block; margin-top: 4px; font-size: 11px; font-weight: 700; color: var(--danger, #c0392b); }
+.alta-solo-tu {
+  margin-left: 6px; padding: 1px 7px; border-radius: 999px;
+  background: var(--guinda-a10); color: var(--guinda);
+  font-size: 10px; font-weight: 800; font-style: normal;
+  text-transform: none; letter-spacing: 0;
+}
+.alta-base textarea { resize: vertical; line-height: 1.5; }
