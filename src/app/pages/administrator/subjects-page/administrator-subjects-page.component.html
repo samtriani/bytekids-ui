@@ -123,6 +123,50 @@
                     </label>
                   </div>
 
+                  <div class="alta-sep">Contenido de la actividad</div>
+
+                  <div class="alta-fila">
+                    <label class="alta-campo">
+                      <span>Enlace del recurso</span>
+                      <input type="url" [(ngModel)]="cuerpoNuevo.url" placeholder="https://…">
+                      @if (urlSospechosaEn(cuerpoNuevo.url)) {
+                        <small class="alta-mal">Debe empezar con https:// o el botón no abrirá nada.</small>
+                      } @else {
+                        <small class="alta-pista">Es el botón "Abrir el recurso" que ve el alumno. Opcional.</small>
+                      }
+                    </label>
+                    <label class="alta-campo alta-campo--corto">
+                      <span>Tipo de recurso</span>
+                      <select [(ngModel)]="cuerpoNuevo.resource_type" [disabled]="!cuerpoNuevo.url.trim()">
+                        <option value="enlace">🔗 Enlace</option>
+                        <option value="video">🎬 Video</option>
+                        <option value="documento">📄 Documento</option>
+                      </select>
+                    </label>
+                  </div>
+
+                  <label class="alta-campo">
+                    <span>Instrucciones para el alumno</span>
+                    <textarea [(ngModel)]="cuerpoNuevo.instructions" rows="6"
+                              placeholder="Los pasos que tiene que seguir, uno por línea."></textarea>
+                  </label>
+
+                  @if (nuevaPieza.type === 'proyecto') {
+                    <label class="alta-campo">
+                      <span>Checklist del proyecto</span>
+                      <textarea [(ngModel)]="cuerpoNuevo.checklist" rows="5"
+                                placeholder="Un punto por línea."></textarea>
+                      <small class="alta-pista">Un punto por línea. Es la rúbrica que ve el alumno.</small>
+                    </label>
+                  }
+
+                  <label class="alta-campo">
+                    <span>Respuesta esperada <em class="alta-solo-tu">solo la ves tú</em></span>
+                    <textarea [(ngModel)]="cuerpoNuevo.expected_output" rows="3"
+                              placeholder="Qué debería contestar o lograr. Le sirve al maestro para calificar."></textarea>
+                    <small class="alta-pista">El backend no se la manda al alumno.</small>
+                  </label>
+
                   <div class="alta-campo">
                     <span>Salones que lo reciben</span>
                     @if (!salones.length) {

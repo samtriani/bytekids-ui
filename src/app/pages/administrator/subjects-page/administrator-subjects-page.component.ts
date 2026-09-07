@@ -113,6 +113,7 @@ export class AdministratorSubjectsPageComponent implements OnInit {
     this.salonesElegidos = [];
     this.nuevaPieza = { title: '', type: 'mision', difficulty: 'medio',
                         xpReward: 50, estimatedMinutes: 30, description: '', orderIndex: null };
+    this.cuerpoNuevo = this.cuerpoVacio();
   }
 
   get puedeGuardarPieza(): boolean {
@@ -127,6 +128,7 @@ export class AdministratorSubjectsPageComponent implements OnInit {
       ...this.nuevaPieza,
       title:        this.nuevaPieza.title.trim(),
       subjectId:    this.selected.id,
+      contentBody:  this.armarCuerpo(this.cuerpoNuevo),
       classroomIds: this.salonesElegidos,   // el backend asigna a estos salones
     }).subscribe({
       next: () => {
@@ -154,6 +156,9 @@ export class AdministratorSubjectsPageComponent implements OnInit {
    */
   cuerpo = { url: '', resource_type: 'enlace', instructions: '',
              expected_output: '', checklist: '' };
+  /** El mismo formulario para el alta, que es un panel aparte del modal. */
+  cuerpoNuevo = { url: '', resource_type: 'enlace', instructions: '',
+                  expected_output: '', checklist: '' };
   private cuerpoOriginal: any = {};
 
   editarPieza(c: any) {
@@ -176,34 +181,46 @@ export class AdministratorSubjectsPageComponent implements OnInit {
     };
   }
 
-  /** Parte del original: quitar una llave del form no debe borrar las demas. */
-  private armarCuerpo(): string | null {
-    const o: any = { ...this.cuerpoOriginal };
+  /**
+   * Arma el content_body del formulario encima de `base`. En la edicion
+   * `base` es el cuerpo original, para no borrar teacher_notes ni
+   * starter_code, que esta pantalla no edita. En el alta va vacio.
+   */
+  private armarCuerpo(form: any, base: any = {}): string | null {
+    const o: any = { ...base };
     const poner = (llave: string, valor: string) => {
       const v = (valor ?? '').trim();
       if (v) o[llave] = v; else delete o[llave];
     };
-    poner('url',             this.cuerpo.url);
-    poner('instructions',    this.cuerpo.instructions);
-    poner('expected_output', this.cuerpo.expected_output);
+    poner('url',             form.url);
+    poner('instructions',    form.instructions);
+    poner('expected_output', form.expected_output);
 
-    const pasos = this.cuerpo.checklist.split('\n').map(x => x.trim()).filter(Boolean);
+    const pasos = (form.checklist ?? '').split('\n')
+                    .map((x: string) => x.trim()).filter(Boolean);
     if (pasos.length) o.checklist = pasos; else delete o.checklist;
 
     // resource_type solo tiene sentido si hay enlace.
-    if (o.url) o.resource_type = this.cuerpo.resource_type || 'enlace';
+    if (o.url) o.resource_type = form.resource_type || 'enlace';
     else delete o.resource_type;
 
     return Object.keys(o).length ? JSON.stringify(o) : null;
   }
 
+  private cuerpoVacio() {
+    return { url: '', resource_type: 'enlace', instructions: '',
+             expected_output: '', checklist: '' };
+  }
+
+  urlSospechosaEn(u: string): boolean {
+    const t = (u ?? '').trim();
+    return !!t && !/^https?:\/\//i.test(t);
+  }
+
   /** Para avisar en el modal que la pieza trae guia y que no se va a perder. */
   get piezaTieneGuia(): boolean { return !!this.cuerpoOriginal?.teacher_notes; }
 
-  get urlSospechosa(): boolean {
-    const u = this.cuerpo.url.trim();
-    return !!u && !/^https?:\/\//i.test(u);
-  }
+  get urlSospechosa(): boolean { return this.urlSospechosaEn(this.cuerpo.url); }
 
   cancelarEdicionPieza() { this.piezaEnEdicion = null; }
 
@@ -217,7 +234,7 @@ export class AdministratorSubjectsPageComponent implements OnInit {
       type: p.type, subjectId: this.selected.id,
       xpReward: p.xpReward, difficulty: p.difficulty,
       estimatedMinutes: p.estimatedMinutes, orderIndex: p.orderIndex,
-      contentBody: this.armarCuerpo(),
+      contentBody: this.armarCuerpo(this.cuerpo, this.cuerpoOriginal),
     }).subscribe({
       next: () => {
         this.guardandoPieza = false;
