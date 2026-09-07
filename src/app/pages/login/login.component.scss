@@ -527,3 +527,52 @@
 }
 @keyframes espera-in { from { opacity: 0; transform: translateY(-4px); } }
 @media (prefers-reduced-motion: reduce) { .espera-aviso { animation: none; } }
+
+/* ── DISTINTIVO DE IA ────────────────────────────────────────────────────
+   Era el tercero de cuatro chips iguales. Ahí la IA competía con "Plataforma
+   Nacional" por la misma atención, cuando es lo único que nadie más tiene.
+   Sale de la fila, sube en la jerarquía y se queda con el dorado de la marca
+   —el mismo de "Academy"—, que en esta portada solo lo usa el logo. */
+.brand-ia {
+  display: inline-flex;
+  align-items: center;
+  gap: 12px;
+  padding: 12px 18px 12px 14px;
+  border-radius: 16px;
+  background: linear-gradient(135deg, rgba(196,153,42,.22), rgba(196,153,42,.06));
+  border: 1px solid rgba(196,153,42,.42);
+  box-shadow: 0 6px 26px rgba(196,153,42,.16);
+  backdrop-filter: blur(6px);
+  font-family: 'Nunito', sans-serif;
+}
+
+.bia-icono {
+  font-size: 1.6rem;
+  line-height: 1;
+  flex-shrink: 0;
+  filter: drop-shadow(0 2px 6px rgba(0,0,0,.35));
+}
+
+.bia-texto { display: flex; flex-direction: column; gap: 2px; }
+
+.bia-texto strong {
+  font-size: 1rem;
+  font-weight: 800;
+  color: #E8C46A;
+  letter-spacing: .01em;
+}
+
+.bia-texto em {
+  font-style: normal;
+  font-size: .78rem;
+  font-weight: 600;
+  color: rgba(255,255,255,.72);
+  line-height: 1.4;
+}
+
+@media (max-width: 420px) {
+  .brand-ia { padding: 10px 14px 10px 12px; gap: 10px; }
+  .bia-icono { font-size: 1.35rem; }
+  .bia-texto strong { font-size: .92rem; }
+  .bia-texto em { font-size: .72rem; }
+}
