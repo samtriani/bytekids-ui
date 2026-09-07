@@ -160,3 +160,7 @@
   background: var(--guinda-a10); color: var(--guinda);
   font-size: 10px; font-weight: 800; text-transform: none; letter-spacing: 0;
 }
+
+/* La descripcion de una pieza es un parrafo, no una linea: que se pueda
+   estirar si hace falta y que no encoja abajo de 5 renglones. */
+.mm .textarea { min-height: 96px; resize: vertical; line-height: 1.5; }
