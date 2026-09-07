@@ -394,3 +394,49 @@
   text-decoration: underline;
 }
 .sal-vacio { margin: 12px 4px; font-size: 12.5px; color: var(--tx4); line-height: 1.5; }
+
+/* ── CONTENIDO DEL SALON ─────────────────────────────────────────────────
+   El alumno ve una pieza solo si hay una fila en content_assignments para
+   su salon. Antes esto solo se podia hacer al crear la pieza: montar un
+   salon nuevo con el plan base eran 12 inserts a mano. */
+.cont-bloque {
+  margin-top: 22px; padding-top: 20px;
+  border-top: 1px solid var(--border2);
+}
+
+.cont-nota {
+  margin: 0 0 12px; padding: 10px 12px;
+  background: var(--guinda-a10); border-radius: 8px;
+  font-size: 12px; line-height: 1.55; color: var(--tx3);
+}
+
+.cont-alta { display: flex; gap: 10px; align-items: center; margin-bottom: 14px; flex-wrap: wrap; }
+.cont-alta .select { flex: 1 1 240px; }
+
+.cont-vacio { margin: 10px 2px; font-size: 12.5px; line-height: 1.5; color: var(--tx4); }
+
+.cont-materia { margin-bottom: 14px; }
+.cont-materia-head {
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 6px 2px; margin-bottom: 4px;
+  border-bottom: 1px solid var(--border2);
+  font-size: 12px; font-weight: 800; color: var(--tx2);
+}
+.cont-materia-n { font-size: 11px; font-weight: 700; color: var(--tx4); }
+
+.cont-lista { list-style: none; margin: 0; padding: 0; }
+.cont-item {
+  display: flex; align-items: center; gap: 10px;
+  padding: 7px 2px; border-bottom: 1px solid var(--border2);
+}
+.cont-item:last-child { border-bottom: none; }
+
+.cont-orden {
+  flex: 0 0 24px; height: 24px; border-radius: 7px;
+  display: flex; align-items: center; justify-content: center;
+  background: var(--guinda-a10); color: var(--guinda);
+  font-size: 11px; font-weight: 800;
+}
+.cont-info   { flex: 1; min-width: 0; }
+.cont-nombre { display: block; font-size: 12.5px; font-weight: 600; color: var(--tx1); }
+.cont-meta   { display: block; font-size: 11px; color: var(--tx4); text-transform: capitalize; }
