@@ -511,3 +511,19 @@
   .login-brand { display: none; }
   .login-form-wrap { padding: 24px 16px; }
 }
+
+/* Aviso escalonado mientras el backend despierta del arranque en frio */
+.espera-aviso {
+  margin: 12px 0 0;
+  padding: 10px 14px;
+  background: rgba(196, 153, 42, .12);
+  border: 1px solid rgba(196, 153, 42, .3);
+  border-radius: 10px;
+  font-size: .8rem;
+  line-height: 1.5;
+  color: #8B5C0A;
+  text-align: center;
+  animation: espera-in .25s ease-out;
+}
+@keyframes espera-in { from { opacity: 0; transform: translateY(-4px); } }
+@media (prefers-reduced-motion: reduce) { .espera-aviso { animation: none; } }

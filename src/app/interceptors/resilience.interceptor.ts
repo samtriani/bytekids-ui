@@ -4,9 +4,15 @@ import { Router } from '@angular/router';
 import { catchError, retry, tap, throwError, timer } from 'rxjs';
 import { BackendStatusService } from '../services/backend-status.service';
 
-/** Reintentos y espera entre ellos: cubre los ~40s de arranque en frio de Fly. */
-const MAX_REINTENTOS = 4;
-const ESPERA_MS = [2000, 5000, 10000, 15000];
+/**
+ * Reintentos y espera entre ellos. Estaban calibrados para un backend caido
+ * (2s, 5s, 10s, 15s = hasta 32s de pura espera), pero el caso real es otro:
+ * la maquina esta despertando y responde en pocos segundos. Con esperas cortas
+ * se conecta antes, y el total sigue dando margen suficiente para que Fly y
+ * Neon terminen de arrancar.
+ */
+const MAX_REINTENTOS = 5;
+const ESPERA_MS = [800, 1500, 3000, 5000, 8000];
 
 /** Errores que valen la pena reintentar: el backend esta despertando o saturado. */
 function esTransitorio(e: HttpErrorResponse): boolean {
