@@ -117,6 +117,7 @@ export class AdministratorAssignmentsPageComponent implements OnInit {
         this.teachers   = teachers;
         this.students   = students;
         this.classrooms = classrooms;
+        this.ajustarCicloPorDefecto();
         this.subjects   = subjects;
         // refresca salón seleccionado si ya había uno
         if (this.selectedClassroom) {
@@ -129,12 +130,70 @@ export class AdministratorAssignmentsPageComponent implements OnInit {
     });
   }
 
+  // ── Navegacion de salones ───────────────────────────────────────────────
+  // Con muchos salones una lista plana obliga a scrollear o a recordar el
+  // nombre exacto. Se filtra por ciclo escolar (arranca en el mas reciente) y
+  // se agrupa por grado, que es como el coordinador los tiene en la cabeza.
+
+  cicloFiltro = '';
+  gradosCerrados = new Set<string>();
+
+  /** Ciclos existentes, del mas reciente al mas viejo. */
+  get ciclos(): string[] {
+    return [...new Set(this.classrooms.map(c => c.schoolYear).filter(Boolean))]
+      .sort().reverse();
+  }
+
+  /** Deja seleccionado el ciclo mas reciente la primera vez que hay datos. */
+  private ajustarCicloPorDefecto() {
+    if (!this.cicloFiltro && this.ciclos.length) {
+      this.cicloFiltro = this.ciclos[0];
+    }
+  }
+
   get filteredClassrooms() {
     const term = this.classroomSearch.trim().toLowerCase();
-    return term ? this.classrooms.filter(c =>
-      `${c.name} ${c.section} ${c.schoolYear}`.toLowerCase().includes(term)
-    ) : this.classrooms;
+    return this.classrooms.filter(c =>
+      // Al buscar se ignora el filtro de ciclo: si escribes un nombre, lo quieres
+      // encontrar aunque sea de otro año.
+      (term || !this.cicloFiltro || c.schoolYear === this.cicloFiltro) &&
+      (!term || `${c.name} ${c.section} ${c.schoolYear}`.toLowerCase().includes(term))
+    );
   }
+
+  /** Salones agrupados por grado, ordenados. */
+  get gruposDeSalones(): { grado: string; etiqueta: string; salones: any[] }[] {
+    const mapa = new Map<string, any[]>();
+    for (const c of this.filteredClassrooms) {
+      const grado = c.gradeLevel != null ? String(c.gradeLevel) : 'sin-grado';
+      if (!mapa.has(grado)) mapa.set(grado, []);
+      mapa.get(grado)!.push(c);
+    }
+    return [...mapa.entries()]
+      .sort((a, b) => {
+        if (a[0] === 'sin-grado') return 1;
+        if (b[0] === 'sin-grado') return -1;
+        return Number(a[0]) - Number(b[0]);
+      })
+      .map(([grado, salones]) => ({
+        grado,
+        etiqueta: grado === 'sin-grado' ? 'Sin grado' : `${grado}° grado`,
+        salones: salones.sort((a, b) => (a.section ?? '').localeCompare(b.section ?? '')),
+      }));
+  }
+
+  /** Al buscar se abren todos, para no esconder resultados. */
+  grupoAbierto(grado: string): boolean {
+    if (this.classroomSearch.trim()) return true;
+    return !this.gradosCerrados.has(grado);
+  }
+
+  alternarGrupo(grado: string) {
+    if (this.gradosCerrados.has(grado)) this.gradosCerrados.delete(grado);
+    else this.gradosCerrados.add(grado);
+  }
+
+  limpiarBusqueda() { this.classroomSearch = ''; }
 
   selectClassroom(classroom: any) {
     this.selectedClassroom = classroom;
