@@ -8,6 +8,7 @@ import { UserApiService } from '../../../services/api/user-api.service';
 import { ClassroomApiService } from '../../../services/api/classroom-api.service';
 import { AdministratorApiService } from '../../../services/api/administrator-api.service';
 import { SubjectService } from '../../../services/api/subject-api.service';
+import { ContentApiService } from '../../../services/api/content-api.service';
 import { ScheduleApiService } from '../../../services/api/schedule-api.service';
 import { ADMINISTRATOR_NAV_ITEMS } from '../shared/administrator-nav';
 
@@ -34,6 +35,14 @@ export class AdministratorAssignmentsPageComponent implements OnInit {
   selectedClassroom:         any    = null;
   selectedClassroomStudents: any[]  = [];
   selectedClassroomSubjects: any[]  = [];
+
+  // ── Contenido del salon ───────────────────────────────────────────────
+  // El alumno ve el contenido por content_assignments, no por la materia
+  // del salon: asignar la materia no le entrega ninguna pieza.
+  contenidoDelSalon: any[] = [];
+  cargandoContenido        = false;
+  materiaAAsignar          = '';
+  piezaEnBaja: any         = null;
 
   teacherAssignment = { classroomId: '', teacherId: '' };
   studentAssignment = { classroomId: '', studentId: '' };
@@ -98,7 +107,8 @@ export class AdministratorAssignmentsPageComponent implements OnInit {
     private classroomApi: ClassroomApiService,
     private administratorApi: AdministratorApiService,
     private subjectApi: SubjectService,
-    private scheduleApi: ScheduleApiService
+    private scheduleApi: ScheduleApiService,
+    private contentApi: ContentApiService
   ) {
     const u = this.auth.getUser();
     if (u) { this.userName = u.displayName; this.userAvatar = u.initials; }
@@ -200,6 +210,8 @@ export class AdministratorAssignmentsPageComponent implements OnInit {
     this.teacherAssignment.classroomId = classroom.id;
     this.studentAssignment.classroomId = classroom.id;
     this.subjectIdToAdd = '';
+    this.materiaAAsignar = '';
+    this.cargarContenido(classroom.id);
     forkJoin({
       students:  this.classroomApi.getStudents(classroom.id),
       subjects:  this.classroomApi.getSubjects(classroom.id),
@@ -212,6 +224,74 @@ export class AdministratorAssignmentsPageComponent implements OnInit {
         this.precargarDesdeHorarioExistente();
       }
     });
+  }
+
+  private cargarContenido(classroomId: string) {
+    this.cargandoContenido = true;
+    this.contentApi.byClassroom(classroomId)
+      .pipe(catchError(() => of([])))
+      .subscribe(items => {
+        this.contenidoDelSalon = items ?? [];
+        this.cargandoContenido = false;
+      });
+  }
+
+  /** Agrupa por materia: un salon puede recibir plan base de varias. */
+  get contenidoPorMateria(): { materia: string; icono: string; piezas: any[] }[] {
+    const mapa = new Map<string, { materia: string; icono: string; piezas: any[] }>();
+    for (const c of this.contenidoDelSalon) {
+      const materia = c.subjectName || 'Sin materia';
+      if (!mapa.has(materia)) {
+        mapa.set(materia, { materia, icono: c.subjectIcon || 'D', piezas: [] });
+      }
+      mapa.get(materia)!.piezas.push(c);
+    }
+    return [...mapa.values()].sort((a, b) => a.materia.localeCompare(b.materia));
+  }
+
+  /** Solo materias que ya estan en el salon: primero se asigna la materia. */
+  get materiasAsignables(): any[] {
+    return this.selectedClassroomSubjects ?? [];
+  }
+
+  asignarMateriaCompleta() {
+    const salon = this.selectedClassroom?.id;
+    if (!this.materiaAAsignar || !salon || this.saving) return;
+    this.saving = true;
+    this.contentApi.assignSubjectToClassroom(this.materiaAAsignar, salon).subscribe({
+      next: (nuevas) => {
+        this.saving = false;
+        this.materiaAAsignar = '';
+        this.cargarContenido(salon);
+        this.showToast(nuevas
+          ? `${nuevas} piezas asignadas al salon`
+          : 'El salon ya tenia todo el plan base de esa materia');
+      },
+      error: (e: any) => {
+        this.saving = false;
+        this.showToast(e?.error?.message ?? 'No se pudo asignar la materia');
+      },
+    });
+  }
+
+  /** Reusa el modal de confirmacion que ya tiene la pantalla. */
+  quitarPieza(c: any) {
+    const salon = this.selectedClassroom?.id;
+    if (!c || !salon) return;
+    this.openConfirm(
+      'Quitar del salón',
+      `<strong>"${c.title}"</strong> dejará de aparecerles a los alumnos de este ` +
+      `salón. La pieza no se borra y sigue en el plan base; las entregas que ya ` +
+      `hicieron se conservan.`,
+      () => this.contentApi.unassignFromClassroom(c.id, salon).subscribe({
+        next: () => {
+          this.cargarContenido(salon);
+          this.showToast(`"${c.title}" se quitó del salón`);
+        },
+        error: (e: any) =>
+          this.showToast(e?.error?.message ?? 'No se pudo quitar la pieza'),
+      })
+    );
   }
 
   assignTeacher() {

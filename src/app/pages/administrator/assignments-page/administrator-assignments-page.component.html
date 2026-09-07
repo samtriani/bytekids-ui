@@ -194,6 +194,75 @@
 
         </div><!-- /assign-grid -->
 
+        <!-- ── Contenido que recibe el salón ── -->
+        <div class="cont-bloque">
+          <div class="section-head" style="margin-bottom:10px">
+            <h3>📘 Contenido del salón</h3>
+            <span class="tag tag-guinda">{{ contenidoDelSalon.length }} piezas</span>
+          </div>
+
+          <p class="cont-nota">
+            El alumno ve una pieza solo si está asignada a su salón. Asignar la
+            materia allá arriba <strong>no</strong> le entrega el temario: eso se
+            hace aquí.
+          </p>
+
+          @if (!materiasAsignables.length) {
+            <p class="cont-vacio">
+              Primero asígnale una materia al salón, en la columna de Materias.
+            </p>
+          } @else {
+            <div class="cont-alta">
+              <select class="select" [(ngModel)]="materiaAAsignar">
+                <option value="">-- Materia del plan base --</option>
+                @for (m of materiasAsignables; track m.id) {
+                  <option [value]="m.id">{{ m.icon ?? '📚' }} {{ m.name }}</option>
+                }
+              </select>
+              <button class="btn btn-primary"
+                      (click)="asignarMateriaCompleta()"
+                      [disabled]="saving || !materiaAAsignar">
+                Asignar todo el temario
+              </button>
+            </div>
+          }
+
+          @if (cargandoContenido) {
+            <p class="cont-vacio">Cargando el contenido…</p>
+          } @else if (!contenidoDelSalon.length) {
+            <p class="cont-vacio">
+              Este salón todavía no recibe ninguna pieza, así que sus alumnos no
+              verán misiones.
+            </p>
+          } @else {
+            @for (g of contenidoPorMateria; track g.materia) {
+              <div class="cont-materia">
+                <div class="cont-materia-head">
+                  <span>{{ g.icono }} {{ g.materia }}</span>
+                  <span class="cont-materia-n">{{ g.piezas.length }} piezas</span>
+                </div>
+                <ul class="cont-lista">
+                  @for (c of g.piezas; track c.id) {
+                    <li class="cont-item">
+                      <span class="cont-orden">{{ c.orderIndex ?? '—' }}</span>
+                      <div class="cont-info">
+                        <span class="cont-nombre">{{ c.title }}</span>
+                        <span class="cont-meta">
+                          {{ c.type }} · {{ c.xpReward }} XP
+                          @if (!c.isPublished) { · <em>sin publicar</em> }
+                        </span>
+                      </div>
+                      <button class="btn btn-outline btn-sm"
+                              (click)="quitarPieza(c)" [disabled]="saving"
+                              [attr.aria-label]="'Quitar ' + c.title">Quitar</button>
+                    </li>
+                  }
+                </ul>
+              </div>
+            }
+          }
+        </div>
+
         <!-- ── Horario ── -->
         <div class="schedule-section">
           <div class="section-head" style="margin-bottom:14px">

@@ -49,6 +49,23 @@ export class ContentApiService {
     return this.http.post<any>(`${BASE}/${id}/assign`, req).pipe(map(() => void 0));
   }
 
+  /** Lo que hoy recibe un salon, en el orden del curriculo. */
+  byClassroom(classroomId: string): Observable<any[]> {
+    return this.http.get<any>(`${BASE}/classroom/${classroomId}`).pipe(map(r => r.data ?? []));
+  }
+
+  /** Asigna de un golpe el plan base publicado de una materia. */
+  assignSubjectToClassroom(subjectId: string, classroomId: string): Observable<number> {
+    return this.http
+      .post<any>(`${BASE}/subject/${subjectId}/assign/classroom/${classroomId}`, {})
+      .pipe(map(r => r.data ?? 0));
+  }
+
+  unassignFromClassroom(id: string, classroomId: string): Observable<void> {
+    return this.http.delete<any>(`${BASE}/${id}/assign/classroom/${classroomId}`)
+      .pipe(map(() => void 0));
+  }
+
   delete(id: string): Observable<void> {
     return this.http.delete<any>(`${BASE}/${id}`).pipe(map(() => void 0));
   }
