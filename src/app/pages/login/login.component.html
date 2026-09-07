@@ -100,6 +100,10 @@
         }
       </button>
 
+      @if (espera) {
+        <p class="espera-aviso" role="status">{{ espera }}</p>
+      }
+
       <div class="form-divider">
         <span>Sistema protegido</span>
       </div>
