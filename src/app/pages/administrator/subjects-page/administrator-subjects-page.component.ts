@@ -1,4 +1,4 @@
-import { Component, OnInit } from '@angular/core';
+import { Component, HostListener, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { ShellComponent } from '../../../shared/shell/shell.component';
@@ -58,6 +58,17 @@ export class AdministratorSubjectsPageComponent implements OnInit {
   // ── Alta de plan base ───────────────────────────────────────────────────
   // Coordinacion es dueña del plan base de cada materia; el maestro complementa
   // desde su panel. Por eso el alta vive aqui, junto al temario de la materia.
+  /** Escape cierra el modal de encima. Es lo que espera cualquiera que
+   *  abra un dialogo, y aqui el de editar pieza es largo: obligaba a
+   *  scrollear hasta abajo solo para encontrar Cancelar. */
+  @HostListener('document:keydown.escape')
+  cerrarConEscape() {
+    if (this.piezaEnBaja)         { this.cancelarBajaPieza();     return; }
+    if (this.piezaEnEdicion)      { this.cancelarEdicionPieza();  return; }
+    if (this.mostrarAltaMateria)  { this.cerrarAltaMateria();     return; }
+    if (this.mostrarAlta)         { this.cancelarAlta();          return; }
+  }
+
   mostrarAltaMateria = false;
   abrirAltaMateria()   { this.mostrarAltaMateria = true; }
   cerrarAltaMateria()  { this.mostrarAltaMateria = false; }

@@ -215,7 +215,10 @@
 @if (mostrarAltaMateria) {
   <div class="mm-bg" (click)="cerrarAltaMateria()">
     <div class="mm" role="dialog" aria-modal="true" aria-labelledby="mm-mat" (click)="$event.stopPropagation()">
-      <h2 id="mm-mat">Nueva materia</h2>
+      <div class="mm-head">
+        <h2 id="mm-mat">Nueva materia</h2>
+        <button class="mm-cerrar" (click)="cerrarAltaMateria()" aria-label="Cerrar">&#10005;</button>
+      </div>
       <p class="mm-sub">Se agrega al catálogo. Después le defines su plan base.</p>
 
       <div class="fg"><label class="label">Nombre</label><input class="input" [(ngModel)]="createForm.name" placeholder="Ej. Robótica"></div>
@@ -238,7 +241,10 @@
 @if (piezaEnEdicion) {
   <div class="mm-bg" (click)="cancelarEdicionPieza()">
     <div class="mm" role="dialog" aria-modal="true" aria-labelledby="mm-pieza" (click)="$event.stopPropagation()">
-      <h2 id="mm-pieza">Editar pieza</h2>
+      <div class="mm-head">
+        <h2 id="mm-pieza">Editar pieza</h2>
+        <button class="mm-cerrar" (click)="cancelarEdicionPieza()" aria-label="Cerrar">&#10005;</button>
+      </div>
       <p class="mm-sub">Cambia lo del plan base, incluido el recurso al que lleva la actividad.</p>
 
       <div class="fg"><label class="label">Titulo</label><input class="input" [(ngModel)]="piezaEnEdicion.title" maxlength="200"></div>

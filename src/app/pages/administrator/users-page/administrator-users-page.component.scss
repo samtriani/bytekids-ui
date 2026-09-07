@@ -328,3 +328,25 @@
 @keyframes mm-fade { from { opacity: 0; } }
 @keyframes mm-pop  { from { opacity: 0; transform: scale(.96); } }
 @media (prefers-reduced-motion: reduce) { .mm-bg, .mm { animation: none; } }
+
+/* ── ENCABEZADO DEL MODAL CON CERRAR ─────────────────────────────────────
+   .mm hace scroll (max-height 88vh), asi que un boton normal se iria con
+   el contenido: en el modal de editar pieza habia que bajar hasta el final
+   solo para encontrar Cancelar. El encabezado se queda pegado arriba. */
+.mm-head {
+  position: sticky; top: 0; z-index: 2;
+  display: flex; align-items: flex-start; justify-content: space-between; gap: 12px;
+  margin: -26px -26px 0; padding: 26px 26px 10px;
+  background: var(--surface);
+}
+.mm-head h2 { margin: 0; }
+
+.mm-cerrar {
+  flex: 0 0 auto; width: 30px; height: 30px; margin: -4px -4px 0 0;
+  display: flex; align-items: center; justify-content: center;
+  font-family: inherit; font-size: 13px; line-height: 1;
+  color: var(--tx3); background: transparent;
+  border: none; border-radius: 8px; cursor: pointer;
+  transition: background .12s, color .12s;
+}
+.mm-cerrar:hover { background: var(--danger-lt, rgba(192, 57, 43, .1)); color: var(--danger, #c0392b); }
