@@ -20,3 +20,13 @@
   &:hover { opacity: 1; }
   &:disabled { opacity: 0.3; cursor: not-allowed; }
 }
+
+/* Sin salones, la rejilla de detalle reservaba la columna del listado y
+   dejaba el aviso empujado a la derecha, como si algo se hubiera roto. */
+.detail-layout--vacio { display: none; }
+
+.sin-salones {
+  margin: 4px 0 0; padding: 22px;
+  background: var(--guinda-a10); border-radius: 12px;
+  font-size: 13px; line-height: 1.6; color: var(--tx3); text-align: center;
+}

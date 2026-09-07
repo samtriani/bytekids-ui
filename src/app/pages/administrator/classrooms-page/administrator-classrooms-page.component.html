@@ -6,8 +6,8 @@
       <h1>Salones</h1>
       <p>Configura salones, grado, seccion y profesor titular desde una pantalla dedicada.</p>
     </div>
-  </div>
     <button class="btn btn-primary" (click)="abrirAlta()">+ Nuevo salón</button>
+  </div>
 
   @if (toast) {
     <div [class]="'bk-toast bk-toast-' + toastType">{{ toast }}</div>
@@ -25,7 +25,14 @@
         <input class="input" [(ngModel)]="search" placeholder="Busca por salon, seccion o profesor">
       </div>
 
-      <div class="detail-layout">
+      @if (!classrooms.length) {
+        <p class="sin-salones">
+          Todavía no hay salones. Crea el primero con <strong>+ Nuevo salón</strong>
+          y aquí podrás asignarle grado, sección y profesor titular.
+        </p>
+      }
+
+      <div class="detail-layout" [class.detail-layout--vacio]="!classrooms.length">
         <div class="detail-menu">
           @for (row of filteredClassrooms; track row.id) {
             <div class="detail-menu-item-wrap">
