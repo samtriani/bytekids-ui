@@ -214,3 +214,39 @@
   font-size: 11px; color: var(--tx4); font-style: italic;
   max-width: 96px; line-height: 1.4; text-align: right;
 }
+
+/* ── GUIA PARA DAR LA CLASE ──────────────────────────────────────────────
+   El contenido dice que hacer al alumno, pero nada le decia al maestro como
+   darlo. Vive en content_body.teacher_notes y el backend no se lo manda al
+   alumno. */
+.mc-guia-btn {
+  display: inline-flex; align-items: center; gap: 6px; margin-top: 8px;
+  font-family: inherit; font-size: 12px; font-weight: 700;
+  color: var(--guinda); background: var(--guinda-a10);
+  border: none; border-radius: 8px; padding: 5px 10px; cursor: pointer;
+}
+.mc-guia-btn:hover { background: var(--guinda-a18, rgba(122, 21, 53, .18)); }
+.mc-guia-caret { font-size: 9px; transition: transform .15s; display: inline-block; }
+.mc-guia-caret.abierto { transform: rotate(90deg); }
+.mc-guia-dur {
+  font-size: 10.5px; font-weight: 800; color: #fff;
+  background: var(--guinda); padding: 1px 7px; border-radius: 999px;
+}
+
+.mc-guia {
+  margin-top: 8px; padding: 12px 14px;
+  background: var(--guinda-a10); border-left: 3px solid var(--guinda);
+  border-radius: 0 10px 10px 0; font-size: 12.5px; line-height: 1.55;
+}
+.mc-guia-h {
+  margin: 10px 0 4px; font-size: 11px; font-weight: 800;
+  text-transform: uppercase; letter-spacing: .04em; color: var(--guinda);
+}
+.mc-guia ul  { margin: 0; padding-left: 18px; }
+.mc-guia li  { margin-bottom: 3px; }
+.mc-guia-obj { margin: 0 0 2px; }
+.mc-guia-preg li { font-style: italic; }
+.mc-guia-pie {
+  margin: 10px 0 0; padding-top: 8px; border-top: 1px solid var(--guinda-a10);
+  font-size: 11px; color: var(--tx4);
+}

@@ -144,6 +144,39 @@
                     <span>· entrega {{ c.dueDate | date:'d MMM' }}</span>
                   }
                 </p>
+
+                @if (guia(c); as g) {
+                  <button class="mc-guia-btn" (click)="alternarGuia(c.id)"
+                          [attr.aria-expanded]="guiaAbierta(c.id)">
+                    <span class="mc-guia-caret" [class.abierto]="guiaAbierta(c.id)">▸</span>
+                    📘 Guía para dar la clase
+                    @if (g.duracion) { <span class="mc-guia-dur">{{ g.duracion }}</span> }
+                  </button>
+
+                  @if (guiaAbierta(c.id)) {
+                    <div class="mc-guia">
+                      @if (g.objetivo) {
+                        <p class="mc-guia-obj"><strong>Objetivo:</strong> {{ g.objetivo }}</p>
+                      }
+                      @if (g.explicar?.length) {
+                        <p class="mc-guia-h">Explica antes de soltarlos</p>
+                        <ul>@for (x of g.explicar; track x) { <li>{{ x }}</li> }</ul>
+                      }
+                      @if (g.preguntas?.length) {
+                        <p class="mc-guia-h">Preguntas para el grupo</p>
+                        <ul class="mc-guia-preg">@for (x of g.preguntas; track x) { <li>{{ x }}</li> }</ul>
+                      }
+                      @if (g.errores?.length) {
+                        <p class="mc-guia-h">Errores típicos</p>
+                        <ul>@for (x of g.errores; track x) { <li>{{ x }}</li> }</ul>
+                      }
+                      @if (g.cierre) {
+                        <p class="mc-guia-obj"><strong>Cierre:</strong> {{ g.cierre }}</p>
+                      }
+                      <p class="mc-guia-pie">Solo tú ves esto. El alumno nunca lo recibe.</p>
+                    </div>
+                  }
+                }
               </div>
 
               <div class="mc-acciones">
