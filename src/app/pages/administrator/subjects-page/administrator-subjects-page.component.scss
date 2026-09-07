@@ -182,3 +182,7 @@
   text-transform: none; letter-spacing: 0;
 }
 .alta-base textarea { resize: vertical; line-height: 1.5; }
+
+/* --corto son 88px, hechos para Orden/XP/Minutos. Un select con texto no
+   cabe ahi: "Enlace" se cortaba en "Enla" y la etiqueta se partia en dos. */
+.alta-campo--medio { flex: 0 0 168px !important; }
