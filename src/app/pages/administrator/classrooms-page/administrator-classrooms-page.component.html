@@ -7,36 +7,13 @@
       <p>Configura salones, grado, seccion y profesor titular desde una pantalla dedicada.</p>
     </div>
   </div>
+    <button class="btn btn-primary" (click)="abrirAlta()">+ Nuevo salón</button>
 
   @if (toast) {
     <div [class]="'bk-toast bk-toast-' + toastType">{{ toast }}</div>
   }
 
   <div class="layout">
-    <div class="card card-p">
-      <div class="section-head">
-        <h3>Alta de salon</h3>
-        <span class="tag tag-green">Nuevo</span>
-      </div>
-      <div class="fg"><label class="label">Nombre</label><input class="input" [(ngModel)]="createForm.name"></div>
-      <div class="fg-row">
-        <div class="fg"><label class="label">Ciclo escolar</label><input class="input" [(ngModel)]="createForm.schoolYear"></div>
-        <div class="fg"><label class="label">Grado</label><input class="input" type="number" [(ngModel)]="createForm.gradeLevel"></div>
-        <div class="fg"><label class="label">Sección</label><input class="input" [(ngModel)]="createForm.section"></div>
-      </div>
-      <div class="fg">
-        <label class="label">Profesor titular</label>
-        <select class="select" [(ngModel)]="createForm.teacherId">
-          <option value="">Sin asignar</option>
-          @for (teacher of teachers; track teacher.id) {
-            <option [value]="teacher.id">{{ teacher.displayName }}</option>
-          }
-        </select>
-      </div>
-      <div class="fg"><label class="label">Descripcion</label><textarea class="textarea" rows="3" [(ngModel)]="createForm.description"></textarea></div>
-      <button class="btn btn-primary btn-block" (click)="create()" [disabled]="saving">Crear salon</button>
-    </div>
-
     <div class="card card-p">
       <div class="section-head">
         <h3>Detalle y edicion</h3>
@@ -100,3 +77,35 @@
     </div>
   </div>
 </div>
+
+<!-- Alta en modal: la columna fija se comia un tercio de la pantalla -->
+@if (mostrarAlta) {
+  <div class="mm-bg" (click)="cerrarAlta()">
+    <div class="mm" role="dialog" aria-modal="true" aria-labelledby="mm-alta" (click)="$event.stopPropagation()">
+      <h2 id="mm-alta">Nuevo salón</h2>
+      <p class="mm-sub">Después le asignas profesor, alumnos y materias desde Asignaciones.</p>
+      <div class="fg"><label class="label">Nombre</label><input class="input" [(ngModel)]="createForm.name"></div>
+      <div class="fg-row">
+        <div class="fg"><label class="label">Ciclo escolar</label><input class="input" [(ngModel)]="createForm.schoolYear"></div>
+        <div class="fg"><label class="label">Grado</label><input class="input" type="number" [(ngModel)]="createForm.gradeLevel"></div>
+        <div class="fg"><label class="label">Sección</label><input class="input" [(ngModel)]="createForm.section"></div>
+      </div>
+      <div class="fg">
+        <label class="label">Profesor titular</label>
+        <select class="select" [(ngModel)]="createForm.teacherId">
+          <option value="">Sin asignar</option>
+          @for (teacher of teachers; track teacher.id) {
+            <option [value]="teacher.id">{{ teacher.displayName }}</option>
+          }
+        </select>
+      </div>
+      <div class="fg"><label class="label">Descripcion</label><textarea class="textarea" rows="3" [(ngModel)]="createForm.description"></textarea></div>
+      <div class="mm-acciones">
+        <button class="btn" (click)="cerrarAlta()">Cancelar</button>
+        <button class="btn btn-primary" (click)="create(); cerrarAlta()" [disabled]="saving">
+          {{ saving ? 'Guardando…' : 'Nuevo salón' }}
+        </button>
+      </div>
+    </div>
+  </div>
+}

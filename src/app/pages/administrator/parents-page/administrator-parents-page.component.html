@@ -7,6 +7,7 @@
       <h1>Padres y Tutores</h1>
       <p>Da de alta padres, asigna sus hijos y administra sus cuentas.</p>
     </div>
+    <button class="btn btn-primary" (click)="abrirAlta()">+ Nuevo padre o tutor</button>
   </div>
 
   @if (toast) {
@@ -17,38 +18,6 @@
     <div class="empty-box" style="text-align:center;padding:40px">Cargando…</div>
   } @else {
     <div class="layout">
-
-      <!-- ── Columna izquierda: Alta nueva ── -->
-      <div class="card card-p create-card">
-        <div class="section-head">
-          <h3>Alta nueva</h3>
-          <span class="tag tag-guinda">Padre / Tutor</span>
-        </div>
-        <div class="fg">
-          <label class="label">Nombre completo *</label>
-          <input class="input" [(ngModel)]="createForm.displayName" placeholder="María Torres Partida">
-        </div>
-        <div class="fg">
-          <label class="label">Usuario *</label>
-          <input class="input" [(ngModel)]="createForm.username" placeholder="maria.torres">
-        </div>
-        <div class="fg">
-          <label class="label">Contraseña *</label>
-          <input class="input" type="password" [(ngModel)]="createForm.password" placeholder="Mínimo 6 caracteres">
-        </div>
-        <div class="fg">
-          <label class="label">Edad</label>
-          <input class="input" type="number" [(ngModel)]="createForm.age" placeholder="Ej: 38" min="18" max="99">
-        </div>
-        <div class="fg">
-          <label class="label">Dirección</label>
-          <input class="input" [(ngModel)]="createForm.address" placeholder="Calle, número, colonia">
-        </div>
-        <button class="btn btn-primary btn-block" (click)="create()"
-          [disabled]="saving || !createForm.displayName || !createForm.username || !createForm.password">
-          {{ saving ? 'Guardando…' : '➕ Crear padre / tutor' }}
-        </button>
-      </div>
 
       <!-- ── Columna derecha: Lista + detalle ── -->
       <div class="card card-p detail-card">
@@ -206,3 +175,40 @@
     </div>
   }
 </div>
+
+<!-- Alta en modal: la columna fija se comia un tercio de la pantalla -->
+@if (mostrarAlta) {
+  <div class="mm-bg" (click)="cerrarAlta()">
+    <div class="mm" role="dialog" aria-modal="true" aria-labelledby="mm-alta" (click)="$event.stopPropagation()">
+      <h2 id="mm-alta">Nuevo padre o tutor</h2>
+      <p class="mm-sub">Después podrás vincularle sus hijos desde el detalle.</p>
+        <div class="fg">
+          <label class="label">Nombre completo *</label>
+          <input class="input" [(ngModel)]="createForm.displayName" placeholder="María Torres Partida">
+        </div>
+        <div class="fg">
+          <label class="label">Usuario *</label>
+          <input class="input" [(ngModel)]="createForm.username" placeholder="maria.torres">
+        </div>
+        <div class="fg">
+          <label class="label">Contraseña *</label>
+          <input class="input" type="password" [(ngModel)]="createForm.password" placeholder="Mínimo 6 caracteres">
+        </div>
+        <div class="fg">
+          <label class="label">Edad</label>
+          <input class="input" type="number" [(ngModel)]="createForm.age" placeholder="Ej: 38" min="18" max="99">
+        </div>
+        <div class="fg">
+          <label class="label">Dirección</label>
+          <input class="input" [(ngModel)]="createForm.address" placeholder="Calle, número, colonia">
+        </div>
+      <div class="mm-acciones">
+        <button class="btn" (click)="cerrarAlta()">Cancelar</button>
+        <button class="btn btn-primary" (click)="create(); cerrarAlta()"
+          [disabled]="saving || !createForm.displayName || !createForm.username || !createForm.password">
+          {{ saving ? 'Guardando…' : 'Crear padre / tutor' }}
+        </button>
+      </div>
+    </div>
+  </div>
+}

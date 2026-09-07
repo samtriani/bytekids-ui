@@ -161,3 +161,13 @@
 @media (prefers-reduced-motion: reduce) {
   .stf-modal-bg, .stf-modal { animation: none; }
 }
+
+/* El listado ya no comparte ancho con el formulario: usa toda la pantalla. */
+.stf-body { grid-template-columns: 1fr; }
+.stf-head { display: flex; align-items: flex-start; justify-content: space-between; gap: 16px; flex-wrap: wrap; }
+.stf-btn--auto { width: auto; margin-top: 0; }
+
+/* El modal de alta es mas alto que el de confirmar baja */
+.stf-modal--form { max-width: 520px; text-align: left; max-height: 88vh; overflow-y: auto; }
+.stf-modal--form h2 { text-align: left; }
+.mm-sub { font-size: 12.5px; color: var(--tx3); margin: 0 0 18px; line-height: 1.6; }
