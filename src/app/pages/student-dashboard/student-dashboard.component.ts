@@ -36,12 +36,13 @@ export class StudentDashboardComponent implements OnInit, AfterViewInit {
 
   stats = [
     { icon:'⭐', value:'—', label:'XP Total',    change:'cargando…', cls:'up',      color:'#06B6D4' },
-    { icon:'🎯', value:'—', label:'Misiones',    change:'cargando…', cls:'neutral', color:'#7C3AED' },
+    { icon:'🎯', value:'—', label:'Actividades', change:'cargando…', cls:'neutral', color:'#7C3AED' },
     { icon:'🏆', value:'—', label:'Logros',      change:'cargando…', cls:'up',      color:'#F59E0B' },
     { icon:'🔥', value:'—', label:'Racha activa',change:'¡Sigue así!', cls:'neutral',color:'#EC4899' },
   ];
 
   missions:     any[] = [];
+  logrosGanados       = 0;
   achievements: any[] = [];
   totalXpNum  = 0;
   private xpChartInst:     any;
@@ -85,8 +86,11 @@ export class StudentDashboardComponent implements OnInit, AfterViewInit {
         this.totalXpNum = xp;
         this.stats[0].value  = xp.toLocaleString();
         this.stats[0].change = `Nivel ${this.level} · ${this.levelName}`;
+        // No son 12 misiones: entre las 12 piezas hay misiones, tareas,
+        // quizzes, proyecto y material. Se cuentan como actividades y el
+        // desglose por tipo va abajo.
         this.stats[1].value  = String(missions.length);
-        this.stats[1].change = `${approvedIds.size} completadas`;
+        this.stats[1].change = this.desglosePorTipo(missions);
         this.stats[2].value  = String(earned.length);
         this.stats[2].change = `de ${defs.length} posibles`;
         this.stats[3].value  = `${streak}d`;
@@ -111,11 +115,17 @@ export class StudentDashboardComponent implements OnInit, AfterViewInit {
           color:    '#7C3AED',
         }));
 
-        // Logros (primeros 6)
+        // Logros: primero los que ya ganó. Mostrar 6 bloqueados al azar no
+        // le dice nada al niño sobre lo que está haciendo.
         const earnedIds = new Set(earned.map((e:any) => e.achievement?.id ?? e.achievementId));
-        this.achievements = defs.slice(0, 6).map((d: any) => ({
-          title: d.title, icon: d.icon ?? '🏆', earned: earnedIds.has(d.id)
-        }));
+        this.achievements = [...defs]
+          .sort((a: any, b: any) =>
+            Number(earnedIds.has(b.id)) - Number(earnedIds.has(a.id)))
+          .slice(0, 6)
+          .map((d: any) => ({
+            title: d.title, icon: d.icon ?? '🏆', earned: earnedIds.has(d.id)
+          }));
+        this.logrosGanados = earned.length;
 
         // Gráfica de habilidades por materia
         if (this.skillsChartInst && subjects.length) {
@@ -139,6 +149,26 @@ export class StudentDashboardComponent implements OnInit, AfterViewInit {
         }
       }
     });
+  }
+
+  /** "12 actividades" es correcto; "12 misiones" no lo era. */
+  private desglosePorTipo(items: any[]): string {
+    const NOMBRE: Record<string, [string, string]> = {
+      mision:   ['misión',   'misiones'],
+      tarea:    ['tarea',    'tareas'],
+      quiz:     ['quiz',     'quizzes'],
+      proyecto: ['proyecto', 'proyectos'],
+      material: ['material', 'materiales'],
+    };
+    const cuenta = new Map<string, number>();
+    for (const c of items) cuenta.set(c.type, (cuenta.get(c.type) ?? 0) + 1);
+
+    const partes = [...cuenta.entries()]
+      .filter(([tipo]) => NOMBRE[tipo])
+      .sort((a, b) => b[1] - a[1])
+      .map(([tipo, n]) => `${n} ${NOMBRE[tipo][n === 1 ? 0 : 1]}`);
+
+    return partes.length ? partes.join(' · ') : 'sin actividades aún';
   }
 
   ngAfterViewInit() {

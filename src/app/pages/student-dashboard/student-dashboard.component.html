@@ -29,7 +29,7 @@
   <!-- Charts -->
   <div class="bk-grid-2 fade-in-up" style="animation-delay:.1s; margin-bottom:20px">
     <div class="bk-card">
-      <div class="card-header"><span class="card-title">📈 XP Semanal</span><a routerLink="/student/progress" class="see-all">Ver detalles →</a></div>
+      <div class="card-header"><span class="card-title">📈 XP Semanal</span><a routerLink="/student/progress" class="card-action">Ver detalles →</a></div>
       <div style="height:185px"><canvas #xpChart></canvas></div>
     </div>
     <div class="bk-card">
@@ -43,18 +43,18 @@
     <div class="bk-card">
       <div class="card-header">
         <span class="card-title">🎯 Misiones Activas</span>
-        <a routerLink="/student/missions" class="see-all">Ver todas →</a>
+        <a routerLink="/student/missions" class="card-action">Ver todas →</a>
       </div>
       <div class="missions-list">
         @for (m of missions; track m.title) {
           <div class="mission-row">
-            <div class="m-icon" [style.background]="m.color+'18'">{{ m.icon }}</div>
-            <div class="m-body">
-              <div class="m-top"><span class="m-name">{{ m.title }}</span><span class="m-xp">+{{ m.xp }} XP</span></div>
-              <span class="m-subj">{{ m.subject }}</span>
+            <div class="mission-icon" [style.background]="m.color+'18'">{{ m.icon }}</div>
+            <div class="mission-body">
+              <div class="mission-top"><span class="mission-name">{{ m.title }}</span><span class="mission-xp">+{{ m.xp }} XP</span></div>
+              <span class="mission-subject">{{ m.subject }}</span>
               <div class="bk-progress" style="height:5px;margin-top:4px"><div class="bar" [style.width]="m.progress+'%'" [style.background]="m.color"></div></div>
             </div>
-            <div class="m-badge" [class]="m.cls">{{ m.cls==='done'?'✓':m.cls==='new'?'★':'▶' }}</div>
+            <div class="mission-badge" [class]="m.cls">{{ m.cls==='done'?'✓':m.cls==='new'?'★':'▶' }}</div>
           </div>
         }
       </div>
@@ -63,20 +63,20 @@
     <div class="bk-card">
       <div class="card-header">
         <span class="card-title">🏆 Mis Logros</span>
-        <a routerLink="/student/achievements" class="see-all">Ver todos →</a>
+        <a routerLink="/student/achievements" class="card-action">Ver todos →</a>
       </div>
       <div class="achieve-grid">
         @for (a of achievements; track a.title) {
           <div class="achieve-item" [class.earned]="a.earned">
-            <div class="a-icon">{{ a.icon }}</div>
-            <span class="a-name">{{ a.title }}</span>
-            <span>{{ a.earned?'✓':'🔒' }}</span>
+            <div class="achieve-icon">{{ a.icon }}</div>
+            <span class="achieve-name">{{ a.title }}</span>
+            <span class="achieve-lock">{{ a.earned ? '✓' : '🔒' }}</span>
           </div>
         }
       </div>
 
       <a routerLink="/student/ai-tutor" class="ai-cta">
-        <div class="ai-left"><img src="assets/logo-bytekids.jpeg" class="ai-logo" alt="ByteBot"><div><div class="ai-t">Tutor IA — ByteBot</div><div class="ai-s">Tengo una duda... 🤖</div></div></div>
+        <div class="ai-cta-left"><img src="assets/logo-bytekids.jpeg" class="ai-logo" alt="ByteBot"><div><div class="ai-title">Tutor IA — ByteBot</div><div class="ai-sub">Tengo una duda... 🤖</div></div></div>
         <span class="bk-btn yellow" style="font-size:.8rem;padding:8px 14px">Chatear ✨</span>
       </a>
     </div>

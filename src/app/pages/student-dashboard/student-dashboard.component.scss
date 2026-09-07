@@ -47,3 +47,43 @@
 .ai-avatar   { font-size: 1.5rem; }
 .ai-title    { font-weight: 800; font-size: .85rem; color: var(--bk-text); }
 .ai-sub      { font-size: .73rem; color: var(--bk-text-muted); font-weight: 600; }
+
+/* ── ENCABEZADO DE TARJETA ───────────────────────────────────────────────
+   No existia en ningun lado: el titulo y el "ver todo" salian pegados,
+   "XP SemanalVer detalles". */
+.card-header {
+  display: flex; align-items: center; justify-content: space-between;
+  gap: 12px; margin-bottom: 14px;
+}
+
+/* Es una accion, no una nota al pie: se ve y se toca como boton. */
+.card-action {
+  flex-shrink: 0;
+  display: inline-flex; align-items: center; gap: 5px;
+  padding: 5px 12px; border-radius: 999px;
+  background: rgba(124,58,237,.12);
+  border: 1px solid rgba(124,58,237,.28);
+  color: var(--bk-blue-light, #7C3AED);
+  font-family: 'Nunito', sans-serif;
+  font-size: .72rem; font-weight: 800; text-decoration: none;
+  white-space: nowrap; transition: background .18s, transform .12s;
+}
+.card-action:hover { background: rgba(124,58,237,.22); transform: translateY(-1px); }
+.card-action:active { transform: translateY(0); }
+
+/* ── LOGO DE BYTEBOT ─────────────────────────────────────────────────────
+   El <img> no tenia ninguna regla, asi que se pintaba al tamano del
+   archivo y se comia la tarjeta. */
+.ai-logo {
+  width: 38px; height: 38px; flex-shrink: 0;
+  border-radius: 10px; object-fit: cover;
+  box-shadow: 0 2px 8px rgba(0,0,0,.25);
+}
+
+/* El titulo de la mision es el que se tiene que poder cortar, no la fila. */
+.mission-name {
+  overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+  min-width: 0; padding-right: 8px;
+}
+.mission-top { gap: 8px; }
+.mission-xp  { flex-shrink: 0; }
