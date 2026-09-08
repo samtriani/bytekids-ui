@@ -58,3 +58,32 @@
   font-size: .9rem;
   color: var(--bk-text-muted);
 }
+
+/* ── DOS FILAS DE FILTROS ────────────────────────────────────────────────
+   Sin etiqueta se veian dos hileras de pildoras casi identicas, con un
+   "Todas" y un "Todos" que parecian repetidos. Cada fila dice que filtra. */
+.ach-filtros {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  margin-bottom: 18px;
+}
+.filtro-fila {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+.filtro-lbl {
+  flex: 0 0 96px;
+  font-size: .68rem;
+  font-weight: 800;
+  letter-spacing: .08em;
+  text-transform: uppercase;
+  color: var(--bk-text-muted);
+}
+.filtro-chips { display: flex; flex-wrap: wrap; gap: 8px; flex: 1; }
+
+@media (max-width: 620px) {
+  .filtro-lbl { flex-basis: 100%; }
+}
