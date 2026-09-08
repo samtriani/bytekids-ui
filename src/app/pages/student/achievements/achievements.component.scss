@@ -23,3 +23,38 @@
 .ac-xp   { font-size:.76rem; font-weight:800; color:var(--bk-yellow-light); }
 .ac-date { font-size:.72rem; color:var(--bk-green); font-weight:700; }
 .ac-lock { font-size:.85rem; }
+
+/* ── PESTAÑAS POR MATERIA ────────────────────────────────────────────────
+   Un alumno puede llevar dos materias a la vez y sus logros son distintos.
+   Solo aparecen si de verdad hay mas de una: con una sola, estorban. */
+.ach-materias {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-bottom: 10px;
+}
+
+.materia-btn {
+  font-family: inherit;
+  font-size: .78rem;
+  font-weight: 800;
+  padding: 7px 15px;
+  border-radius: 999px;
+  cursor: pointer;
+  border: 1.5px solid var(--bk-border);
+  background: var(--bk-bg-card);
+  color: var(--bk-text-muted);
+  transition: background .15s, color .15s, border-color .15s;
+}
+.materia-btn:hover { border-color: var(--bk-blue-light); color: var(--bk-text); }
+.materia-btn.active {
+  background: var(--bk-blue, #2563EB);
+  border-color: var(--bk-blue, #2563EB);
+  color: #fff;
+}
+
+.ach-vacio {
+  margin: 18px 2px;
+  font-size: .9rem;
+  color: var(--bk-text-muted);
+}
