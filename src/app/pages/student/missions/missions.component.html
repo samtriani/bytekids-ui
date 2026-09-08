@@ -17,7 +17,7 @@
   <!-- Filtros: un panel para que se lean como controles y no como adorno -->
   <div class="filtros-panel">
     <div class="filtro-fila">
-      <span class="filtro-lbl">Materia</span>
+      <span class="filtro-lbl">Materias</span>
       <div class="filtro-chips">
         @for (f of filters; track f) {
           <button class="filter-btn" [class.active]="activeFilter === f"
@@ -31,7 +31,7 @@
     </div>
 
     <div class="filtro-fila">
-      <span class="filtro-lbl">Actividad</span>
+      <span class="filtro-lbl">Actividades</span>
       <div class="filtro-chips">
         <button class="filter-btn filter-btn--tipo" [class.active]="!tipoFiltro"
                 (click)="setTipo('')">Todas</button>
