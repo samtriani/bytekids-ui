@@ -6,7 +6,7 @@ import { AchievementApiService } from '../../../services/api/achievement-api.ser
 import { AuthService } from '../../../services/auth.service';
 import { forkJoin, of } from 'rxjs';
 import { catchError } from 'rxjs/operators';
-import { SubjectService } from '../../../services/api/subject-api.service';
+import { ContentApiService } from '../../../services/api/content-api.service';
 
 @Component({ selector:'app-achievements', standalone:true, imports:[CommonModule, RouterLink, ShellComponent],
   templateUrl:'./achievements.component.html', styleUrls:['./achievements.component.scss']
@@ -15,7 +15,7 @@ export class AchievementsComponent implements OnInit {
   get studentName(): string     { return this.auth.getUser()?.displayName || 'Alumno'; }
   get studentInitials(): string { return this.auth.getUser()?.initials || 'A'; }
   constructor(private achievementApi: AchievementApiService,
-              private subjectApi: SubjectService,
+              private contentApi: ContentApiService,
               private auth: AuthService) {}
 
   navItems: NavItem[] = [
@@ -54,11 +54,16 @@ export class AchievementsComponent implements OnInit {
     forkJoin({
       defs:     this.achievementApi.getAll(),
       earned:   this.achievementApi.getMyAchievements(),
-      materias: this.subjectApi.getAll().pipe(catchError(() => of([]))),
+      // El color sale del feed y NO de /subjects: ese endpoint es solo para
+      // personal, y un 403 aqui no lo salva el catchError — el interceptor
+      // borra el token antes y saca al alumno de la sesion.
+      feed: this.contentApi.getMyFeed().pipe(catchError(() => of([]))),
     }).subscribe({
-      next: ({ defs, earned, materias }) => {
-        for (const m of materias ?? []) {
-          if (m?.name && m?.color) this.coloresMateria[m.name] = m.color;
+      next: ({ defs, earned, feed }) => {
+        for (const c of feed ?? []) {
+          if (c?.subjectName && c?.subjectColor) {
+            this.coloresMateria[c.subjectName] = c.subjectColor;
+          }
         }
         const earnedIds = new Set(earned.map((e: any) => e.achievement?.id ?? e.achievementId));
 
