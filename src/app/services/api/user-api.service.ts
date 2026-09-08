@@ -9,6 +9,7 @@ export interface CreateUserPayload {
   username: string;
   password: string;
   displayName: string;
+  email?: string | null;
   role: 'student' | 'teacher' | 'parent' | 'admin' | 'director';
   initials?: string;
   age?: number | null;

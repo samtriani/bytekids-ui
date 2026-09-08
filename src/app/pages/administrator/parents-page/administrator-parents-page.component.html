@@ -144,6 +144,11 @@
                     <label class="label">Nueva contraseña</label>
                     <input class="input" type="password" [(ngModel)]="editForm.password" placeholder="Opcional">
                   </div>
+                  <div class="fg">
+                    <label class="label">Correo electrónico</label>
+                    <input class="input" type="email" [(ngModel)]="editForm.email"
+                           placeholder="mama@correo.com" autocomplete="off">
+                  </div>
                   <div class="fg-row">
                     <div class="fg">
                       <label class="label">Edad</label>
@@ -193,6 +198,12 @@
         <div class="fg">
           <label class="label">Contraseña *</label>
           <input class="input" type="password" [(ngModel)]="createForm.password" placeholder="Mínimo 6 caracteres">
+        </div>
+        <div class="fg">
+          <label class="label">Correo electrónico</label>
+          <input class="input" type="email" [(ngModel)]="createForm.email"
+                 placeholder="mama@correo.com" autocomplete="off">
+          <small class="fg-nota">A donde llegarán los avisos y la recuperación de contraseña.</small>
         </div>
         <div class="fg">
           <label class="label">Edad</label>

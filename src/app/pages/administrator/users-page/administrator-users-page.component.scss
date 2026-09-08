@@ -350,3 +350,10 @@
   transition: background .12s, color .12s;
 }
 .mm-cerrar:hover { background: var(--danger-lt, rgba(192, 57, 43, .1)); color: var(--danger, #c0392b); }
+
+/* Nota bajo un campo: el correo de un alumno es el del tutor, y eso hay que
+   decirlo donde se captura, no en un instructivo aparte. */
+.fg-nota {
+  display: block; margin-top: 5px;
+  font-size: 11px; line-height: 1.45; color: var(--tx4);
+}
