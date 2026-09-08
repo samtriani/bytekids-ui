@@ -17,19 +17,27 @@
     </div>
   </div>
 
-  @if (materias.length) {
-    <div class="ach-materias">
-      @for (m of materias; track m) {
-        <button class="materia-btn" [class.active]="materiaActiva===m"
-                (click)="materiaActiva=m">{{ etiquetaMateria(m) }}</button>
-      }
-    </div>
-  }
-
-  <div class="ach-filters">
-    @for (c of categories; track c) {
-      <button class="filter-btn" [class.active]="activeCategory===c" (click)="activeCategory=c">{{ c }}</button>
+  <div class="ach-filtros">
+    @if (materias.length) {
+      <div class="filtro-fila">
+        <span class="filtro-lbl">Materia</span>
+        <div class="filtro-chips">
+          @for (m of materias; track m) {
+            <button class="materia-btn" [class.active]="materiaActiva===m"
+                    (click)="materiaActiva=m">{{ etiquetaMateria(m) }}</button>
+          }
+        </div>
+      </div>
     }
+
+    <div class="filtro-fila">
+      <span class="filtro-lbl">Tipo de logro</span>
+      <div class="filtro-chips">
+        @for (c of categories; track c) {
+          <button class="filter-btn" [class.active]="activeCategory===c" (click)="activeCategory=c">{{ c }}</button>
+        }
+      </div>
+    </div>
   </div>
 
   @if (!filtered.length) {
