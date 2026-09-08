@@ -61,6 +61,26 @@ export class ContentApiService {
       .pipe(map(r => r.data ?? 0));
   }
 
+  // ── Membresia individual: contenido sin salon ──────────────────────
+
+  /** Solo lo asignado a titulo personal, no lo que le llega por su salon. */
+  assignedDirectlyTo(studentId: string): Observable<any[]> {
+    return this.http.get<any>(`${BASE}/student/${studentId}/direct`)
+      .pipe(map(r => r.data ?? []));
+  }
+
+  assignSubjectToStudent(subjectId: string, studentId: string): Observable<number> {
+    return this.http
+      .post<any>(`${BASE}/subject/${subjectId}/assign/student/${studentId}`, {})
+      .pipe(map(r => r.data ?? 0));
+  }
+
+  unassignSubjectFromStudent(subjectId: string, studentId: string): Observable<number> {
+    return this.http
+      .delete<any>(`${BASE}/subject/${subjectId}/assign/student/${studentId}`)
+      .pipe(map(r => r.data ?? 0));
+  }
+
   unassignFromClassroom(id: string, classroomId: string): Observable<void> {
     return this.http.delete<any>(`${BASE}/${id}/assign/classroom/${classroomId}`)
       .pipe(map(() => void 0));

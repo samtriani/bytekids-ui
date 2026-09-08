@@ -154,6 +154,54 @@
                   <button class="btn btn-primary btn-block" (click)="update()" [disabled]="saving">Guardar cambios</button>
                   <button class="btn btn-ghost btn-block" (click)="deactivate()" [disabled]="saving">Desactivar usuario</button>
                 </div>
+
+                @if (mode === 'students') {
+                  <div class="memb">
+                    <div class="memb-head">
+                      <span class="memb-titulo">🎟️ Membresía de contenido</span>
+                      <span class="memb-n">{{ membresia.length }} piezas</span>
+                    </div>
+                    <p class="memb-nota">
+                      Le da el temario y el tutor de IA <strong>sin meterlo a un salón</strong>.
+                      No incluye las clases en vivo: ésas van con la inscripción a un salón.
+                    </p>
+
+                    @if (cargandoMembresia) {
+                      <p class="memb-vacio">Cargando…</p>
+                    } @else {
+                      @if (!membresiaPorMateria.length) {
+                        <p class="memb-vacio">Sin membresía individual.</p>
+                      }
+                      @for (m of membresiaPorMateria; track m.id) {
+                        <div class="memb-item">
+                          <span class="memb-icono">{{ m.icono }}</span>
+                          <span class="memb-info">
+                            <span class="memb-nombre">{{ m.nombre }}</span>
+                            <span class="memb-piezas">{{ m.piezas }} piezas</span>
+                          </span>
+                          <button class="btn btn-outline btn-sm" (click)="quitarMembresia(m)">
+                            Dar de baja
+                          </button>
+                        </div>
+                      }
+
+                      @if (materiasDisponibles.length) {
+                        <div class="memb-alta">
+                          <select class="input" [(ngModel)]="materiaMembresia">
+                            <option value="">-- Materia --</option>
+                            @for (m of materiasDisponibles; track m.id) {
+                              <option [value]="m.id">{{ m.icon ?? '📚' }} {{ m.name }}</option>
+                            }
+                          </select>
+                          <button class="btn btn-primary" (click)="darMembresia()"
+                                  [disabled]="guardandoMembresia || !materiaMembresia">
+                            {{ guardandoMembresia ? 'Dando…' : 'Dar membresía' }}
+                          </button>
+                        </div>
+                      }
+                    }
+                  </div>
+                }
               </div>
             </div>
           } @else {

@@ -357,3 +357,36 @@
   display: block; margin-top: 5px;
   font-size: 11px; line-height: 1.45; color: var(--tx4);
 }
+
+/* ── MEMBRESIA DE CONTENIDO ──────────────────────────────────────────────
+   El contenido se puede asignar directo a un alumno, sin salon: es el nivel
+   barato, temario y tutor de IA sin clases en vivo. La inscripcion a un
+   salon sigue siendo la membresia completa. */
+.memb {
+  margin-top: 18px; padding-top: 16px;
+  border-top: 1px solid var(--border2);
+}
+.memb-head {
+  display: flex; align-items: center; justify-content: space-between;
+  margin-bottom: 6px;
+}
+.memb-titulo { font-size: 12.5px; font-weight: 800; color: var(--tx1); }
+.memb-n {
+  font-size: 10.5px; font-weight: 800; color: var(--guinda);
+  background: var(--guinda-a10); padding: 1px 8px; border-radius: 999px;
+}
+.memb-nota { margin: 0 0 10px; font-size: 11.5px; line-height: 1.5; color: var(--tx4); }
+.memb-vacio { margin: 8px 0; font-size: 12px; color: var(--tx4); }
+
+.memb-item {
+  display: flex; align-items: center; gap: 10px;
+  padding: 8px 0; border-bottom: 1px solid var(--border2);
+}
+.memb-item:last-of-type { border-bottom: none; }
+.memb-icono  { font-size: 1.1rem; flex-shrink: 0; }
+.memb-info   { flex: 1; min-width: 0; }
+.memb-nombre { display: block; font-size: 12.5px; font-weight: 700; color: var(--tx1); }
+.memb-piezas { display: block; font-size: 11px; color: var(--tx4); }
+
+.memb-alta { display: flex; gap: 8px; margin-top: 12px; }
+.memb-alta .input { flex: 1; }
