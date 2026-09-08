@@ -4,7 +4,9 @@ import { RouterLink } from '@angular/router';
 import { ShellComponent, NavItem } from '../../../shared/shell/shell.component';
 import { AchievementApiService } from '../../../services/api/achievement-api.service';
 import { AuthService } from '../../../services/auth.service';
-import { forkJoin } from 'rxjs';
+import { forkJoin, of } from 'rxjs';
+import { catchError } from 'rxjs/operators';
+import { SubjectService } from '../../../services/api/subject-api.service';
 
 @Component({ selector:'app-achievements', standalone:true, imports:[CommonModule, RouterLink, ShellComponent],
   templateUrl:'./achievements.component.html', styleUrls:['./achievements.component.scss']
@@ -12,7 +14,9 @@ import { forkJoin } from 'rxjs';
 export class AchievementsComponent implements OnInit {
   get studentName(): string     { return this.auth.getUser()?.displayName || 'Alumno'; }
   get studentInitials(): string { return this.auth.getUser()?.initials || 'A'; }
-  constructor(private achievementApi: AchievementApiService, private auth: AuthService) {}
+  constructor(private achievementApi: AchievementApiService,
+              private subjectApi: SubjectService,
+              private auth: AuthService) {}
 
   navItems: NavItem[] = [
     { label:'Mi Dashboard',  icon:'🏠', route:'/student' },
@@ -48,10 +52,14 @@ export class AchievementsComponent implements OnInit {
 
   ngOnInit() {
     forkJoin({
-      defs:   this.achievementApi.getAll(),
-      earned: this.achievementApi.getMyAchievements(),
+      defs:     this.achievementApi.getAll(),
+      earned:   this.achievementApi.getMyAchievements(),
+      materias: this.subjectApi.getAll().pipe(catchError(() => of([]))),
     }).subscribe({
-      next: ({ defs, earned }) => {
+      next: ({ defs, earned, materias }) => {
+        for (const m of materias ?? []) {
+          if (m?.name && m?.color) this.coloresMateria[m.name] = m.color;
+        }
         const earnedIds = new Set(earned.map((e: any) => e.achievement?.id ?? e.achievementId));
 
         this.achievements = defs.map((d: any) => ({
@@ -96,6 +104,14 @@ export class AchievementsComponent implements OnInit {
     programacion: '💻', racha: '🔥', especial: '⭐',
     proyectos: '🏗️', social: '👥',
   };
+
+  /** El color de la materia sale del catalogo, igual que en Mis Actividades. */
+  private coloresMateria: Record<string, string> = {};
+
+  colorMateria(m: string): string {
+    if (m === 'Todas' || m === 'Generales') return '#7C3AED';
+    return this.coloresMateria[m] ?? '#7C3AED';
+  }
 
   iconoCategoria(c: string): string {
     return c === 'Todos' ? '🏆' : (this.ICONO_CATEGORIA[c] ?? '🎖️');

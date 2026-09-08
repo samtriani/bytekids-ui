@@ -168,6 +168,22 @@ export class MissionsComponent implements OnInit {
 
   setFilter(f: string) { this.activeFilter = f; }
 
+  /**
+   * Cada materia ya tiene su color en la base y las tarjetas lo usan. Que el
+   * chip activo lo tome tambien amarra las dos cosas: el color dice DE QUE
+   * materia estas viendo, no solo que hay algo seleccionado.
+   */
+  colorMateria(nombre: string): string {
+    if (nombre === 'Todas') return '#7C3AED';
+    return this.missions.find(m => m.subject === nombre)?.color ?? '#7C3AED';
+  }
+
+  contarMateria(nombre: string): number {
+    return nombre === 'Todas'
+      ? this.missions.length
+      : this.missions.filter(m => m.subject === nombre).length;
+  }
+
   startMission(m: any) {
     if (m.locked || !m.id) return;
     this.router.navigate(['/student/missions', m.id]);
