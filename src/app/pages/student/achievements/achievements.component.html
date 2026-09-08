@@ -20,7 +20,7 @@
   <div class="filtros-panel">
     @if (materias.length) {
       <div class="filtro-fila">
-        <span class="filtro-lbl">Materia</span>
+        <span class="filtro-lbl">Materias</span>
         <div class="filtro-chips">
           @for (m of materias; track m) {
             <button class="filter-btn" [class.active]="materiaActiva===m"
@@ -35,7 +35,7 @@
     }
 
     <div class="filtro-fila">
-      <span class="filtro-lbl">Tipo</span>
+      <span class="filtro-lbl">Tipos de logro</span>
       <div class="filtro-chips">
         @for (c of categories; track c) {
           <button class="filter-btn filter-btn--tipo" [class.active]="activeCategory===c"
