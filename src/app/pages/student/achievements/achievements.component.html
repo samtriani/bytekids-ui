@@ -17,27 +17,24 @@
     </div>
   </div>
 
-  <div class="ach-filtros">
-    @if (materias.length) {
-      <div class="filtro-fila">
-        <span class="filtro-lbl">Materia</span>
-        <div class="filtro-chips">
-          @for (m of materias; track m) {
-            <button class="materia-btn" [class.active]="materiaActiva===m"
-                    (click)="materiaActiva=m">{{ etiquetaMateria(m) }}</button>
-          }
-        </div>
-      </div>
-    }
-
-    <div class="filtro-fila">
-      <span class="filtro-lbl">Tipo de logro</span>
-      <div class="filtro-chips">
-        @for (c of categories; track c) {
-          <button class="filter-btn" [class.active]="activeCategory===c" (click)="activeCategory=c">{{ c }}</button>
-        }
-      </div>
+  @if (materias.length) {
+    <div class="ach-filters">
+      @for (m of materias; track m) {
+        <button class="filter-btn" [class.active]="materiaActiva===m"
+                (click)="materiaActiva=m">
+          {{ m }} <span class="filter-n">{{ contarMateria(m) }}</span>
+        </button>
+      }
     </div>
+  }
+
+  <div class="ach-filters ach-filters--tipo">
+    @for (c of categories; track c) {
+      <button class="filter-btn filter-btn--tipo" [class.active]="activeCategory===c"
+              (click)="activeCategory=c">
+        {{ iconoCategoria(c) }} {{ c }} <span class="filter-n">{{ contarCategoria(c) }}</span>
+      </button>
+    }
   </div>
 
   @if (!filtered.length) {
