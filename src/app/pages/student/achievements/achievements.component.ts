@@ -91,10 +91,30 @@ export class AchievementsComponent implements OnInit {
                                                : a.materia === this.materiaActiva)));
   }
 
-  /** Nombre corto para la pestaña: el prefijo se repite en todas. */
-  etiquetaMateria(m: string): string {
-    const nivel = m.match(/\(([^)]+)\)/);
-    return nivel ? nivel[1] : m;
+  /** Un icono por categoria: distingue esta fila de la de materias. */
+  readonly ICONO_CATEGORIA: Record<string, string> = {
+    programacion: '💻', racha: '🔥', especial: '⭐',
+    proyectos: '🏗️', social: '👥',
+  };
+
+  iconoCategoria(c: string): string {
+    return c === 'Todos' ? '🏆' : (this.ICONO_CATEGORIA[c] ?? '🎖️');
+  }
+
+  /** Los conteos son informacion real y ademas separan las dos filas. */
+  contarMateria(m: string): number {
+    if (m === 'Todas')     return this.achievements.length;
+    if (m === 'Generales') return this.achievements.filter(a => !a.materia).length;
+    return this.achievements.filter(a => a.materia === m).length;
+  }
+
+  contarCategoria(c: string): number {
+    const porMateria = this.achievements.filter(a =>
+      this.materiaActiva === 'Todas'
+        || (this.materiaActiva === 'Generales' ? !a.materia
+                                              : a.materia === this.materiaActiva));
+    return c === 'Todos' ? porMateria.length
+                         : porMateria.filter(a => a.category === c).length;
   }
   get earnedCount() { return this.achievements.filter(a => a.earned).length; }
   get totalXp() { return this.achievements.filter(a => a.earned).reduce((s,a) => s+a.xp, 0); }
