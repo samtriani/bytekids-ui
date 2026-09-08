@@ -263,10 +263,23 @@ export class AdministratorUsersPageComponent implements OnInit {
   materiaMembresia           = '';
   guardandoMembresia         = false;
 
+  /** Contenido publicado, para saber de cuantas piezas consta cada materia. */
+  catalogo: any[] = [];
+
   private cargarMaterias() {
-    if (this.materias.length) return;
-    this.subjectApi.getAll().pipe(catchError(() => of([])))
-      .subscribe(m => this.materias = m ?? []);
+    if (!this.materias.length) {
+      this.subjectApi.getAll().pipe(catchError(() => of([])))
+        .subscribe(m => this.materias = m ?? []);
+    }
+    if (!this.catalogo.length) {
+      this.contentApi.getAll().pipe(catchError(() => of([])))
+        .subscribe(c => this.catalogo = c ?? []);
+    }
+  }
+
+  /** Cuantas piezas publicadas tiene hoy la materia. */
+  piezasDeLaMateria(subjectId: string): number {
+    return this.catalogo.filter(c => c.subjectId === subjectId).length;
   }
 
   private cargarMembresia(studentId: string) {
@@ -281,15 +294,21 @@ export class AdministratorUsersPageComponent implements OnInit {
   }
 
   /** Agrupada por materia: cada materia es una membresia que se da o se quita. */
-  get membresiaPorMateria(): { id: string; nombre: string; icono: string; piezas: number }[] {
-    const mapa = new Map<string, { id: string; nombre: string; icono: string; piezas: number }>();
+  get membresiaPorMateria(): { id: string; nombre: string; icono: string;
+                               piezas: number; total: number; faltan: number }[] {
+    const mapa = new Map<string, { id: string; nombre: string; icono: string;
+                                   piezas: number; total: number; faltan: number }>();
     for (const c of this.membresia) {
       const id = c.subjectId ?? 'sin-materia';
       if (!mapa.has(id)) {
         mapa.set(id, { id, nombre: c.subjectName ?? 'Sin materia',
-                       icono: c.subjectIcon ?? '📚', piezas: 0 });
+                       icono: c.subjectIcon ?? '📚', piezas: 0, total: 0, faltan: 0 });
       }
       mapa.get(id)!.piezas++;
+    }
+    for (const g of mapa.values()) {
+      g.total  = this.piezasDeLaMateria(g.id);
+      g.faltan = Math.max(0, g.total - g.piezas);
     }
     return [...mapa.values()].sort((a, b) => a.nombre.localeCompare(b.nombre));
   }
@@ -314,6 +333,31 @@ export class AdministratorUsersPageComponent implements OnInit {
       error: (e) => {
         this.guardandoMembresia = false;
         this.showToast(e?.error?.message ?? 'No se pudo dar la membresía');
+      },
+    });
+  }
+
+  /**
+   * Al curso se le agregan piezas con el tiempo, y quien ya tenia la
+   * membresia no las recibe: la asignacion ocurrio una sola vez. Esto le
+   * entrega lo que se publico despues. El endpoint es idempotente, asi que
+   * no duplica lo que ya tiene.
+   */
+  completarMembresia(m: { id: string; nombre: string }) {
+    const alumno = this.selected?.id;
+    if (!alumno || this.guardandoMembresia) return;
+    this.guardandoMembresia = true;
+    this.contentApi.assignSubjectToStudent(m.id, alumno).subscribe({
+      next: (n) => {
+        this.guardandoMembresia = false;
+        this.cargarMembresia(alumno);
+        this.showToast(n
+          ? `Se agregaron ${n} piezas nuevas de ${m.nombre}`
+          : 'Ya tenía todas las piezas de esa materia');
+      },
+      error: (e) => {
+        this.guardandoMembresia = false;
+        this.showToast(e?.error?.message ?? 'No se pudo actualizar');
       },
     });
   }

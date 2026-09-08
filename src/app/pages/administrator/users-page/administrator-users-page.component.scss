@@ -390,3 +390,7 @@
 
 .memb-alta { display: flex; gap: 8px; margin-top: 12px; }
 .memb-alta .input { flex: 1; }
+
+/* Cuando al curso se le agregan piezas, quien ya tenia la membresia no las
+   recibe: la asignacion ocurrio una sola vez. Se avisa aqui. */
+.memb-faltan { font-style: normal; font-weight: 700; color: var(--guinda); }

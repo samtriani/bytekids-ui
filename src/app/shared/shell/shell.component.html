@@ -2,7 +2,7 @@
   <div class="sh-conn" [class.sh-conn--down]="backend.status() === 'down'" role="status">
     @if (backend.status() === 'waking') {
       <span class="sh-conn-spin"></span>
-      <span>Despertando el servidor… esto tarda unos segundos la primera vez.</span>
+      <span>Despertando a Bytebot🤖… esto tarda unos segundos la primera vez.</span>
     } @else {
       <span>⚠️</span>
       <span>No pudimos conectar con el servidor. Revisa tu internet o vuelve a intentar.</span>

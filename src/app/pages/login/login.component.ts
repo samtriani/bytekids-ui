@@ -31,7 +31,7 @@ export class LoginComponent {
   private iniciarAvisos() {
     this.espera = '';
     this.temporizadores = [
-      setTimeout(() => this.espera = 'Despertando el servidor… la primera vez del día tarda un poco.', 2500),
+      setTimeout(() => this.espera = 'Despertando a Bytebot🤖… la primera vez del día tarda un poco.', 2500),
       setTimeout(() => this.espera = 'Sigue arrancando. Ya casi, no cierres esta página.', 9000),
       setTimeout(() => this.espera = 'Está tardando más de lo normal. Si no entra, vuelve a intentar.', 20000),
     ];

@@ -177,8 +177,21 @@
                           <span class="memb-icono">{{ m.icono }}</span>
                           <span class="memb-info">
                             <span class="memb-nombre">{{ m.nombre }}</span>
-                            <span class="memb-piezas">{{ m.piezas }} piezas</span>
+                            <span class="memb-piezas">
+                              {{ m.piezas }} de {{ m.total }} piezas
+                              @if (m.faltan) {
+                                <em class="memb-faltan">· le faltan {{ m.faltan }}</em>
+                              }
+                            </span>
                           </span>
+                          @if (m.faltan) {
+                            <button class="btn btn-primary btn-sm"
+                                    (click)="completarMembresia(m)"
+                                    [disabled]="guardandoMembresia"
+                                    title="Le entrega las piezas que se publicaron después de darle la membresía">
+                              Completar
+                            </button>
+                          }
                           <button class="btn btn-outline btn-sm" (click)="quitarMembresia(m)">
                             Dar de baja
                           </button>
