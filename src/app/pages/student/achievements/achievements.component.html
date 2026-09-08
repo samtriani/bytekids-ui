@@ -17,24 +17,34 @@
     </div>
   </div>
 
-  @if (materias.length) {
-    <div class="ach-filters">
-      @for (m of materias; track m) {
-        <button class="filter-btn" [class.active]="materiaActiva===m"
-                (click)="materiaActiva=m">
-          {{ m }} <span class="filter-n">{{ contarMateria(m) }}</span>
-        </button>
-      }
-    </div>
-  }
-
-  <div class="ach-filters ach-filters--tipo">
-    @for (c of categories; track c) {
-      <button class="filter-btn filter-btn--tipo" [class.active]="activeCategory===c"
-              (click)="activeCategory=c">
-        {{ iconoCategoria(c) }} {{ c }} <span class="filter-n">{{ contarCategoria(c) }}</span>
-      </button>
+  <div class="filtros-panel">
+    @if (materias.length) {
+      <div class="filtro-fila">
+        <span class="filtro-lbl">Materia</span>
+        <div class="filtro-chips">
+          @for (m of materias; track m) {
+            <button class="filter-btn" [class.active]="materiaActiva===m"
+                    [style.background]="materiaActiva===m ? colorMateria(m) : null"
+                    [style.border-color]="materiaActiva===m ? colorMateria(m) : null"
+                    (click)="materiaActiva=m">
+              {{ m }} <span class="filter-n">{{ contarMateria(m) }}</span>
+            </button>
+          }
+        </div>
+      </div>
     }
+
+    <div class="filtro-fila">
+      <span class="filtro-lbl">Tipo</span>
+      <div class="filtro-chips">
+        @for (c of categories; track c) {
+          <button class="filter-btn filter-btn--tipo" [class.active]="activeCategory===c"
+                  (click)="activeCategory=c">
+            {{ iconoCategoria(c) }} {{ c }} <span class="filter-n">{{ contarCategoria(c) }}</span>
+          </button>
+        }
+      </div>
+    </div>
   </div>
 
   @if (!filtered.length) {

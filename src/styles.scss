@@ -754,3 +754,58 @@ input,select,textarea { font-family:inherit; }
   text-decoration:none; transition:all .14s;
 }
 .tb-portal-btn:hover { background:var(--guinda); color:#fff; }
+
+/* ── PANEL DE FILTROS ────────────────────────────────────────────────────
+   Global a proposito: lo usan Mis Actividades y Mis Logros, y son la misma
+   idea en dos pantallas. Definido por componente se desincroniza —de hecho
+   ya paso: el panel existia en una y en la otra salia sin estilo.
+
+   Sueltas sobre el fondo, las pildoras no leian como controles: parecian
+   etiquetas decorativas. Agrupadas en un panel, con su nombre a la
+   izquierda, se entiende que filtran y por que criterio. */
+.filtros-panel {
+  background: var(--bk-bg-card);
+  border: 1px solid var(--bk-border);
+  border-radius: 14px;
+  padding: 14px 16px;
+  margin-bottom: 20px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.filtro-fila {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  flex-wrap: wrap;
+}
+.filtro-fila + .filtro-fila {
+  padding-top: 10px;
+  border-top: 1px solid var(--bk-border);
+}
+
+.filtro-lbl {
+  flex: 0 0 74px;
+  font-size: .68rem;
+  font-weight: 800;
+  letter-spacing: .09em;
+  text-transform: uppercase;
+  color: var(--bk-text-muted);
+}
+
+.filtro-chips { display: flex; flex-wrap: wrap; gap: 8px; flex: 1; min-width: 0; }
+
+/* El chip activo de materia toma el color de SU materia, puesto inline desde
+   el componente; la sombra morada generica pelearia con el. */
+.filter-btn.active[style*="background"] { box-shadow: none; }
+
+.filter-btn:not(.active) .filter-n {
+  background: var(--bk-bg-card2);
+  color: var(--bk-text-muted);
+}
+
+@media (max-width: 620px) {
+  .filtro-lbl { flex-basis: 100%; }
+  .filtro-fila { gap: 8px; }
+}

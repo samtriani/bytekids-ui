@@ -24,26 +24,15 @@
 .ac-date { font-size:.72rem; color:var(--bk-green); font-weight:700; }
 .ac-lock { font-size:.85rem; }
 
-/* ── FILTROS ─────────────────────────────────────────────────────────────
-   Mismo lenguaje que Mis Actividades: arriba las materias con su nombre
-   completo, abajo los tipos con icono. Los dos usan .filter-btn, o sea el
-   mismo color activo: dos acentos distintos leian como error, no como
-   jerarquia. Lo que separa las filas es su contenido, no su estilo. */
-.ach-filters { display: flex; gap: 8px; flex-wrap: wrap; margin-bottom: 14px; }
-.ach-filters--tipo { margin-top: -6px; margin-bottom: 22px; }
-
+/* Los filtros usan el mismo panel que Mis Actividades: mismas etiquetas,
+   mismo color por materia, mismo conteo. Son la misma idea en dos
+   pantallas y deben comportarse igual. */
 .filter-btn--tipo { font-size: .78rem; }
 
-/* El conteo es informacion real y de paso ancla la vista: dice cuantos
-   logros hay de cada materia sin tener que contarlos. */
 .filter-n {
   display: inline-block; margin-left: 5px; padding: 1px 6px;
   border-radius: 999px; font-size: .68rem; font-weight: 800;
   background: rgba(255, 255, 255, .18);
-}
-.filter-btn:not(.active) .filter-n {
-  background: var(--bk-bg-card2);
-  color: var(--bk-text-muted);
 }
 
 .ach-vacio { margin: 18px 2px; font-size: .9rem; color: var(--bk-text-muted); }
