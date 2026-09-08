@@ -30,6 +30,22 @@ export class AchievementsComponent implements OnInit {
   activeCategory = 'Todos';
   achievements: any[] = [];
 
+  /**
+   * Un alumno puede llevar dos materias a la vez, y sus logros son
+   * distintos. Sin este filtro ve una sola lista revuelta y no entiende
+   * cuales le tocan por lo que esta cursando.
+   */
+  materias: string[] = [];
+  materiaActiva = 'Todas';
+
+  /** La materia de un logro vive en condition_value.subject. */
+  private materiaDe(d: any): string {
+    try {
+      const cond = JSON.parse(d?.conditionValue ?? '{}');
+      return cond?.subject || '';
+    } catch { return ''; }
+  }
+
   ngOnInit() {
     forkJoin({
       defs:   this.achievementApi.getAll(),
@@ -47,11 +63,19 @@ export class AchievementsComponent implements OnInit {
           category: d.category ?? 'General',
           date:     earned.find((e: any) => (e.achievement?.id ?? e.achievementId) === d.id)?.earnedAt?.substring(0,10) ?? null,
           rarity:   d.rarity === 'poco_comun' ? 'Poco común' : (d.rarity ? d.rarity.charAt(0).toUpperCase() + d.rarity.slice(1) : 'Común'),
+          materia:  this.materiaDe(d),
         }));
 
         // Categorías derivadas de las definiciones reales
         const catSet = new Set(this.achievements.map(a => a.category).filter(Boolean));
         this.categories = ['Todos', ...Array.from(catSet)];
+
+        // Las pestañas solo salen si de verdad hay mas de una materia.
+        const matSet = new Set<string>(
+          this.achievements.map(a => a.materia).filter(Boolean));
+        this.materias = matSet.size > 1
+          ? ['Todas', ...Array.from(matSet).sort(), 'Generales']
+          : [];
       }
     });
   }
@@ -59,8 +83,18 @@ export class AchievementsComponent implements OnInit {
   rarityColor: Record<string,string> = { 'Común':'#6B7FBB', 'Poco común':'#10B981', 'Raro':'#2563EB', 'Épico':'#7C3AED', 'Legendario':'#F59E0B' };
 
   get filtered() {
-    if (this.activeCategory === 'Todos') return this.achievements;
-    return this.achievements.filter(a => a.category === this.activeCategory);
+    return this.achievements.filter(a =>
+      (this.activeCategory === 'Todos' || a.category === this.activeCategory) &&
+      // "Generales" son los que no dependen de ninguna materia: racha, XP.
+      (this.materiaActiva === 'Todas'
+        || (this.materiaActiva === 'Generales' ? !a.materia
+                                               : a.materia === this.materiaActiva)));
+  }
+
+  /** Nombre corto para la pestaña: el prefijo se repite en todas. */
+  etiquetaMateria(m: string): string {
+    const nivel = m.match(/\(([^)]+)\)/);
+    return nivel ? nivel[1] : m;
   }
   get earnedCount() { return this.achievements.filter(a => a.earned).length; }
   get totalXp() { return this.achievements.filter(a => a.earned).reduce((s,a) => s+a.xp, 0); }
