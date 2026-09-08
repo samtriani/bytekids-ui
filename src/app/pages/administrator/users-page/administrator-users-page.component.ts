@@ -7,6 +7,8 @@ import { ShellComponent } from '../../../shared/shell/shell.component';
 import { AuthService } from '../../../services/auth.service';
 import { UserApiService } from '../../../services/api/user-api.service';
 import { AdministratorApiService } from '../../../services/api/administrator-api.service';
+import { ContentApiService } from '../../../services/api/content-api.service';
+import { SubjectService } from '../../../services/api/subject-api.service';
 import { ClassroomApiService } from '../../../services/api/classroom-api.service';
 import { ScheduleApiService } from '../../../services/api/schedule-api.service';
 import { ADMINISTRATOR_NAV_ITEMS } from '../shared/administrator-nav';
@@ -56,6 +58,8 @@ export class AdministratorUsersPageComponent implements OnInit {
     private auth: AuthService,
     private userApi: UserApiService,
     private administratorApi: AdministratorApiService,
+    private contentApi: ContentApiService,
+    private subjectApi: SubjectService,
     private classroomApi: ClassroomApiService,
     private scheduleApi: ScheduleApiService
   ) {
@@ -126,6 +130,12 @@ export class AdministratorUsersPageComponent implements OnInit {
     this.selectedTeacherClassrooms = [];
     this.teacherSchedules = [];
     this.classroomStudents = {};
+    this.membresia = [];
+    this.materiaMembresia = '';
+    if (this.mode === 'students' && row?.id) {
+      this.cargarMaterias();
+      this.cargarMembresia(row.id);
+    }
     if (this.mode === 'teachers' && row?.id) {
       forkJoin({
         classrooms: this.classroomApi.getByTeacher(row.id).pipe(catchError(() => of([]))),
@@ -242,6 +252,82 @@ export class AdministratorUsersPageComponent implements OnInit {
     return this.mode === 'students'
       ? 'Del padre o tutor. Es a donde llegarán los avisos y la recuperación de contraseña.'
       : 'Para avisos y recuperación de contraseña.';
+  }
+
+  // ── Membresia de solo contenido ─────────────────────────────────────
+  // Le da al alumno el temario y el tutor de IA sin meterlo a un salon.
+  // Las clases en vivo no entran: cuelgan del horario de un salon.
+  materias: any[]            = [];
+  membresia: any[]           = [];
+  cargandoMembresia          = false;
+  materiaMembresia           = '';
+  guardandoMembresia         = false;
+
+  private cargarMaterias() {
+    if (this.materias.length) return;
+    this.subjectApi.getAll().pipe(catchError(() => of([])))
+      .subscribe(m => this.materias = m ?? []);
+  }
+
+  private cargarMembresia(studentId: string) {
+    this.cargandoMembresia = true;
+    this.membresia = [];
+    this.contentApi.assignedDirectlyTo(studentId)
+      .pipe(catchError(() => of([])))
+      .subscribe(items => {
+        this.membresia = items ?? [];
+        this.cargandoMembresia = false;
+      });
+  }
+
+  /** Agrupada por materia: cada materia es una membresia que se da o se quita. */
+  get membresiaPorMateria(): { id: string; nombre: string; icono: string; piezas: number }[] {
+    const mapa = new Map<string, { id: string; nombre: string; icono: string; piezas: number }>();
+    for (const c of this.membresia) {
+      const id = c.subjectId ?? 'sin-materia';
+      if (!mapa.has(id)) {
+        mapa.set(id, { id, nombre: c.subjectName ?? 'Sin materia',
+                       icono: c.subjectIcon ?? '📚', piezas: 0 });
+      }
+      mapa.get(id)!.piezas++;
+    }
+    return [...mapa.values()].sort((a, b) => a.nombre.localeCompare(b.nombre));
+  }
+
+  /** No ofrece materias que el alumno ya tiene a titulo personal. */
+  get materiasDisponibles(): any[] {
+    const yaTiene = new Set(this.membresiaPorMateria.map(m => m.id));
+    return this.materias.filter(m => !yaTiene.has(m.id));
+  }
+
+  darMembresia() {
+    const alumno = this.selected?.id;
+    if (!this.materiaMembresia || !alumno || this.guardandoMembresia) return;
+    this.guardandoMembresia = true;
+    this.contentApi.assignSubjectToStudent(this.materiaMembresia, alumno).subscribe({
+      next: (n) => {
+        this.guardandoMembresia = false;
+        this.materiaMembresia = '';
+        this.cargarMembresia(alumno);
+        this.showToast(n ? `${n} piezas asignadas` : 'El alumno ya tenía esa materia');
+      },
+      error: (e) => {
+        this.guardandoMembresia = false;
+        this.showToast(e?.error?.message ?? 'No se pudo dar la membresía');
+      },
+    });
+  }
+
+  quitarMembresia(m: { id: string; nombre: string }) {
+    const alumno = this.selected?.id;
+    if (!alumno) return;
+    this.contentApi.unassignSubjectFromStudent(m.id, alumno).subscribe({
+      next: () => {
+        this.cargarMembresia(alumno);
+        this.showToast(`Se dio de baja "${m.nombre}"`);
+      },
+      error: (e) => this.showToast(e?.error?.message ?? 'No se pudo dar de baja'),
+    });
   }
 
   private buildInitials(name: string) {
