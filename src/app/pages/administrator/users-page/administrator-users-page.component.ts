@@ -48,8 +48,8 @@ export class AdministratorUsersPageComponent implements OnInit {
   teacherSchedules: any[] = [];
   classroomStudents: Record<string, any[]> = {};
 
-  createForm = { displayName: '', username: '', password: '', age: null as number | null, address: '' };
-  editForm   = { id: '', username: '', displayName: '', initials: '', password: '', age: null as number | null, address: '' };
+  createForm = { displayName: '', username: '', password: '', email: '', age: null as number | null, address: '' };
+  editForm   = { id: '', username: '', displayName: '', initials: '', password: '', email: '', age: null as number | null, address: '' };
 
   constructor(
     private route: ActivatedRoute,
@@ -164,10 +164,11 @@ export class AdministratorUsersPageComponent implements OnInit {
       role: this.role,
       initials: this.buildInitials(this.createForm.displayName),
       age: this.createForm.age,
+      email:   this.createForm.email?.trim() || null,
       address: this.createForm.address || null,
     }).subscribe({
       next: () => {
-        this.createForm = { displayName: '', username: '', password: '', age: null, address: '' };
+        this.createForm = { displayName: '', username: '', password: '', email: '', age: null, address: '' };
         this.showToast(`${this.mode === 'teachers' ? 'Profesor' : 'Alumno'} creado correctamente`);
         this.saving = false;
         this.load();
@@ -189,6 +190,7 @@ export class AdministratorUsersPageComponent implements OnInit {
       role: this.role,
       initials: this.editForm.initials || this.buildInitials(this.editForm.displayName),
       age: this.editForm.age,
+      email:   this.editForm.email?.trim() || null,
       address: this.editForm.address || null,
     }).subscribe({
       next: () => {
@@ -228,9 +230,18 @@ export class AdministratorUsersPageComponent implements OnInit {
       displayName: this.selected.displayName ?? '',
       initials:    this.selected.initials    ?? '',
       password:    '',
+      email:       this.selected.email       ?? '',
       age:         this.selected.age         ?? null,
       address:     this.selected.address     ?? '',
     };
+  }
+
+  /** En un alumno el correo es del tutor: el niño no tiene, y es a quien
+   *  hay que avisarle de pagos, recuperaciones y avisos. */
+  get notaCorreo(): string {
+    return this.mode === 'students'
+      ? 'Del padre o tutor. Es a donde llegarán los avisos y la recuperación de contraseña.'
+      : 'Para avisos y recuperación de contraseña.';
   }
 
   private buildInitials(name: string) {

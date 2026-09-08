@@ -41,8 +41,8 @@ export class AdministratorParentsPageComponent implements OnInit {
   linking   = false;
   confirmUnlinkId: string | null = null;
 
-  createForm = { displayName:'', username:'', password:'', age: null as number|null, address:'' };
-  editForm   = { id:'', username:'', displayName:'', initials:'', password:'', age: null as number|null, address:'' };
+  createForm = { displayName:'', username:'', password:'', email:'', age: null as number|null, address:'' };
+  editForm   = { id:'', username:'', displayName:'', initials:'', password:'', email:'', age: null as number|null, address:'' };
 
   constructor(
     private auth: AuthService,
@@ -137,11 +137,12 @@ export class AdministratorParentsPageComponent implements OnInit {
       password:    this.createForm.password,
       role:        'parent',
       initials:    this.buildInitials(this.createForm.displayName),
+      email:       this.createForm.email?.trim() || null,
       age:         this.createForm.age,
       address:     this.createForm.address || null,
     }).subscribe({
       next: (newParent: any) => {
-        this.createForm = { displayName:'', username:'', password:'', age:null, address:'' };
+        this.createForm = { displayName:'', username:'', password:'', email:'', age:null, address:'' };
         this.saving = false;
         this.showToast('Padre/Madre creado correctamente');
         this.userApi.getParents().pipe(catchError(() => of([]))).subscribe(p => {
@@ -166,6 +167,7 @@ export class AdministratorParentsPageComponent implements OnInit {
       password:    this.editForm.password || undefined,
       role:        'parent',
       initials:    this.editForm.initials || this.buildInitials(this.editForm.displayName),
+      email:       this.editForm.email?.trim() || null,
       age:         this.editForm.age,
       address:     this.editForm.address || null,
     }).subscribe({
@@ -214,6 +216,7 @@ export class AdministratorParentsPageComponent implements OnInit {
       displayName: this.selected.displayName ?? '',
       initials:    this.selected.initials    ?? '',
       password:    '',
+      email:       this.selected.email       ?? '',
       age:         this.selected.age         ?? null,
       address:     this.selected.address     ?? '',
     };

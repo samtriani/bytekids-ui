@@ -9,6 +9,7 @@ export interface AdministratorUserPayload {
   username: string;
   password: string;
   displayName: string;
+  email?: string | null;
   role: 'teacher' | 'student' | 'parent' | 'director' | 'admin';
   initials?: string;
   avatarUrl?: string;
