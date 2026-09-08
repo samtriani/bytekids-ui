@@ -214,6 +214,12 @@ export class AdministratorAssignmentsPageComponent implements OnInit {
     this.subjectIdToAdd = '';
     this.materiaAAsignar = '';
     this.piezasElegidas.clear();
+    // Sin esto, la materia elegida para el salon anterior sobrevive al
+    // cambio y precargarDesdeHorarioExistente ni siquiera intenta llenar
+    // el formulario, porque cree que el usuario ya escribio algo.
+    this.scheduleForm = { subjectId: '', teacherId: '', startTime: '08:00',
+                          endTime: '09:00', startDate: '', endDate: '' };
+    this.diasSeleccionados = ['lunes'];
     this.cargarContenido(classroom.id);
     forkJoin({
       students:  this.classroomApi.getStudents(classroom.id),
@@ -408,6 +414,10 @@ export class AdministratorAssignmentsPageComponent implements OnInit {
     if (!f.subjectId || !f.teacherId || !dias.length || !f.startTime || !f.endTime || !f.startDate || !f.endDate) return;
 
     this.saving = true;
+    // El backend rechaza si el maestro ya tiene clase ese dia y hora, y ese
+    // mensaje es el que hay que enseñar: sin el, el usuario ve "no se pudo"
+    // y concluye que el horario se fue al salon equivocado.
+    const motivos: string[] = [];
     const peticiones = dias.map(dia => this.scheduleApi.create({
       classroomId: this.selectedClassroom.id,
       subjectId:   f.subjectId,
@@ -417,7 +427,11 @@ export class AdministratorAssignmentsPageComponent implements OnInit {
       endTime:     f.endTime,
       startDate:   f.startDate,
       endDate:     f.endDate,
-    }).pipe(catchError(() => of(null))));   // un dia que falle no tumba a los demas
+    }).pipe(catchError((e: any) => {        // un dia que falle no tumba a los demas
+      const motivo = e?.error?.message;
+      if (motivo && !motivos.includes(motivo)) motivos.push(motivo);
+      return of(null);
+    })));
 
     forkJoin(peticiones).subscribe({
       next: (resultados: any[]) => {
@@ -426,7 +440,7 @@ export class AdministratorAssignmentsPageComponent implements OnInit {
         this.saving = false;
 
         if (!creados.length) {
-          this.showToast('No se pudo guardar el horario');
+          this.showToast(motivos[0] ?? 'No se pudo guardar el horario');
           return;
         }
         this.scheduleForm = { subjectId: '', teacherId: '', startTime: '08:00', endTime: '09:00', startDate: '', endDate: '' };
@@ -434,7 +448,7 @@ export class AdministratorAssignmentsPageComponent implements OnInit {
 
         const fallidos = resultados.length - creados.length;
         this.showToast(fallidos
-          ? `Se agregaron ${creados.length} de ${resultados.length} dias`
+          ? `Se agregaron ${creados.length} de ${resultados.length} días. ${motivos[0] ?? ''}`.trim()
           : creados.length === 1
             ? 'Horario agregado'
             : `Se agregaron ${creados.length} clases`);
