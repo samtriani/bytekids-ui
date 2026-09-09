@@ -1,6 +1,7 @@
 import { Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
+import { ActivatedRoute } from '@angular/router';
 import { ShellComponent } from '../../../shared/shell/shell.component';
 import { TEACHER_NAV } from '../shared/teacher-nav';
 import { ClassroomApiService } from '../../../services/api/classroom-api.service';
@@ -130,6 +131,7 @@ export class GradebookComponent implements OnInit {
   }
 
   constructor(
+    private route: ActivatedRoute,
     private classroomApi: ClassroomApiService,
     private submissionApi: SubmissionApiService,
     private auth: AuthService,
@@ -140,7 +142,11 @@ export class GradebookComponent implements OnInit {
       this.classrooms      = cls;
       this.loadingClassrooms = false;
       if (cls.length) {
-        this.selectedClassroom = cls[0].id || cls[0]._id;
+        // El salon puede venir del Panel del Maestro. Si no viene --o si
+        // ya no existe-- se cae al primero, pero nunca se ignora.
+        const pedido = this.route.snapshot.queryParamMap.get('salon');
+        const existe = pedido && cls.some((c: any) => (c.id || c._id) === pedido);
+        this.selectedClassroom = existe ? pedido! : (cls[0].id || cls[0]._id);
         this.loadGradebook();
       }
     });

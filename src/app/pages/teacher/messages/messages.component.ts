@@ -1,7 +1,7 @@
 import { Component, OnInit, ViewChild, ElementRef, AfterViewChecked } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
-import { RouterLink } from '@angular/router';
+import { ActivatedRoute, RouterLink } from '@angular/router';
 import { ShellComponent } from '../../../shared/shell/shell.component';
 import { TEACHER_NAV } from '../shared/teacher-nav';
 import { RolePipe } from '../../../shared/pipes/role.pipe';
@@ -38,7 +38,8 @@ export class MessagesComponent implements OnInit, AfterViewChecked {
   get totalUnread(): number { return this.conversations.reduce((s, c) => s + c.unread, 0); }
   get selected(): any { return this.conversations.find(c => c.id === this.selectedId) ?? null; }
 
-  constructor(private messageApi: MessageApiService, private auth: AuthService) {}
+  constructor(
+    private route: ActivatedRoute,private messageApi: MessageApiService, private auth: AuthService) {}
 
   ngOnInit(): void {
     this.teacher = this.auth.getUser();
@@ -50,7 +51,7 @@ export class MessagesComponent implements OnInit, AfterViewChecked {
       this.sentRaw  = sent;
       this.buildConversations();
       this.loading = false;
-      if (this.conversations.length) this.select(this.conversations[0].id);
+      this.abrirConversacionPedida();
     });
   }
 
@@ -59,6 +60,34 @@ export class MessagesComponent implements OnInit, AfterViewChecked {
       this.msgBottom.nativeElement.scrollIntoView({ behavior: 'smooth' });
       this.shouldScroll = false;
     }
+  }
+
+  /**
+   * Abre la conversacion que venga en la URL. Si el maestro nunca le ha
+   * escrito a esa persona no hay hilo todavia, asi que se crea uno vacio:
+   * dejarlo caer en la primera conversacion de la lista es peor, porque
+   * escribiria al alumno equivocado sin darse cuenta.
+   */
+  private abrirConversacionPedida(): void {
+    const destino = this.route.snapshot.queryParamMap.get('to');
+    const nombre  = this.route.snapshot.queryParamMap.get('nombre');
+
+    if (destino) {
+      if (!this.conversations.some(c => c.id === destino)) {
+        this.conversations = [{
+          id: destino,
+          name: nombre || 'Nueva conversación',
+          role: 'Alumno',
+          av: this.toInitials(nombre || '?', ''),
+          lastMsg: 'Sin mensajes todavía',
+          time: '',
+          unread: 0,
+        }, ...this.conversations];
+      }
+      this.select(destino);
+      return;
+    }
+    if (this.conversations.length) this.select(this.conversations[0].id);
   }
 
   private buildConversations(): void {
