@@ -44,14 +44,22 @@ export class ShellComponent implements OnInit, OnDestroy {
    * quedaria activo en todas sus hijas-- y las anidadas por prefijo, para
    * que una pantalla de detalle mantenga marcada su seccion.
    */
+  // Referencias FIJAS. routerLinkActiveOptions es un @Input y RouterLinkActive
+  // implementa OnChanges: si el metodo devolviera un objeto nuevo en cada
+  // llamada, cada ciclo de deteccion lo veria como un valor distinto, correria
+  // update(), pediria otro ciclo, y la pagina se quedaria girando. Como el
+  // shell esta en todas las pantallas, colgaba la app entera.
+  private static readonly EXACTA: IsActiveMatchOptions = {
+    paths: 'exact', queryParams: 'ignored', matrixParams: 'ignored', fragment: 'ignored',
+  };
+  private static readonly POR_PREFIJO: IsActiveMatchOptions = {
+    paths: 'subset', queryParams: 'ignored', matrixParams: 'ignored', fragment: 'ignored',
+  };
+
   matchOptions(route?: string): IsActiveMatchOptions {
-    const profundidad = (route ?? '').split('/').length;
-    return {
-      paths: profundidad <= 3 ? 'exact' : 'subset',
-      queryParams: 'ignored',
-      matrixParams: 'ignored',
-      fragment: 'ignored',
-    };
+    return (route ?? '').split('/').length <= 3
+      ? ShellComponent.EXACTA
+      : ShellComponent.POR_PREFIJO;
   }
 
   @Input() role: Role = 'student';
