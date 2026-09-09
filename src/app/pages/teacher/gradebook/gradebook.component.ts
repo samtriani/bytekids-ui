@@ -45,7 +45,7 @@ export class GradebookComponent implements OnInit {
   }
 
   leidosDe(materialId: string): number {
-    return this.students.filter(s => this.leyo(s.id, materialId)).length;
+    return this.filteredStudents.filter(s => this.leyo(s.id, materialId)).length;
   }
 
   filterStatus = 'Todos';
@@ -196,8 +196,14 @@ export class GradebookComponent implements OnInit {
     return true;
   }
 
+  /**
+   * Los totales de la tabla siguen el filtro. Antes se calculaban sobre
+   * TODOS los alumnos: con "Rechazado" no quedaba ninguna fila, pero la
+   * fila Promedio seguia mostrando 10.0, y parecia que habia una entrega
+   * rechazada con esa calificacion cuando no habia ninguna.
+   */
   avgScore(contentId: string): string {
-    const scores = this.students
+    const scores = this.filteredStudents
       .map(s => this.getGrade(s.id, contentId))
       .filter(g => g?.score != null)
       .map(g => g.score as number);
@@ -206,7 +212,21 @@ export class GradebookComponent implements OnInit {
   }
 
   submittedCount(contentId: string): number {
-    return this.students.filter(s => !!this.getGrade(s.id, contentId)).length;
+    return this.filteredStudents.filter(s => !!this.getGrade(s.id, contentId)).length;
+  }
+
+  /** Cuantos alumnos se estan mostrando, para los "x de y" del encabezado. */
+  get totalMostrado(): number { return this.filteredStudents.length; }
+
+  /** Texto del vacio: nombra el filtro que dejo la tabla sin nadie. */
+  get sinResultados(): string {
+    const porFiltro: Record<string, string> = {
+      'Aprobado':     'Ningún alumno tiene entregas aprobadas todavía.',
+      'Rechazado':    'Ningún alumno tiene entregas que hayas pedido corregir.',
+      'Pendiente':    'No hay entregas esperando revisión. Todo al corriente.',
+      'Sin entregar': 'Todos los alumnos han entregado algo.',
+    };
+    return porFiltro[this.filterStatus] ?? 'Este salón no tiene alumnos inscritos.';
   }
 
   typeIcon(type: string): string {

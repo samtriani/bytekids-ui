@@ -57,7 +57,7 @@
                 </div>
                 <div class="gb-content-meta">
                   <span>+{{ c.xpReward }} XP</span>
-                  <span class="gb-submitted-count">{{ submittedCount(c.id) }}/{{ students.length }}</span>
+                  <span class="gb-submitted-count">{{ submittedCount(c.id) }}/{{ totalMostrado }}</span>
                 </div>
               </th>
             }
@@ -90,15 +90,23 @@
               }
             </tr>
           }
-          <!-- Fila promedio -->
-          <tr class="gb-row gb-avg-row">
-            <td class="gb-td-student" style="font-weight:800;color:var(--tx2)">Promedio</td>
-            @for (c of content; track c.id) {
-              <td class="gb-td" style="font-weight:800;color:var(--guinda)">{{ avgScore(c.id) }}</td>
-            }
-          </tr>
+          <!-- Fila promedio: solo si hay alguien de quien promediar. Con un
+               filtro que no deja a nadie, una fila de promedios sola parece
+               una entrega real. -->
+          @if (filteredStudents.length) {
+            <tr class="gb-row gb-avg-row">
+              <td class="gb-td-student" style="font-weight:800;color:var(--tx2)">Promedio</td>
+              @for (c of content; track c.id) {
+                <td class="gb-td" style="font-weight:800;color:var(--guinda)">{{ avgScore(c.id) }}</td>
+              }
+            </tr>
+          }
         </tbody>
       </table>
+
+      @if (!filteredStudents.length) {
+        <p class="gb-vacio">{{ sinResultados }}</p>
+      }
     </div>
 
     <!-- Leyenda -->
@@ -124,19 +132,19 @@
           <table class="gb-table">
             <thead>
               <tr>
-                <th class="gb-th-student">Alumno</th>
+                <th class="gb-th gb-th-student">Alumno</th>
                 @for (m of materials; track m.id) {
                   <th class="gb-th">
                     <div class="gb-th-title">{{ m.orderIndex }}. {{ m.title }}</div>
                     <div class="gb-th-meta">
-                      +{{ m.xpReward }} XP · {{ leidosDe(m.id) }}/{{ students.length }}
+                      +{{ m.xpReward }} XP · {{ leidosDe(m.id) }}/{{ totalMostrado }}
                     </div>
                   </th>
                 }
               </tr>
             </thead>
             <tbody>
-              @for (s of students; track s.id) {
+              @for (s of filteredStudents; track s.id) {
                 <tr class="gb-row">
                   <td class="gb-td-student">
                     <div class="gb-student-cell">
