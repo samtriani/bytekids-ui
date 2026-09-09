@@ -19,3 +19,12 @@
 
 .teacher-toast { position:fixed; bottom:28px; left:50%; transform:translateX(-50%); background:var(--guinda); color:#fff; padding:12px 24px; border-radius:40px; font-weight:800; font-size:.9rem; z-index:9999; box-shadow:0 8px 24px rgba(0,0,0,.25); white-space:nowrap; animation:modalIn .3s ease; }
 @keyframes modalIn { from{opacity:0;transform:translateY(12px)} to{opacity:1;transform:translateY(0)} }
+
+/* El conteo en el chip evita filtrar a ciegas: se ve cuantos hay antes de
+   pulsar, y que un estado esta vacio sin tener que probarlo. */
+.chip-n {
+  display: inline-block; margin-left: 5px; padding: 1px 6px;
+  border-radius: 999px; font-size: .66rem; font-weight: 800;
+  background: rgba(255, 255, 255, .2);
+}
+.chip:not(.on) .chip-n { background: var(--surface2); color: var(--tx3); }
