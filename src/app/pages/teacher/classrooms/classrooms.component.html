@@ -43,7 +43,7 @@
       @if (sel) {
         <div class="rd-header">
           <div>
-            <h2 class="rd-title">Salón {{ sel.name }}</h2>
+            <h2 class="rd-title">{{ sel.name }}</h2>
             <p class="rd-sub">{{ sel.students }} alumnos · {{ sel.desc }}</p>
           </div>
           @if (sel.status==='warn') {
@@ -59,24 +59,24 @@
           <div class="alert alert-danger mb14">⚠️ Promedio por debajo de la meta (65%). Se recomienda revisar el plan de estudios y apoyar a los alumnos rezagados.</div>
         }
         @if (sel.status==='excellent') {
-          <div class="alert alert-ok mb14">✅ ¡Salón {{ sel.name }} es el número 1 de la institución! Sigue motivando a tus alumnos.</div>
+          <div class="alert alert-ok mb14">✅ ¡{{ sel.name }} es el salón con mejor avance de la institución! Sigue motivando a tus alumnos.</div>
         }
 
         <div class="rd-body">
           <div class="rd-left">
-            <div class="card-title mb8">Materias del período</div>
+            <div class="card-title mb8">Materias que imparte este salón</div>
             <div class="chips mb14">
               @for (s of sel.subjects; track s) { <span class="chip on">{{ s }}</span> }
               @if (!sel.subjects.length) { <span style="color:var(--tx2);font-size:.8rem">Sin materias registradas</span> }
             </div>
-            <div class="card-title mb8">Desempeño por materia</div>
+            <div class="card-title mb8">Avance por alumno</div>
             <div style="height:170px"><canvas #radC></canvas></div>
           </div>
           <div class="rd-right">
             <div class="card-title mb8">Estadísticas del salón</div>
             <div class="stat-grid">
               <div class="sg-item"><div class="sg-v" [style.color]="rc(sel.avg)">{{ sel.avg }}%</div><div class="sg-l">Promedio</div></div>
-              <div class="sg-item"><div class="sg-v">{{ sel.missions }}</div><div class="sg-l">Actividades</div></div>
+              <div class="sg-item"><div class="sg-v">{{ sel.piezas ?? sel.missions }}</div><div class="sg-l">Actividades del temario</div></div>
               <div class="sg-item"><div class="sg-v" style="color:var(--ok)">{{ sel.active }}</div><div class="sg-l">Activos</div></div>
               <div class="sg-item"><div class="sg-v" style="font-size:.72rem">{{ sel.topStudent }}</div><div class="sg-l">⭐ Top alumno</div></div>
             </div>

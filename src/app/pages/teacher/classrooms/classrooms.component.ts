@@ -31,7 +31,15 @@ export class ClassroomsComponent implements OnInit {
 
   get teacherName(): string { return this.teacher?.displayName || 'Maestro'; }
   get teacherInitials(): string { return this.teacher?.initials || 'M'; }
-  get totalStudents(): number { return this.rooms.reduce((s, r) => s + r.students, 0); }
+  /**
+   * Un alumno inscrito en dos salones es UN alumno. Sumar los conteos de
+   * cada salon lo contaba dos veces: decia 3 con dos alumnos reales.
+   */
+  get totalStudents(): number {
+    const ids = new Set<string>();
+    this.rooms.forEach(r => (r.studentIds ?? []).forEach((id: string) => ids.add(id)));
+    return ids.size || this.rooms.reduce((s, r) => s + r.students, 0);
+  }
   get globalAvg(): number {
     if (!this.rooms.length) return 0;
     return Math.round(this.rooms.reduce((s, r) => s + r.avg, 0) / this.rooms.length);
@@ -77,6 +85,7 @@ export class ClassroomsComponent implements OnInit {
       this.sel = this.rooms[0] || null;
       this.loading = false;
       setTimeout(() => this.renderChart(), 80);
+      this.cargarMaterias();
       this.corregirPromedios();
     });
   }
@@ -87,20 +96,89 @@ export class ClassroomsComponent implements OnInit {
    * Libreta y Reportes ya usan el avance real, y ver tres cifras distintas
    * del mismo alumno en el mismo modulo es peor que verlas todas mal.
    */
+  /** Las materias que imparte el salon, no las que cursan sus alumnos. */
+  private cargarMaterias(): void {
+    if (!this.rooms.length) return;
+    forkJoin(this.rooms.map((r: any) =>
+      this.classroomApi.getSubjects(r._id || r.id).pipe(catchError(() => of([])))
+    )).subscribe(listas => {
+      (listas as any[][]).forEach((materias, i) => {
+        this.rooms[i].subjects = (materias ?? []).map((m: any) => m.name).filter(Boolean);
+        this.rooms[i].color    = materias?.[0]?.color || '#7A1535';
+      });
+      if (this.sel) {
+        this.sel = this.rooms.find((r: any) => (r._id || r.id) === (this.sel._id || this.sel.id)) ?? this.sel;
+      }
+    });
+  }
+
   private corregirPromedios(): void {
     if (!this.rooms.length) return;
     forkJoin(this.rooms.map((r: any) =>
       this.submissionApi.getGradebook(r._id || r.id).pipe(catchError(() => of(null)))
     )).subscribe(libretas => {
-      (libretas as any[]).forEach((l, i) => {
-        const real = this.promedioDeLibreta(l);
-        if (real !== null) this.rooms[i].avg = real;
-      });
+      // Se recalcula TODO lo que depende del promedio, no solo el numero.
+      // Al corregir solo avg, el encabezado seguia diciendo "Promedio del
+      // 18%" --texto armado con el valor viejo-- mientras la tarjeta decia
+      // 8%. Dos cifras distintas del mismo salon en la misma pantalla.
+      (libretas as any[]).forEach((l, i) => this.aplicarLibreta(this.rooms[i], l));
       if (this.sel) {
         this.sel = this.rooms.find((r: any) => (r._id || r.id) === (this.sel._id || this.sel.id)) ?? this.sel;
       }
       setTimeout(() => this.renderChart(), 40);
     });
+  }
+
+  /**
+   * Vuelca la libreta sobre el salon: promedio, piezas del temario, avance
+   * de cada alumno y quien va al frente. Todo del MISMO salon.
+   */
+  private aplicarLibreta(room: any, libreta: any): void {
+    if (!libreta) return;
+    const contenidos: any[] = libreta.content   ?? [];
+    const materiales: any[] = libreta.materials ?? [];
+    const alumnos: any[]    = libreta.students  ?? [];
+    const piezas = contenidos.length + materiales.length;
+    const grades = libreta.grades ?? {};
+    const reads  = libreta.reads  ?? {};
+
+    const avances = alumnos.map(a => {
+      const suyas  = grades[a.id] ?? {};
+      const leidos = reads[a.id]  ?? {};
+      const hechas = contenidos.filter(c => suyas[c.id]?.status === 'aprobado').length
+                   + materiales.filter(m => leidos[m.id]).length;
+      const porCalificar = contenidos.filter(c => suyas[c.id]?.status === 'enviado').length;
+      return {
+        id: a.id,
+        nombre: a.name,
+        hechas, porCalificar,
+        prog: piezas ? Math.round((hechas / piezas) * 100) : 0,
+      };
+    });
+
+    room.studentIds  = alumnos.map(a => a.id);
+    room.students    = alumnos.length;
+    room.piezas      = piezas;
+    room.avances     = avances;
+    room.porCalificar = avances.reduce((s, a) => s + a.porCalificar, 0);
+    room.avg = avances.length
+      ? Math.round(avances.reduce((s, a) => s + a.prog, 0) / avances.length) : 0;
+
+    const mejor = [...avances].sort((a, b) => b.prog - a.prog)[0];
+    room.topStudent = mejor?.nombre ?? '—';
+
+    // El estado y su texto se rearman con el promedio ya corregido.
+    room.status = !piezas ? 'warn'
+                : room.avg >= 80 ? 'excellent'
+                : room.avg < 65  ? 'warn' : 'ok';
+    room.up = room.avg >= 65;
+    room.desc = !piezas
+      ? 'Sin temario asignado: sus alumnos todavía no ven actividades.'
+      : room.status === 'excellent'
+        ? `Grupo de alto rendimiento. Promedio del ${room.avg}% del temario.`
+        : room.status === 'warn'
+          ? `Promedio del ${room.avg}% de las ${piezas} actividades del temario.`
+          : `Grupo en progreso. Promedio del ${room.avg}% del temario.`;
   }
 
   /** Aprobadas + materiales leidos sobre las piezas asignadas al salon. */
@@ -139,19 +217,12 @@ export class ClassroomsComponent implements OnInit {
     const missions = enriched.reduce((s, e) =>
       s + e.activity.reduce((acc: number, a: any) => acc + (a.missionsCompleted ?? 0), 0), 0);
 
-    // Aggregate subjects with avg progress
-    const subjectMap = new Map<string, number[]>();
-    enriched.forEach(e => e.subjects.forEach((sub: any) => {
-      const name = sub.subject?.name || sub.subjectName || sub.name || 'Sin nombre';
-      const p = this.subjectProgress(sub);
-      if (!subjectMap.has(name)) subjectMap.set(name, []);
-      subjectMap.get(name)!.push(p);
-    }));
-    const subjects = Array.from(subjectMap.keys()).slice(0, 5);
-    const subjectAvgs = subjects.map(s => {
-      const vals = subjectMap.get(s)!;
-      return Math.round(vals.reduce((a, b) => a + b, 0) / vals.length);
-    });
+    // Las materias del salon se piden aparte, en cargarMaterias(). Aqui se
+    // sacaban del progreso de los ALUMNOS, y un alumno inscrito en dos
+    // salones arrastra las materias del otro: por eso los dos salones
+    // mostraban las mismas dos materias.
+    const subjects: string[] = [];
+    const subjectAvgs: number[] = [];
 
     // Top student
     const topIdx = studentProgs.length ? studentProgs.indexOf(Math.max(...studentProgs)) : -1;
@@ -199,28 +270,65 @@ export class ClassroomsComponent implements OnInit {
     setTimeout(() => this.renderChart(), 50);
   }
 
+  /**
+   * Barras horizontales de avance por alumno.
+   *
+   * Antes era un radar "por materia" con dos problemas: los datos venian del
+   * progreso de los ALUMNOS --asi que un salon mostraba las materias del
+   * otro-- y un radar de dos ejes degenera en una linea vertical, que es
+   * literalmente lo que se veia. Un radar necesita tres ejes o mas para
+   * significar algo.
+   *
+   * Quien va adelante y quien atras en ESTE salon si es una pregunta que el
+   * maestro se hace, y con pocos alumnos se lee mejor en barras.
+   */
   renderChart(): void {
     if (!this.radC || !this.sel) return;
     this.chart?.destroy();
+
+    const avances: any[] = [...(this.sel.avances ?? [])].sort((a, b) => b.prog - a.prog);
+    const piezas = this.sel.piezas ?? 0;
+
     this.chart = new Chart(this.radC.nativeElement, {
-      type: 'radar',
+      type: 'bar',
       data: {
-        labels: this.sel.subjects.length ? this.sel.subjects : ['Sin materias'],
+        labels: avances.length ? avances.map(a => a.nombre.split(' ')[0]) : ['Sin alumnos'],
         datasets: [{
-          data: this.sel.subjectAvgs.length ? this.sel.subjectAvgs : [0],
-          backgroundColor: 'rgba(122,21,53,.12)',
-          borderColor: '#7A1535',
-          pointBackgroundColor: '#7A1535',
-          borderWidth: 2,
-        }]
+          data: avances.length ? avances.map(a => a.prog) : [0],
+          backgroundColor: avances.map(a => this.barColor(a.prog) + 'CC'),
+          borderColor: avances.map(a => this.barColor(a.prog)),
+          borderWidth: 1.5,
+          borderRadius: 5,
+        }],
       },
       options: {
+        indexAxis: 'y',
         responsive: true, maintainAspectRatio: false,
-        scales: { r: { grid: {color:'#EDEEF1'}, pointLabels: {color:'#3D2D3A', font:{family:'Nunito',size:11,weight:'bold'}},
-          ticks: {display:false}, suggestedMin: 0, suggestedMax: 100 }},
-        plugins: { legend: { display: false } }
-      }
+        plugins: {
+          legend: { display: false },
+          tooltip: {
+            callbacks: {
+              // El porcentaje solo no dice nada sin el tamano del temario.
+              label: (ctx) => {
+                const a = avances[ctx.dataIndex];
+                return a ? `${a.prog}% · ${a.hechas} de ${piezas} actividades` : '';
+              },
+            },
+          },
+        },
+        scales: {
+          x: { max: 100, grid: { color: '#EDEEF1' },
+               ticks: { color: '#7A6878', font: { family: 'Nunito', size: 11 },
+                        callback: (v) => v + '%' } },
+          y: { grid: { display: false },
+               ticks: { color: '#3D2D3A', font: { family: 'Nunito', size: 11, weight: 'bold' } } },
+        },
+      },
     });
+  }
+
+  private barColor(p: number): string {
+    return p >= 80 ? '#1A6B3C' : p < 40 ? '#9B1414' : '#C4992A';
   }
 
   rc(avg: number): string { return avg >= 80 ? 'var(--ok)' : avg < 65 ? 'var(--danger)' : 'var(--guinda)'; }
