@@ -7,8 +7,6 @@
 .as-progress-wrap { display:flex; align-items:center; gap:10px; }
 .as-pct  { font-weight:800; font-size:.83rem; color:var(--bk-purple-light); white-space:nowrap; }
 .ach-filters { display:flex; gap:8px; margin-bottom:18px; flex-wrap:wrap; }
-.filter-btn { padding:6px 16px; border-radius:20px; border:1px solid var(--bk-border); background:transparent; color:var(--bk-text-muted); font-size:.78rem; font-weight:700; cursor:pointer; transition:all .2s; font-family:'Nunito',sans-serif; }
-.filter-btn.active { background:var(--bk-purple); color:#fff; border-color:var(--bk-purple); }
 .ach-grid { display:grid; grid-template-columns:repeat(auto-fill, minmax(220px,1fr)); gap:14px; }
 .ach-card { background:var(--bk-bg-card); border:1px solid var(--bk-border); border-radius:16px; padding:20px; display:flex; flex-direction:column; align-items:center; gap:8px; text-align:center; transition:all .2s; }
 .ach-card.earned { border-color:rgba(37,99,235,0.35); background:rgba(37,99,235,0.04); }
@@ -27,7 +25,6 @@
 /* Los filtros usan el mismo panel que Mis Actividades: mismas etiquetas,
    mismo color por materia, mismo conteo. Son la misma idea en dos
    pantallas y deben comportarse igual. */
-.filter-btn--tipo { font-size: .78rem; }
 
 .filter-n {
   display: inline-block; margin-left: 5px; padding: 1px 6px;

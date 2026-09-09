@@ -29,6 +29,7 @@ interface Salon {
   id: string;
   nombre: string;
   ciclo: string;
+  color: string;        // el de su materia, para reconocerlo de un vistazo
   alumnos: AlumnoDelSalon[];
   piezas: number;
   promedio: number;
@@ -113,9 +114,11 @@ export class TeacherDashboardComponent implements OnInit {
 
       forkJoin(
         salones.map((c: any) =>
-          this.submissionApi.getGradebook(c.id).pipe(
-            map(libreta => this.armarSalon(c, libreta)),
-            catchError(() => of(this.armarSalon(c, null))),
+          forkJoin({
+            libreta:  this.submissionApi.getGradebook(c.id).pipe(catchError(() => of(null))),
+            materias: this.classroomApi.getSubjects(c.id).pipe(catchError(() => of([]))),
+          }).pipe(
+            map(({ libreta, materias }) => this.armarSalon(c, libreta, materias)),
           ))
       ).subscribe(resultado => {
         this.salones = resultado as Salon[];
@@ -126,7 +129,7 @@ export class TeacherDashboardComponent implements OnInit {
     });
   }
 
-  private armarSalon(c: any, libreta: any): Salon {
+  private armarSalon(c: any, libreta: any, materias: any[] = []): Salon {
     const alumnosRaw: any[] = libreta?.students ?? [];
     const contenidos: any[] = libreta?.content   ?? [];
     const materiales: any[] = libreta?.materials ?? [];
@@ -166,6 +169,7 @@ export class TeacherDashboardComponent implements OnInit {
       id: c.id,
       nombre: c.name,
       ciclo: c.schoolYear ?? '',
+      color: materias?.[0]?.color || '#7C3AED',
       alumnos,
       piezas,
       promedio: alumnos.length

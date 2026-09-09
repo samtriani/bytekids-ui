@@ -117,3 +117,9 @@
   .td-buscar { flex-wrap: wrap; }
   .sl-pct { min-width: 34px; }
 }
+
+/* La pildora del salon lleva el color de su materia, puesto inline desde el
+   componente. Sin color propio en la base, tres salones con nombre casi
+   identico solo se distinguen leyendo hasta el parentesis. */
+.filter-btn[style*="border-color"] { border-width: 1.5px; }
+.filter-btn[style*="background"] .filter-n { background: rgba(255, 255, 255, .25); }
