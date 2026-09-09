@@ -34,6 +34,10 @@
     <div class="aula-header" [style.--subject-color]="subjectColor">
       <div class="aula-header-left">
         <button class="aula-exit-btn" (click)="exitClass()">← Salir de clase</button>
+        <button class="aula-menu-btn" (click)="irAlMenu()"
+                title="La clase sigue y el video se va a una esquina">
+          🏠 Ir al menú
+        </button>
         <div class="aula-subject-info">
           <span class="aula-subject-icon">{{ session.subjectIcon }}</span>
           <div>

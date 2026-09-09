@@ -199,3 +199,14 @@
   transition: all .15s;
   &:hover { background: rgba(124,58,237,.14); }
 }
+
+/* Dos salidas distintas: una cuelga y la otra no, y tienen que verse
+   distinto. La de colgar se queda como estaba; esta es la neutral. */
+.aula-menu-btn {
+  padding: 7px 13px; border-radius: 10px;
+  border: 1.5px solid rgba(255,255,255,.28);
+  background: rgba(255,255,255,.10); color: #fff;
+  font-size: .78rem; font-weight: 700; cursor: pointer;
+  white-space: nowrap; transition: background .15s;
+  &:hover { background: rgba(255,255,255,.22); }
+}
