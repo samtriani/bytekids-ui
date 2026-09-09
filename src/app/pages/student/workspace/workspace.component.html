@@ -19,12 +19,29 @@
 @if (screen === 'done') {
   <div class="ws-done">
     <div class="ws-done-confetti">🎉</div>
-    @if (quizResult) {
-      <div class="ws-done-score" [style.color]="scoreColor(quizResult.scorePercent ?? quizResult.score ?? 0)">
-        {{ quizResult.scorePercent ?? quizResult.score ?? 0 }}%
-      </div>
-      <h2 class="ws-done-title">{{ (quizResult.scorePercent ?? quizResult.score ?? 0) >= 80 ? '¡Excelente resultado!' : '¡Completado!' }}</h2>
-      <p class="ws-done-sub">{{ quizResult.correctAnswers ?? '—' }} de {{ quizResult.totalQuestions ?? questions.length }} respuestas correctas</p>
+    @if (ultimoIntento) {
+      <!-- correctAnswers y totalQuestions no existen en la respuesta del
+           backend: siempre salia "— de 5". Se usa la calificacion, que si. -->
+      <div class="ws-done-score" [style.color]="scoreColor(califica)">{{ califica }}%</div>
+      <h2 class="ws-done-title">
+        {{ califica >= 80 ? '¡Excelente resultado!'
+           : aprobo ? '¡Quiz aprobado!'
+           : 'Ya casi' }}
+      </h2>
+      <p class="ws-done-sub">
+        @if (aprobo) {
+          Contestaste bien lo suficiente para aprobarlo.
+        } @else {
+          Necesitas 70% para aprobarlo. Puedes volver a intentarlo las veces
+          que quieras: para eso está.
+        }
+        @if (intentos.length > 1) {
+          <br><small>Llevas {{ intentos.length }} intentos.</small>
+        }
+      </p>
+      <button class="ws-btn ghost" style="margin-top:14px" (click)="reintentarQuiz()">
+        {{ aprobo ? '🔁 Volver a contestarlo' : '✏️ Intentar de nuevo' }}
+      </button>
     } @else if (existingSub?.status === 'aprobado') {
       <h2 class="ws-done-title">¡Ya completaste esta actividad!</h2>
       <p class="ws-done-sub">Aquí abajo puedes repasar lo que entregaste, {{ student?.displayName?.split(' ')[0] }} 👇</p>
