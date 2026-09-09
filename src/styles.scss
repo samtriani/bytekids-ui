@@ -852,3 +852,190 @@ input,select,textarea { font-family:inherit; }
   background: var(--bk-bg-card2, var(--surface2));
   color: var(--bk-text-muted, var(--tx3));
 }
+
+
+/* ═════════════════════════════════════════════════════════════════════
+   AULA EN VIVO — panel dividido y pestaña Actividad
+   Compartido por las dos aulas: el maestro ve lo mismo que el alumno, y
+   eso es justo el punto. Vive aquí y no en los componentes porque estaba
+   duplicado en los dos y el SCSS del maestro se pasó del presupuesto.
+   ═════════════════════════════════════════════════════════════════════ */
+
+/* ══ Panel dividido: video y actividad a la vez ═══════════════════════════ */
+
+.aula-panel-body {
+  flex: 1; display: flex; min-height: 0; overflow: hidden;
+}
+.aula-tab-pane {
+  flex: 1; display: flex; flex-direction: column;
+  min-width: 0; min-height: 0; overflow: hidden;
+}
+
+/* El panel de video se oculta, no se desmonta: quitarlo del DOM destruye el
+   iframe de Jitsi y tumba la llamada. Con display:none la sesión sigue viva. */
+.aula-pane-oculta { display: none !important; }
+
+.aula-panel-body--split {
+  .aula-video-panel {
+    /* !important porque el componente le pone flex:1 y, con el atributo del
+       ámbito emulado, su selector pesa más que este. */
+    flex: 0 0 44% !important;
+    min-width: 280px; max-width: 620px;
+    border-right: 1px solid rgba(255,255,255,.08);
+  }
+}
+
+/* Debajo de este ancho no caben dos columnas legibles: el video estorba más
+   de lo que ayuda y la actividad se queda con toda la pantalla. La llamada no
+   se corta, solo deja de pintarse. */
+@media (max-width: 1180px) {
+  .aula-panel-body--split .aula-video-panel { display: none !important; }
+}
+
+.aula-video-mini-btn {
+  margin-left: auto; padding: 3px 10px; border-radius: 8px;
+  border: 1px solid rgba(255,255,255,.2); background: rgba(255,255,255,.08);
+  color: rgba(255,255,255,.75); font-size: .7rem; font-weight: 700; cursor: pointer;
+  &:hover { background: rgba(255,255,255,.16); color: #fff; }
+}
+
+/* ══ Pestaña Actividad ════════════════════════════════════════════════════ */
+
+/* El ajuste de .aula-tabs y .aula-tab para que quepan cuatro pestañas vive en
+   cada componente: con el ámbito emulado de Angular, un .aula-tab de aquí pesa
+   menos que el .aula-tab[_ngcontent-xyz] de allá y no llegaría nunca. */
+
+.aula-tab--work {
+  &.active { background: linear-gradient(135deg, #0f766e, #14a08f) !important;
+             border-color: #0f766e !important;
+             box-shadow: 0 4px 14px rgba(15,118,110,.35) !important; }
+  &:hover:not(.active) { border-color: rgba(15,118,110,.4) !important;
+                         color: #0f766e !important;
+                         background: rgba(15,118,110,.06) !important; }
+}
+.aula-tab-dot {
+  width: 7px; height: 7px; border-radius: 50%; background: #F59E0B;
+  display: inline-block; animation: pulse 1.2s ease-in-out infinite;
+  box-shadow: 0 0 0 2px rgba(245,158,11,.3);
+}
+
+.aula-work {
+  flex: 1; display: flex; flex-direction: column;
+  min-height: 0; overflow: hidden; background: var(--bg1);
+}
+
+.aula-work-empty {
+  flex: 1; display: flex; flex-direction: column; align-items: center;
+  justify-content: center; gap: 8px; padding: 40px 30px; text-align: center;
+  span  { font-size: 2.6rem; }
+  p     { margin: 0; font-size: .92rem; font-weight: 800; color: var(--tx1); }
+  small { font-size: .78rem; color: var(--tx3); max-width: 300px; line-height: 1.5; }
+}
+
+.aula-work-head {
+  flex-shrink: 0; padding: 14px 18px;
+  border-bottom: 1px solid; border-bottom-color: inherit;
+}
+.aula-work-head-top { display: flex; align-items: flex-start; gap: 12px; }
+.aula-work-icon   { font-size: 1.7rem; line-height: 1; flex-shrink: 0; }
+.aula-work-titles { flex: 1; min-width: 0; }
+.aula-work-title  { font-size: 1rem; font-weight: 900; color: var(--tx1); line-height: 1.3; }
+.aula-work-meta   { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 6px; }
+.aula-work-chip {
+  font-size: .68rem; font-weight: 800; color: #fff;
+  padding: 3px 9px; border-radius: 999px;
+  &--soft { background: var(--bg2) !important; color: var(--tx2); text-transform: capitalize; }
+}
+.aula-work-showvid {
+  flex-shrink: 0; padding: 6px 11px; border-radius: 10px;
+  border: 1.5px solid rgba(10,77,122,.35); background: rgba(10,77,122,.07);
+  color: #0a4d7a; font-size: .72rem; font-weight: 800; cursor: pointer;
+  &:hover { background: rgba(10,77,122,.14); }
+}
+.aula-work-desc {
+  margin: 10px 0 0; font-size: .84rem; color: var(--tx2); line-height: 1.55;
+}
+
+.aula-work-scroll {
+  flex: 1; min-height: 0; overflow-y: auto;
+  padding: 16px 18px 24px; display: flex; flex-direction: column; gap: 12px;
+}
+
+.aula-work-block {
+  background: var(--bg-card, #fff); border: 1px solid var(--border);
+  border-radius: 12px; padding: 13px 15px;
+  display: flex; flex-direction: column; gap: 8px;
+}
+.aula-work-block-title { font-size: .8rem; font-weight: 900; color: var(--tx1); }
+.aula-work-text  { margin: 0; font-size: .86rem; color: var(--tx2); line-height: 1.6; white-space: pre-wrap; }
+.aula-work-note  { margin: 0; font-size: .82rem; color: var(--tx3); line-height: 1.55; }
+
+.aula-work-check {
+  margin: 0; padding-left: 20px;
+  display: flex; flex-direction: column; gap: 5px;
+  li { font-size: .84rem; color: var(--tx2); line-height: 1.5; }
+}
+
+.aula-work-code {
+  margin: 0; padding: 12px 14px; border-radius: 10px;
+  background: #0d0d1a; color: #d9f99d;
+  font-family: 'Fira Code', Consolas, monospace; font-size: .8rem; line-height: 1.6;
+  overflow-x: auto; white-space: pre;
+}
+
+.aula-work-link {
+  display: inline-flex; align-items: center; justify-content: center;
+  padding: 11px 16px; border-radius: 12px;
+  border: 1.5px solid; background: var(--bg-card, #fff);
+  font-size: .86rem; font-weight: 800; text-decoration: none;
+  transition: all .15s;
+  &:hover { transform: translateY(-1px); box-shadow: 0 4px 14px rgba(0,0,0,.08); }
+}
+
+.aula-work-status {
+  border-radius: 12px; padding: 11px 15px;
+  display: flex; flex-direction: column; gap: 6px;
+  font-size: .84rem; font-weight: 800;
+
+  &--ok     { background: rgba(16,185,129,.1);  border: 1px solid rgba(16,185,129,.3);  color: #047857; }
+  &--espera { background: rgba(59,130,246,.09); border: 1px solid rgba(59,130,246,.28); color: #1d4ed8; }
+  /* Ámbar y no rojo: el maestro pidió un cambio, no descartó el trabajo. */
+  &--ajuste { background: rgba(245,158,11,.09); border: 1px solid rgba(245,158,11,.3);  color: #B45309; }
+}
+.aula-work-status-t { font-size: .86rem; font-weight: 900; }
+.aula-work-status-h { font-size: .76rem; font-weight: 600; color: var(--tx3); }
+.aula-work-fb {
+  background: var(--bg-card, #fff); border-left: 3px solid #F59E0B;
+  border-radius: 6px; padding: 9px 11px;
+  font-size: .84rem; font-weight: 500; color: var(--tx1); line-height: 1.5;
+}
+
+.aula-work-textarea {
+  width: 100%; min-height: 130px; resize: vertical;
+  padding: 11px 13px; border-radius: 10px;
+  border: 1.5px solid var(--border); background: var(--bg1);
+  font-family: inherit; font-size: .86rem; color: var(--tx1); line-height: 1.6;
+  &:focus { outline: none; border-color: var(--guinda); }
+  &:disabled { opacity: .6; }
+}
+.aula-work-actions { display: flex; align-items: center; gap: 12px; flex-wrap: wrap; }
+.aula-work-hint    { font-size: .74rem; color: var(--tx3); }
+
+.aula-work-btn {
+  align-self: flex-start; padding: 11px 22px; border-radius: 12px; border: none;
+  color: #fff; font-size: .86rem; font-weight: 800; cursor: pointer;
+  box-shadow: 0 3px 12px rgba(0,0,0,.15); transition: all .15s;
+  &:hover:not(:disabled)  { transform: translateY(-1px); box-shadow: 0 6px 18px rgba(0,0,0,.2); }
+  &:disabled { opacity: .5; cursor: not-allowed; box-shadow: none; }
+}
+
+.aula-work-ok {
+  background: rgba(16,185,129,.1); border: 1px solid rgba(16,185,129,.3);
+  border-radius: 12px; padding: 11px 15px;
+  font-size: .85rem; font-weight: 800; color: #047857;
+}
+.aula-work-err {
+  background: rgba(239,68,68,.08); border: 1px solid rgba(239,68,68,.28);
+  border-radius: 12px; padding: 11px 15px;
+  font-size: .82rem; font-weight: 700; color: #DC2626;
+}

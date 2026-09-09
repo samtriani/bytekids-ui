@@ -93,6 +93,10 @@
               </div>
             </div>
 
+            <button class="aula-work-open" (click)="abrirActividad()">
+              📝 Ver la actividad como la ven ellos
+            </button>
+
             <!-- Progreso de entregas -->
             <div class="aula-sub-progress">
               <div class="aula-sub-progress-bar">
@@ -182,6 +186,10 @@
             💬 Chat
             @if (chatMessages.length) { <span class="aula-tab-count">{{ chatMessages.length }}</span> }
           </button>
+          <button class="aula-tab aula-tab--work" [class.active]="activeTab==='work'" (click)="abrirActividad()">
+            📝 Actividad
+            @if (activeMission && activeTab !== 'work') { <span class="aula-tab-dot"></span> }
+          </button>
           <button class="aula-tab aula-tab--video"
                   [class.active]="activeTab==='video'"
                   (click)="activeTab='video'">
@@ -191,6 +199,39 @@
             🤖 ByteBot
           </button>
         </div>
+
+        <div class="aula-panel-body" [class.aula-panel-body--split]="vistaDividida">
+
+          <!--
+            El panel de video NUNCA sale del DOM. Montado dentro de un
+            @if (activeTab === 'video'), cambiar de pestaña lo sacaba del árbol
+            y destruía el iframe de Jitsi: se caía la clase entera. Se oculta
+            con CSS, que deja la llamada viva.
+          -->
+          <div class="aula-video-panel" [class.aula-pane-oculta]="!videoVisible">
+            @if (!teacherVideoActive) {
+              <div class="aula-video-start">
+                <div class="aula-video-start-icon">📷</div>
+                <div class="aula-video-start-title">Videollamada</div>
+                <div class="aula-video-start-sub">Solo tú puedes iniciar la videollamada.<br>Los alumnos recibirán la invitación automáticamente.</div>
+                <button class="aula-video-btn" (click)="startVideo()">
+                  🎥 Iniciar videollamada
+                </button>
+              </div>
+            } @else {
+              <div class="aula-video-live-bar">
+                <span class="aula-vid-dot"></span> Videollamada activa
+                @if (vistaDividida) {
+                  <button class="aula-video-mini-btn" (click)="verVideoAlLado = false">✕ Ocultar</button>
+                }
+                <button class="aula-video-end-btn" (click)="startVideo()">⏹ Finalizar</button>
+              </div>
+              <div id="jitsi-teacher" class="aula-jitsi-container"></div>
+            }
+          </div>
+
+          @if (activeTab !== 'video') {
+          <div class="aula-tab-pane">
 
         <!-- Tab: Chat del aula -->
         @if (activeTab === 'chat') {
@@ -232,24 +273,110 @@
           </div>
         }
 
-        <!-- Tab: Video -->
-        @if (activeTab === 'video') {
-          <div class="aula-video-panel">
-            @if (!teacherVideoActive) {
-              <div class="aula-video-start">
-                <div class="aula-video-start-icon">📷</div>
-                <div class="aula-video-start-title">Videollamada</div>
-                <div class="aula-video-start-sub">Solo tú puedes iniciar la videollamada.<br>Los alumnos recibirán la invitación automáticamente.</div>
-                <button class="aula-video-btn" (click)="startVideo()">
-                  🎥 Iniciar videollamada
-                </button>
+        <!-- Tab: Actividad del día -->
+        @if (activeTab === 'work') {
+          <div class="aula-work">
+            @if (!activeMission) {
+              <div class="aula-work-empty">
+                <span>🎯</span>
+                <p>Todavía no has lanzado la actividad de hoy</p>
+                <small>Elígela en “Misión del día”, a la izquierda. En cuanto la lances aparecerá aquí y en la pantalla de tus alumnos.</small>
               </div>
             } @else {
-              <div class="aula-video-live-bar">
-                <span class="aula-vid-dot"></span> Videollamada activa
-                <button class="aula-video-end-btn" (click)="startVideo()">⏹ Finalizar</button>
+              <div class="aula-work-head"
+                   [style.background]="subjectColor + '12'"
+                   [style.border-color]="subjectColor + '35'">
+                <div class="aula-work-head-top">
+                  <span class="aula-work-icon">{{ activeMission.subjectIcon }}</span>
+                  <div class="aula-work-titles">
+                    <div class="aula-work-title">{{ activeMission.title }}</div>
+                    <div class="aula-work-meta">
+                      <span class="aula-work-chip" [style.background]="subjectColor">⭐ +{{ activeMission.xpReward }} XP</span>
+                      <span class="aula-work-chip aula-work-chip--soft">{{ activeMission.difficulty }}</span>
+                      @if (activeMission.estimatedMinutes) {
+                        <span class="aula-work-chip aula-work-chip--soft">⏱ {{ activeMission.estimatedMinutes }} min</span>
+                      }
+                      <span class="aula-work-chip aula-work-chip--soft">{{ submittedCount }}/{{ enrolledStudents.length }} entregaron</span>
+                    </div>
+                  </div>
+                  @if (teacherVideoActive && !verVideoAlLado) {
+                    <button class="aula-work-showvid" (click)="verVideoAlLado = true">📷 Ver video</button>
+                  }
+                </div>
+                @if (activeMission.description) {
+                  <p class="aula-work-desc">{{ activeMission.description }}</p>
+                }
               </div>
-              <div id="jitsi-teacher" class="aula-jitsi-container"></div>
+
+              <div class="aula-work-scroll">
+                <div class="aula-work-espejo">
+                  👁️ Esto es lo mismo que están viendo tus alumnos en su pestaña
+                  <strong>Actividad</strong>. Si compartes pantalla, todos verán exactamente esto.
+                </div>
+
+                @if (cuerpo.instrucciones) {
+                  <div class="aula-work-block">
+                    <div class="aula-work-block-title">📋 Lo que tienen que hacer</div>
+                    <p class="aula-work-text">{{ cuerpo.instrucciones }}</p>
+                  </div>
+                }
+
+                @if (cuerpo.checklist.length) {
+                  <div class="aula-work-block">
+                    <div class="aula-work-block-title">✅ Su lista de verificación</div>
+                    <ul class="aula-work-check">
+                      @for (item of cuerpo.checklist; track $index) { <li>{{ item }}</li> }
+                    </ul>
+                  </div>
+                }
+
+                @if (cuerpo.starterCode) {
+                  <div class="aula-work-block">
+                    <div class="aula-work-block-title">💻 Código de arranque</div>
+                    <pre class="aula-work-code">{{ cuerpo.starterCode }}</pre>
+                  </div>
+                }
+
+                @if (cuerpo.url) {
+                  <a class="aula-work-link" [href]="cuerpo.url" target="_blank" rel="noopener"
+                     [style.border-color]="subjectColor + '55'" [style.color]="subjectColor">
+                    {{ cuerpo.tipoRecurso }} ↗
+                  </a>
+                }
+
+                @if (cuerpo.textoPlano) {
+                  <div class="aula-work-block">
+                    <p class="aula-work-text">{{ cuerpo.textoPlano }}</p>
+                  </div>
+                }
+
+                <!-- Solo para ti: el backend no le manda esto al alumno. -->
+                @if (cuerpo.notasMaestro) {
+                  <div class="aula-work-block aula-work-guia">
+                    <div class="aula-work-block-title">👩‍🏫 Guía de clase — solo tú ves esto</div>
+                    <p class="aula-work-text">{{ cuerpo.notasMaestro }}</p>
+                  </div>
+                }
+
+                @if (esQuiz) {
+                  <div class="aula-work-block">
+                    <p class="aula-work-note">
+                      Es un cuestionario: tus alumnos lo contestan en su propia pantalla,
+                      una pregunta a la vez. Las calificaciones te llegan solas a la libreta.
+                    </p>
+                  </div>
+                }
+
+                @if (!cuerpo.tieneDetalle && !activeMission.description) {
+                  <div class="aula-work-block">
+                    <p class="aula-work-note">
+                      Esta actividad no tiene instrucciones escritas: tus alumnos solo ven el
+                      título y el recuadro para responder. Puedes agregárselas desde
+                      <strong>Materias → editar el temario</strong>.
+                    </p>
+                  </div>
+                }
+              </div>
             }
           </div>
         }
@@ -280,6 +407,9 @@
                     [style.background]="subjectColor">↑</button>
           </div>
         }
+          </div>
+          }
+        </div>
       </div>
     </div>
   </div>
