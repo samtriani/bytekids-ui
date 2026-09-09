@@ -1,3 +1,119 @@
-.mb18 { margin-bottom:16px; }
-.sl-row { display:flex;align-items:center;gap:8px;padding:6px 8px;border-radius:7px;transition:background .14s; }
-.sl-row:hover { background:var(--surface2); }
+.mb18 { margin-bottom: 16px; }
+
+.td-cargando { text-align: center; padding: 48px; color: var(--tx2); }
+
+.td-vacio { text-align: center; padding: 48px 32px; }
+.td-vacio-ico { font-size: 2.6rem; margin-bottom: 10px; }
+.td-vacio h2 { font-size: 1.15rem; margin: 0 0 8px; color: var(--tx1); }
+.td-vacio p  { margin: 0 auto; max-width: 48ch; font-size: .9rem; line-height: 1.6; color: var(--tx3); }
+
+.td-nada { margin: 16px 4px; font-size: .88rem; line-height: 1.5; color: var(--tx4); }
+
+/* ── KPIs que llevan a algún lado ─────────────────────────────────────────
+   Eran cifras muertas: informaban un problema y dejaban al maestro
+   buscando dónde resolverlo. Ahora cada uno es un botón hacia la pantalla
+   que lo atiende, y se ve que se puede tocar. */
+.kpi--link {
+  width: 100%;
+  text-align: left;
+  font-family: inherit;
+  cursor: pointer;
+  border: 1px solid var(--border);
+  transition: transform .14s, box-shadow .14s, border-color .14s;
+}
+.kpi--link:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 8px 22px rgba(36, 16, 24, .10);
+  border-color: var(--guinda);
+}
+.kpi--link:active { transform: translateY(0); }
+.kpi--link:focus-visible { outline: 2px solid var(--guinda); outline-offset: 2px; }
+
+.kpi-dl {
+  margin-top: 3px;
+  font-size: .68rem;
+  font-weight: 700;
+  color: var(--tx4);
+}
+.kpi--link:hover .kpi-dl { color: var(--guinda); }
+
+/* ── Buscador del listado ─────────────────────────────────────────────── */
+.td-buscar {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+  padding: 10px 14px 4px;
+}
+.td-buscar .input { flex: 1; }
+
+/* ── Listado de alumnos ───────────────────────────────────────────────── */
+.td-lista {
+  padding: 8px 12px 12px;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  max-height: 340px;
+  overflow-y: auto;
+}
+
+.sl-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 8px;
+  border-radius: 8px;
+  transition: background .14s;
+}
+.sl-row:hover { background: var(--surface2); }
+
+.sl-row .av { width: 32px; height: 32px; flex-shrink: 0; }
+
+.sl-info { flex: 1; min-width: 0; }
+.sl-nombre {
+  font-size: .84rem; font-weight: 700; color: var(--tx1);
+  overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+}
+.sl-info .prog { height: 5px; margin-top: 4px; }
+
+/* El porcentaje solo miente: 50% de 2 piezas no es 50% de 17. */
+.sl-detalle { margin-top: 3px; font-size: .7rem; color: var(--tx4); }
+.sl-pend { color: var(--guinda); font-weight: 700; }
+
+.sl-pct {
+  font-size: .82rem; font-weight: 800;
+  min-width: 38px; text-align: right;
+  font-variant-numeric: tabular-nums;
+}
+
+/* ── Alertas con acción ───────────────────────────────────────────────── */
+.td-alertas { display: flex; flex-direction: column; gap: 8px; }
+
+.alert {
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  flex-wrap: wrap;
+}
+.alert-ico { flex-shrink: 0; }
+.alert-txt { flex: 1; min-width: 0; }
+
+.alert-accion {
+  flex-shrink: 0;
+  font-size: .72rem;
+  font-weight: 800;
+  text-decoration: none;
+  padding: 3px 10px;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, .55);
+  color: inherit;
+  border: 1px solid currentColor;
+  transition: background .14s;
+}
+.alert-accion:hover { background: rgba(255, 255, 255, .9); }
+
+.td-acciones { display: flex; flex-direction: column; gap: 6px; }
+
+@media (max-width: 700px) {
+  .td-buscar { flex-wrap: wrap; }
+  .sl-pct { min-width: 34px; }
+}

@@ -1,19 +1,53 @@
 import { Component, OnInit, ViewChild, ElementRef } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { RouterLink } from '@angular/router';
+import { FormsModule } from '@angular/forms';
+import { Router, RouterLink } from '@angular/router';
 import { ShellComponent, NavItem } from '../../shared/shell/shell.component';
 import { ClassroomApiService } from '../../services/api/classroom-api.service';
-import { ProgressApiService } from '../../services/api/progress-api.service';
+import { SubmissionApiService } from '../../services/api/submission-api.service';
 import { AuthService } from '../../services/auth.service';
 import { forkJoin, of } from 'rxjs';
 import { catchError, map } from 'rxjs/operators';
 import { Chart, registerables } from 'chart.js';
 Chart.register(...registerables);
 
+/** Un alumno visto desde el salón que se está mirando. */
+interface AlumnoDelSalon {
+  id: string;
+  nombre: string;
+  iniciales: string;
+  hechas: number;        // aprobadas + materiales leídos
+  totales: number;       // piezas asignadas al salón
+  progreso: number;      // %
+  porCalificar: number;  // entregas suyas esperando revisión
+  rechazadas: number;
+  sinEmpezar: boolean;
+  estado: 'Excelente' | 'Bien' | 'Regular' | 'Apoyo' | 'Sin empezar';
+}
+
+interface Salon {
+  id: string;
+  nombre: string;
+  ciclo: string;
+  alumnos: AlumnoDelSalon[];
+  piezas: number;
+  promedio: number;
+  porCalificar: number;
+  enRiesgo: number;
+}
+
+interface Alerta {
+  icono: string;
+  texto: string;
+  tipo: string;
+  accion?: string;      // etiqueta del botón
+  ruta?: string;        // a dónde lleva
+}
+
 @Component({
   selector: 'app-teacher-dashboard',
   standalone: true,
-  imports: [CommonModule, RouterLink, ShellComponent],
+  imports: [CommonModule, FormsModule, RouterLink, ShellComponent],
   templateUrl: './teacher-dashboard.component.html',
   styleUrls: ['./teacher-dashboard.component.scss']
 })
@@ -24,207 +58,292 @@ export class TeacherDashboardComponent implements OnInit {
   private pieChart: Chart | null = null;
 
   navItems: NavItem[] = [
-    {label:'Mi Panel',icon:'🏠',route:'/teacher'},
-    {label:'Mis Salones',icon:'🏫',route:'/teacher/classrooms'},
-    {label:'Alumnos',icon:'👨‍🎓',route:'/teacher/students'},
-    {label:'Crear Contenido',icon:'📝',route:'/teacher/create'},
-    {label:'Asistente IA',icon:'🤖',route:'/teacher/ai-assistant',badge:'IA'},
-    {label:'Reportes',icon:'📊',route:'/teacher/reports'},
-    {label:'Calendario',icon:'📅',route:'/teacher/calendar'},
-    {label:'Mensajes',icon:'💬',route:'/teacher/messages'}
+    { label: 'Mi Panel',        icon: '🏠', route: '/teacher' },
+    { label: 'Mis Salones',     icon: '🏫', route: '/teacher/classrooms' },
+    { label: 'Alumnos',         icon: '👨‍🎓', route: '/teacher/students' },
+    { label: 'Libreta',         icon: '📋', route: '/teacher/gradebook' },
+    { label: 'Crear Contenido', icon: '📝', route: '/teacher/create' },
+    { label: 'Mis Contenidos',  icon: '📚', route: '/teacher/content' },
+    { label: 'Asistente IA',    icon: '🤖', route: '/teacher/ai-assistant', badge: 'IA' },
+    { label: 'Reportes',        icon: '📊', route: '/teacher/reports' },
+    { label: 'Calendario',      icon: '📅', route: '/teacher/calendar' },
+    { label: 'Mensajes',        icon: '💬', route: '/teacher/messages' },
   ];
 
   teacher: any = null;
-  private classrooms: any[] = [];
-  students: any[] = [];
-  alerts: any[] = [];
-  totalStudents = 0;
-  avgProgress = 0;
-  totalMissions = 0;
-  needSupport = 0;
+  salones: Salon[] = [];
+  salonActivoId = '';
   loading = true;
 
-  get teacherName(): string { return this.teacher?.displayName || 'Maestro'; }
-  get teacherInitials(): string { return this.teacher?.initials || 'M'; }
-  get classroomTitle(): string {
-    if (this.classrooms.length === 1) return this.classrooms[0].name;
-    if (this.classrooms.length > 1) return `${this.classrooms.length} salones`;
-    return 'Mis Salones';
-  }
-  get studentsLabel(): string {
-    return this.classrooms.length === 1
-      ? `Alumnos en ${this.classrooms[0].name}`
-      : 'Total alumnos';
-  }
-  get studentsCardTitle(): string {
-    return this.classrooms.length === 1
-      ? `Alumnos — ${this.classrooms[0].name}`
-      : 'Todos los alumnos';
-  }
+  /** Búsqueda del listado. El maestro con 30 alumnos no scrollea: escribe. */
+  busqueda = '';
 
   constructor(
     private classroomApi: ClassroomApiService,
-    private progressApi: ProgressApiService,
-    private auth: AuthService
+    private submissionApi: SubmissionApiService,
+    private auth: AuthService,
+    private router: Router,
   ) {}
+
+  get teacherName(): string     { return this.teacher?.displayName || 'Maestro'; }
+  get teacherInitials(): string { return this.teacher?.initials || 'M'; }
+
+  get salon(): Salon | null {
+    return this.salones.find(s => s.id === this.salonActivoId) ?? this.salones[0] ?? null;
+  }
+
+  get alumnosFiltrados(): AlumnoDelSalon[] {
+    const t = this.busqueda.trim().toLowerCase();
+    const lista = this.salon?.alumnos ?? [];
+    return t ? lista.filter(a => a.nombre.toLowerCase().includes(t)) : lista;
+  }
 
   ngOnInit(): void {
     this.teacher = this.auth.getUser();
-    this.loadDashboard();
+    this.cargar();
   }
 
-  private loadDashboard(): void {
-    this.classroomApi.getMyClassrooms().subscribe({
-      next: classrooms => {
-        if (!classrooms.length) { this.loading = false; return; }
-        this.classrooms = classrooms;
+  // ── Carga ───────────────────────────────────────────────────────────────
+  // Una sola llamada por salón: la libreta ya trae alumnos, piezas asignadas,
+  // calificaciones y materiales leídos. Antes eran tres llamadas POR ALUMNO
+  // a endpoints de progreso que ni siquiera traían el dato que se usaba.
+  private cargar(): void {
+    this.classroomApi.getMyClassrooms().pipe(catchError(() => of([]))).subscribe(salones => {
+      if (!salones?.length) { this.loading = false; return; }
 
-        // Cargar alumnos de TODOS los salones en paralelo
-        forkJoin(classrooms.map(c =>
-          this.classroomApi.getStudents(c._id || c.id).pipe(
-            map(students => students.map((s: any) => ({ ...s, _classroomName: c.name }))),
-            catchError(() => of([]))
-          )
-        )).subscribe({
-          next: allArrays => {
-            // Aplanar y deduplicar por ID (alumno puede estar en varios salones)
-            const seen = new Set<string>();
-            const allStudents = (allArrays as any[][]).flat().filter(s => {
-              const id = s._id || s.id;
-              if (seen.has(id)) return false;
-              seen.add(id); return true;
-            });
-            if (!allStudents.length) { this.loading = false; return; }
-
-            forkJoin(allStudents.map(s => {
-              const sid = s._id || s.id;
-              return forkJoin({
-                student: of(s),
-                xp:       this.progressApi.getStudentXp(sid).pipe(catchError(() => of(0))),
-                subjects: this.progressApi.getStudentSubjects(sid).pipe(catchError(() => of([]))),
-                activity: this.progressApi.getStudentActivity(sid).pipe(catchError(() => of([]))),
-              });
-            })).subscribe({
-              next: results => { this.processStudents(results); this.loading = false; },
-              error: () => { this.loading = false; }
-            });
-          },
-          error: () => { this.loading = false; }
-        });
-      },
-      error: () => { this.loading = false; }
+      forkJoin(
+        salones.map((c: any) =>
+          this.submissionApi.getGradebook(c.id).pipe(
+            map(libreta => this.armarSalon(c, libreta)),
+            catchError(() => of(this.armarSalon(c, null))),
+          ))
+      ).subscribe(resultado => {
+        this.salones = resultado as Salon[];
+        this.salonActivoId = this.salones[0]?.id ?? '';
+        this.loading = false;
+        setTimeout(() => this.pintarGraficas(), 60);
+      });
     });
   }
 
-  private processStudents(results: any[]): void {
-    this.students = results.map(r => {
-      const prog = this.calcProgress(r.subjects);
-      const initials = r.student.initials ||
-        (r.student.displayName || '').split(' ').map((w: string) => w[0] || '').join('').slice(0, 2).toUpperCase();
+  private armarSalon(c: any, libreta: any): Salon {
+    const alumnosRaw: any[] = libreta?.students ?? [];
+    const contenidos: any[] = libreta?.content   ?? [];
+    const materiales: any[] = libreta?.materials ?? [];
+    const grades  = libreta?.grades ?? {};
+    const reads   = libreta?.reads  ?? {};
+    const piezas  = contenidos.length + materiales.length;
+
+    const alumnos: AlumnoDelSalon[] = alumnosRaw.map(a => {
+      const suyas   = grades[a.id] ?? {};
+      const leidos  = reads[a.id]  ?? {};
+
+      let aprobadas = 0, porCalificar = 0, rechazadas = 0, entregas = 0;
+      for (const c of contenidos) {
+        const g = suyas[c.id];
+        if (!g) continue;
+        entregas++;
+        if (g.status === 'aprobado')  aprobadas++;
+        else if (g.status === 'enviado')   porCalificar++;
+        else if (g.status === 'rechazado') rechazadas++;
+      }
+      const materialesVistos = materiales.filter(m => leidos[m.id]).length;
+
+      const hechas   = aprobadas + materialesVistos;
+      const progreso = piezas ? Math.round((hechas / piezas) * 100) : 0;
+
       return {
-        _id: r.student._id || r.student.id,
-        n: r.student.displayName || r.student.username,
-        av: initials || '??',
-        prog,
-        xp: r.xp,
-        status: this.getStatus(prog),
-        daysSince: this.daysSince(r.activity),
-        completedMissions: r.activity.length,
+        id: a.id,
+        nombre: a.name,
+        iniciales: a.initials || this.iniciales(a.name),
+        hechas, totales: piezas, progreso, porCalificar, rechazadas,
+        sinEmpezar: entregas === 0 && materialesVistos === 0,
+        estado: this.estadoDe(progreso, entregas === 0 && materialesVistos === 0),
       };
     });
 
-    this.totalStudents = this.students.length;
-    this.avgProgress = this.students.length
-      ? Math.round(this.students.reduce((s, r) => s + r.prog, 0) / this.students.length) : 0;
-    this.needSupport = this.students.filter(s => s.prog < 50).length;
-    this.totalMissions = this.students.reduce((s, r) => s + r.completedMissions, 0);
-
-    this.buildAlerts();
-    setTimeout(() => this.renderCharts(), 50);
+    return {
+      id: c.id,
+      nombre: c.name,
+      ciclo: c.schoolYear ?? '',
+      alumnos,
+      piezas,
+      promedio: alumnos.length
+        ? Math.round(alumnos.reduce((s, a) => s + a.progreso, 0) / alumnos.length) : 0,
+      porCalificar: alumnos.reduce((s, a) => s + a.porCalificar, 0),
+      enRiesgo: alumnos.filter(a => a.progreso < 40).length,
+    };
   }
 
-  private calcProgress(subjects: any[]): number {
-    if (!subjects.length) return 0;
-    const sum = subjects.reduce((s, sub) => {
-      const p = typeof sub.progress === 'number' ? sub.progress
-        : (sub.completedMissions != null && sub.totalMissions
-          ? Math.round((sub.completedMissions / sub.totalMissions) * 100) : 0);
-      return s + Math.min(100, Math.max(0, p));
-    }, 0);
-    return Math.round(sum / subjects.length);
+  private iniciales(nombre: string): string {
+    return (nombre || '').split(' ').map(p => p[0] || '').join('').slice(0, 2).toUpperCase() || '??';
   }
 
-  private getStatus(p: number): string {
-    return p >= 80 ? 'Excelente' : p >= 60 ? 'Bueno' : p >= 40 ? 'Regular' : 'Apoyo';
+  private estadoDe(p: number, sinEmpezar: boolean): AlumnoDelSalon['estado'] {
+    if (sinEmpezar) return 'Sin empezar';
+    return p >= 80 ? 'Excelente' : p >= 60 ? 'Bien' : p >= 40 ? 'Regular' : 'Apoyo';
   }
 
-  private daysSince(activity: any[]): number {
-    if (!activity.length) return 999;
-    const latest = activity.reduce((a: any, b: any) =>
-      new Date(a.createdAt) > new Date(b.createdAt) ? a : b);
-    return Math.floor((Date.now() - new Date(latest.createdAt).getTime()) / 86400000);
+  // ── Alertas: cada una con algo que hacer ────────────────────────────────
+  // Las de antes eran informativas y algunas falsas: "lleva varios días sin
+  // actividad" salía de leer un campo que la API no manda, así que le tocaba
+  // a todos por igual.
+  get alertas(): Alerta[] {
+    const s = this.salon;
+    if (!s) return [];
+    const lista: Alerta[] = [];
+
+    if (!s.piezas) {
+      lista.push({
+        icono: '📭', tipo: 'alert-warn',
+        texto: `${s.nombre} no tiene temario asignado, así que sus alumnos no ven actividades.`,
+        accion: 'Ver mis contenidos', ruta: '/teacher/content',
+      });
+      return lista;
+    }
+
+    if (s.porCalificar) {
+      lista.push({
+        icono: '📝', tipo: 'alert-warn',
+        texto: s.porCalificar === 1
+          ? 'Hay 1 entrega esperando tu calificación.'
+          : `Hay ${s.porCalificar} entregas esperando tu calificación.`,
+        accion: 'Calificar', ruta: '/teacher/gradebook',
+      });
+    }
+
+    const sinEmpezar = s.alumnos.filter(a => a.sinEmpezar);
+    if (sinEmpezar.length) {
+      lista.push({
+        icono: '🔕', tipo: 'alert-info',
+        texto: sinEmpezar.length === 1
+          ? `${sinEmpezar[0].nombre} todavía no entrega nada.`
+          : `${sinEmpezar.length} alumnos todavía no entregan nada.`,
+        accion: 'Escribirles', ruta: '/teacher/messages',
+      });
+    }
+
+    const conRechazo = s.alumnos.filter(a => a.rechazadas > 0);
+    if (conRechazo.length) {
+      lista.push({
+        icono: '↩️', tipo: 'alert-info',
+        texto: `${conRechazo.length} ${conRechazo.length === 1 ? 'alumno tiene una entrega' : 'alumnos tienen entregas'} que pediste corregir.`,
+        accion: 'Revisar', ruta: '/teacher/gradebook',
+      });
+    }
+
+    const mejor = [...s.alumnos].sort((a, b) => b.progreso - a.progreso)[0];
+    if (mejor && mejor.progreso >= 80) {
+      lista.push({
+        icono: '🏅', tipo: 'alert-ok',
+        texto: `${mejor.nombre} lleva ${mejor.progreso}% del temario. Va muy bien.`,
+      });
+    }
+
+    if (!lista.length) {
+      lista.push({
+        icono: '✅', tipo: 'alert-ok',
+        texto: 'Todo al corriente: nada pendiente de calificar en este salón.',
+      });
+    }
+    return lista;
   }
 
-  private buildAlerts(): void {
-    this.alerts = [];
-    this.students.filter(s => s.daysSince >= 5).slice(0, 2).forEach(s =>
-      this.alerts.push({
-        icon: '⚠️',
-        text: `${s.n} lleva ${s.daysSince === 999 ? 'varios' : s.daysSince} días sin actividad`,
-        type: 'alert-warn'
-      })
-    );
-    const top = [...this.students].sort((a, b) => b.prog - a.prog).find(s => s.prog >= 80);
-    if (top) this.alerts.push({ icon: '✅', text: `${top.n} tiene ${top.prog}% de progreso`, type: 'alert-ok' });
-    this.students.filter(s => s.prog < 50 && s.prog > 0).slice(0, 1).forEach(s =>
-      this.alerts.push({ icon: 'ℹ️', text: `${s.n} necesita apoyo (${s.prog}%)`, type: 'alert-info' })
-    );
-    if (!this.alerts.length)
-      this.alerts.push({ icon: 'ℹ️', text: 'Sin alertas activas en este momento', type: 'alert-info' });
+  // ── Interacción ─────────────────────────────────────────────────────────
+  cambiarSalon(id: string): void {
+    this.salonActivoId = id;
+    this.busqueda = '';
+    setTimeout(() => this.pintarGraficas(), 30);
   }
 
-  private renderCharts(): void {
-    if (!this.barC || !this.pieC || !this.students.length) return;
+  irALibreta(): void   { this.router.navigate(['/teacher/gradebook']); }
+  irAAlumnos(): void   { this.router.navigate(['/teacher/students']); }
+  irAReportes(): void  { this.router.navigate(['/teacher/reports']); }
+
+  /** Desde el KPI de riesgo: en vez de solo informar, filtra la lista. */
+  verEnRiesgo(): void {
+    const enRiesgo = (this.salon?.alumnos ?? []).filter(a => a.progreso < 40);
+    if (enRiesgo.length === 1) this.busqueda = enRiesgo[0].nombre;
+    document.querySelector('#lista-alumnos')?.scrollIntoView({ behavior: 'smooth', block: 'center' });
+  }
+
+  limpiarBusqueda(): void { this.busqueda = ''; }
+
+  // ── Gráficas, siempre del salón visible ─────────────────────────────────
+  private pintarGraficas(): void {
+    const s = this.salon;
+    if (!this.barC || !this.pieC || !s) return;
     this.barChart?.destroy();
     this.pieChart?.destroy();
 
-    const excellent = this.students.filter(s => s.prog >= 80).length;
-    const medium = this.students.filter(s => s.prog >= 40 && s.prog < 80).length;
-    const support = this.students.filter(s => s.prog < 40).length;
+    const alumnos = s.alumnos;
+    const excelente = alumnos.filter(a => a.progreso >= 80).length;
+    const medio     = alumnos.filter(a => a.progreso >= 40 && a.progreso < 80).length;
+    const apoyo     = alumnos.filter(a => a.progreso < 40).length;
 
     this.barChart = new Chart(this.barC.nativeElement, {
       type: 'bar',
       data: {
-        labels: this.students.map(s => s.n.split(' ')[0]),
-        datasets: [{ label: 'Progreso %', data: this.students.map(s => s.prog),
-          backgroundColor: this.students.map(s => this.pc(s.prog) + 'CC'),
-          borderColor: this.students.map(s => this.pc(s.prog)),
-          borderWidth: 1.5, borderRadius: 5 }]
+        labels: alumnos.map(a => a.nombre.split(' ')[0]),
+        datasets: [{
+          label: '% del temario',
+          data: alumnos.map(a => a.progreso),
+          backgroundColor: alumnos.map(a => this.pc(a.progreso) + 'CC'),
+          borderColor: alumnos.map(a => this.pc(a.progreso)),
+          borderWidth: 1.5, borderRadius: 5,
+        }],
       },
       options: {
         responsive: true, maintainAspectRatio: false,
-        plugins: { legend: { display: false } },
+        plugins: {
+          legend: { display: false },
+          tooltip: {
+            callbacks: {
+              // El porcentaje solo no dice nada: 50% de 2 no es 50% de 17.
+              label: (ctx) => {
+                const a = alumnos[ctx.dataIndex];
+                return `${a.progreso}% · ${a.hechas} de ${a.totales} actividades`;
+              },
+            },
+          },
+        },
         scales: {
           x: { grid: { display: false }, ticks: { color: '#7A6878', font: { family: 'Nunito', size: 11 } } },
-          y: { grid: { color: '#EDEEF1' }, ticks: { color: '#7A6878', font: { family: 'Nunito', size: 11 } }, max: 100 }
-        }
-      }
+          y: { grid: { color: '#EDEEF1' }, ticks: { color: '#7A6878', font: { family: 'Nunito', size: 11 }, callback: (v) => v + '%' }, max: 100 },
+        },
+      },
     });
 
     this.pieChart = new Chart(this.pieC.nativeElement, {
       type: 'doughnut',
       data: {
-        labels: ['Excelente', 'Bueno/Regular', 'Necesita apoyo'],
-        datasets: [{ data: [excellent, medium, support],
-          backgroundColor: ['#1A6B3C', '#7A1535', '#9B1414'], borderWidth: 0 }]
+        labels: ['Excelente (80%+)', 'En camino (40-79%)', 'Necesita apoyo (<40%)'],
+        datasets: [{ data: [excelente, medio, apoyo],
+          backgroundColor: ['#1A6B3C', '#C4992A', '#9B1414'], borderWidth: 0 }],
       },
       options: {
         responsive: true, maintainAspectRatio: false, cutout: '65%',
-        plugins: { legend: { position: 'bottom', labels: { color: '#3D2D3A', font: { family: 'Nunito', size: 11 }, padding: 10, boxWidth: 10 } } }
-      }
+        plugins: {
+          legend: { position: 'bottom', labels: { color: '#3D2D3A', font: { family: 'Nunito', size: 11 }, padding: 10, boxWidth: 10 } },
+          tooltip: {
+            callbacks: {
+              label: (ctx) => {
+                const n = ctx.parsed as number;
+                return `${n} ${n === 1 ? 'alumno' : 'alumnos'}`;
+              },
+            },
+          },
+        },
+      },
     });
   }
 
-  pc(p: number): string { return p >= 80 ? '#1A6B3C' : p < 60 ? '#9B1414' : '#7A1535'; }
-  sc(s: string): string { return s === 'Excelente' ? 'tag-oro' : s === 'Apoyo' ? 'tag-red' : 'tag-guinda'; }
+  pc(p: number): string { return p >= 80 ? '#1A6B3C' : p < 40 ? '#9B1414' : '#C4992A'; }
+
+  sc(estado: string): string {
+    return estado === 'Excelente'   ? 'tag-green'
+         : estado === 'Apoyo'       ? 'tag-red'
+         : estado === 'Sin empezar' ? 'tag-gray'
+         : 'tag-oro';
+  }
 }
