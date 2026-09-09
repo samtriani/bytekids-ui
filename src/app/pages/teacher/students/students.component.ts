@@ -21,7 +21,10 @@ import { catchError, map } from 'rxjs/operators';
 export class StudentsComponent implements OnInit {
   navItems = TEACHER_NAV;
   search = ''; filt = 'Todos'; view: 'table' | 'cards' = 'table';
-  filters = ['Todos', 'Excelente', 'Regular', 'Necesita apoyo'];
+  // Misma escala que el Panel y Reportes. Antes aqui era >=80 / >=50 y
+  // alla >=80 / >=60 / >=40, asi que el mismo alumno salia "Regular" en
+  // una pantalla y "Necesita apoyo" en otra.
+  filters = ['Todos', 'Excelente', 'Bien', 'Regular', 'Apoyo', 'Sin empezar'];
   selected: any = null;
   toast = '';
   loading = true;
@@ -41,6 +44,8 @@ export class StudentsComponent implements OnInit {
    * regla inventada: no mide cuanto del temario lleva, mide cuanto XP
    * junto, y un alumno puede juntar XP sin avanzar en su curso.
    */
+  // Clave alumno|salon: un alumno en dos salones lleva avances distintos,
+  // y al filtrar por uno hay que mostrar el de ESE salon, no la suma.
   private avance = new Map<string, { hechas: number; totales: number; siguiente: string }>();
 
   get teacherName(): string { return this.teacher?.displayName || 'Maestro'; }
@@ -60,17 +65,50 @@ export class StudentsComponent implements OnInit {
     return `Seguimiento individual de ${alumnos}`;
   }
 
-  get excelentes(): number { return this.all.filter(s => s.status === 'Excelente').length; }
-  get enProgreso(): number { return this.all.filter(s => s.status === 'Regular').length; }
-  get needSupport(): number { return this.all.filter(s => s.status === 'Necesita apoyo').length; }
-  get maxStreak(): number { return this.all.length ? Math.max(...this.all.map(s => s.streak)) : 0; }
+  /**
+   * Los alumnos del salon elegido. Los KPI cuelgan de aqui y NO de rows,
+   * porque rows tambien aplica el filtro de estado: si colgaran de ahi,
+   * pulsar "Apoyo" pondria los otros tres contadores en cero.
+   */
+  get enSalon(): any[] {
+    return this.salonFiltro
+      ? this.all.filter(s => (s.classroomIds ?? []).includes(this.salonFiltro))
+      : this.all;
+  }
+
+  get excelentes(): number { return this.enSalon.filter(s => s.status === 'Excelente').length; }
+  get enProgreso(): number { return this.enSalon.filter(s => s.status === 'Bien' || s.status === 'Regular').length; }
+  get needSupport(): number { return this.enSalon.filter(s => s.status === 'Apoyo').length; }
+  get sinEmpezar(): number { return this.enSalon.filter(s => s.status === 'Sin empezar').length; }
+  get maxStreak(): number { return this.enSalon.length ? Math.max(...this.enSalon.map(s => s.streak)) : 0; }
+
+  /**
+   * El color del estado vive aqui y no repartido en ternarios del template.
+   * Estaban escritos ocho veces contra el texto 'Necesita apoyo': al cambiar
+   * la escala habrian dejado de pintar sin que nada fallara.
+   */
+  enApoyo(status: string): boolean {
+    return status === 'Apoyo' || status === 'Sin empezar';
+  }
+
+  bgEstado(status: string): string {
+    if (status === 'Excelente') return 'var(--oro-lt)';
+    return this.enApoyo(status) ? 'var(--danger-lt)' : 'var(--guinda-lt)';
+  }
+
+  fgEstado(status: string): string {
+    if (status === 'Excelente') return '#7A4F00';
+    return this.enApoyo(status) ? 'var(--danger)' : 'var(--guinda)';
+  }
+
+  contarEstado(f: string): number {
+    return f === 'Todos' ? this.enSalon.length
+                         : this.enSalon.filter(s => s.status === f).length;
+  }
 
   get rows() {
-    return this.all.filter(s =>
+    return this.enSalon.filter(s =>
       (this.filt === 'Todos' || s.status === this.filt) &&
-      // Un alumno puede estar en varios salones: se queda si esta en el
-      // elegido, no solo si es el primero que le tocó al deduplicar.
-      (!this.salonFiltro || (s.classroomIds ?? []).includes(this.salonFiltro)) &&
       s.n.toLowerCase().includes(this.search.toLowerCase())
     );
   }
@@ -82,7 +120,10 @@ export class StudentsComponent implements OnInit {
               : this.all.length;
   }
 
-  filtrarPorSalon(id: string): void { this.salonFiltro = id; }
+  filtrarPorSalon(id: string): void {
+    this.salonFiltro = id;
+    this.refrescarAvances();
+  }
 
   constructor(
     private router: Router,
@@ -120,7 +161,8 @@ export class StudentsComponent implements OnInit {
         forkJoin(classrooms.map((c: any) =>
           this.submissionApi.getGradebook(c.id).pipe(catchError(() => of(null)))
         )).subscribe(libretas => {
-          (libretas as any[]).forEach(l => this.acumularAvance(l));
+          (libretas as any[]).forEach((l, i) =>
+            this.acumularAvance(l, classrooms[i].id || classrooms[i]._id));
           if (this.all.length) this.all = this.all.map(a => this.conAvance(a));
         });
 
@@ -180,7 +222,7 @@ export class StudentsComponent implements OnInit {
   }
 
   /** Suma lo de esta libreta al avance de cada alumno que aparezca en ella. */
-  private acumularAvance(libreta: any): void {
+  private acumularAvance(libreta: any, salonId = ''): void {
     if (!libreta) return;
     const contenidos: any[] = libreta.content   ?? [];
     const materiales: any[] = libreta.materials ?? [];
@@ -198,17 +240,29 @@ export class StudentsComponent implements OnInit {
       // backend ya devuelve el contenido en orden de curriculo.
       const pendiente = contenidos.find(c => suyas[c.id]?.status !== 'aprobado');
 
+      // Se guarda el total del alumno y ademas el de cada salon por
+      // separado, para poder responder las dos preguntas: cuanto lleva en
+      // total y cuanto lleva en el salon que el maestro esta mirando.
       const previo = this.avance.get(alumno.id) ?? { hechas: 0, totales: 0, siguiente: '' };
       this.avance.set(alumno.id, {
         hechas:  previo.hechas  + aprobadas + vistos,
         totales: previo.totales + piezas,
         siguiente: previo.siguiente || pendiente?.title || '',
       });
+      this.avance.set(`${alumno.id}|${salonId}`, {
+        hechas: aprobadas + vistos,
+        totales: piezas,
+        siguiente: pendiente?.title || '',
+      });
     }
   }
 
   private conAvance(a: any): any {
-    const v = this.avance.get(a.id);
+    // Con un salon elegido se muestra su avance EN ESE salon; sin filtro,
+    // el acumulado. Antes un alumno en dos salones veia siempre la suma,
+    // aunque el maestro estuviera mirando solo uno.
+    const v = (this.salonFiltro ? this.avance.get(`${a.id}|${this.salonFiltro}`) : null)
+           ?? this.avance.get(a.id);
     if (!v || !v.totales) return a;
     const prog = Math.round((v.hechas / v.totales) * 100);
     return {
@@ -216,16 +270,27 @@ export class StudentsComponent implements OnInit {
       prog,
       hechas: v.hechas,
       totales: v.totales,
-      status: prog >= 80 ? 'Excelente' : prog >= 50 ? 'Regular' : 'Necesita apoyo',
+      status: this.estadoDe(prog, v.hechas === 0),
       nextMission: v.siguiente || 'Terminó el temario',
     };
+  }
+
+  /** La misma escala que usa el Panel del Maestro. */
+  private estadoDe(p: number, sinEmpezar: boolean): string {
+    if (sinEmpezar) return 'Sin empezar';
+    return p >= 80 ? 'Excelente' : p >= 60 ? 'Bien' : p >= 40 ? 'Regular' : 'Apoyo';
+  }
+
+  /** Al cambiar de salon hay que recalcular: el avance mostrado cambia. */
+  private refrescarAvances(): void {
+    this.all = this.all.map(a => this.conAvance(a));
   }
 
   private buildStudent(r: any): any {
     const s = r.student;
     const sid = s._id || s.id;
     const prog = this.calcProg(r.subjects);
-    const status = prog >= 80 ? 'Excelente' : prog >= 50 ? 'Regular' : 'Necesita apoyo';
+    const status = this.estadoDe(prog, prog === 0);
     const subjects = r.subjects.map((sub: any) => sub.subjectName || sub.name).filter(Boolean).slice(0, 4);
     const last = this.lastAccess(r.activity);
     const missions = [...r.activity]
