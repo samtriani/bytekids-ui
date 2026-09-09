@@ -404,6 +404,19 @@ export class TeacherClassroomComponent implements OnInit, OnDestroy, AfterViewCh
     });
   }
 
+  /**
+   * Sale del aula SIN colgar: la clase sigue y la videollamada se va a la
+   * ventanita de la esquina. Es lo que permite que un alumno ensene su
+   * progreso o pregunte por una pantalla en plena clase, compartiendo
+   * pantalla, sin desconectarse.
+   *
+   * No llama a leave(): no se esta saliendo de la clase, solo se esta
+   * moviendo por la plataforma.
+   */
+  irAlMenu(): void {
+    this.router.navigate(['/teacher']);
+  }
+
   exitClass() {
     // Salir de clase si cuelga: es la decision explicita del maestro.
     this.llamada.terminar();
