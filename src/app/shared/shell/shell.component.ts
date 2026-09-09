@@ -1,6 +1,6 @@
 import { Component, Input, OnInit, OnDestroy, HostListener, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { Router, RouterLink, RouterLinkActive } from '@angular/router';
+import { IsActiveMatchOptions, Router, RouterLink, RouterLinkActive } from '@angular/router';
 import { AuthService } from '../../services/auth.service';
 import { NotificationApiService } from '../../services/api/notification-api.service';
 import { BackendStatusService } from '../../services/backend-status.service';
@@ -32,6 +32,28 @@ const ROLE_CFG: Record<string, { label: string; emoji: string; color: string }> 
   styleUrls: ['./shell.component.scss']
 })
 export class ShellComponent implements OnInit, OnDestroy {
+  /**
+   * Como marcar activa una entrada del menu.
+   *
+   * Con el atajo {exact:true}, Angular exige que TAMBIEN coincidan los query
+   * params. Al navegar a /teacher/students?salon=xxx la entrada dejaba de
+   * marcarse: el maestro llegaba a la pantalla correcta con el menu diciendo
+   * que estaba en otro lado.
+   *
+   * Las rutas de primer nivel comparan la ruta exacta --si no, /teacher
+   * quedaria activo en todas sus hijas-- y las anidadas por prefijo, para
+   * que una pantalla de detalle mantenga marcada su seccion.
+   */
+  matchOptions(route?: string): IsActiveMatchOptions {
+    const profundidad = (route ?? '').split('/').length;
+    return {
+      paths: profundidad <= 3 ? 'exact' : 'subset',
+      queryParams: 'ignored',
+      matrixParams: 'ignored',
+      fragment: 'ignored',
+    };
+  }
+
   @Input() role: Role = 'student';
   @Input() userName = 'Usuario';
   @Input() userAvatar = 'U';
