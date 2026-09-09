@@ -34,7 +34,7 @@
         <a class="nav-item"
            [routerLink]="item.route ?? null"
            routerLinkActive="active"
-           [routerLinkActiveOptions]="{exact: (item.route ?? '').split('/').length <= 3}">
+           [routerLinkActiveOptions]="matchOptions(item.route)">
           <span class="ni-icon">{{ item.icon }}</span>
           <span class="ni-label">{{ item.label }}</span>
           @if (item.badge) {
