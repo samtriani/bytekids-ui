@@ -1,7 +1,7 @@
 import { Component, OnInit, ViewChild, ElementRef } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
-import { RouterLink } from '@angular/router';
+import { ActivatedRoute, RouterLink } from '@angular/router';
 import { ShellComponent } from '../../../shared/shell/shell.component';
 import { TEACHER_NAV } from '../shared/teacher-nav';
 import { ClassroomApiService } from '../../../services/api/classroom-api.service';
@@ -57,6 +57,7 @@ export class ReportsComponent implements OnInit {
   kpis = { total: 0, avg: '0%', missions: 0, needSupport: 0 };
 
   constructor(
+    private route: ActivatedRoute,
     private classroomApi: ClassroomApiService,
     private submissionApi: SubmissionApiService,
     private progressApi: ProgressApiService,
@@ -69,7 +70,13 @@ export class ReportsComponent implements OnInit {
     this.classroomApi.getMyClassrooms().subscribe({
       next: classrooms => {
         if (!classrooms.length) { this.loading = false; return; }
-        this.classrooms = classrooms;
+        // Si el Panel mando un salon, el reporte habla de ese y no de todos.
+        const pedido = this.route.snapshot.queryParamMap.get('salon');
+        const elegido = pedido
+          ? classrooms.filter((c: any) => (c.id || c._id) === pedido)
+          : [];
+        this.classrooms = elegido.length ? elegido : classrooms;
+        classrooms = this.classrooms;
 
         forkJoin(classrooms.map(c =>
           this.classroomApi.getStudents(c._id || c.id).pipe(catchError(() => of([])))

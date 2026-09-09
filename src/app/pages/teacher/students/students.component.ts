@@ -281,7 +281,11 @@ export class StudentsComponent implements OnInit {
 
   msgStudent(s: any) {
     this.closeModal();
-    this.router.navigate(['/teacher/messages'], { queryParams: { to: s.n } });
+    // El id identifica; el nombre no. Va tambien el nombre para poder
+    // abrir una conversacion nueva con alguien a quien nunca se le ha
+    // escrito, que es justo el caso mas comun desde aqui.
+    this.router.navigate(['/teacher/messages'],
+      { queryParams: { to: s.id, nombre: s.n } });
   }
 
   assignMission(s: any) {
