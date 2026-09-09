@@ -53,7 +53,9 @@
       <div class="mission-card" [class.locked]="m.locked" [class.done]="m.status==='Completado'">
         <div class="mc-header">
           <div class="mc-icon" [style.background]="m.color+'18'">
-            @if (m.paso) {
+            @if (m.status === 'Completado') {
+              <span class="mc-paso mc-paso--hecho" title="Completada">✓</span>
+            } @else if (m.paso) {
               <span class="mc-paso" [style.background]="m.color">{{ m.paso }}</span>
             }
             {{ m.icon }}
@@ -84,7 +86,13 @@
           <div class="bar" [style.width]="m.progress+'%'" [style.background]="m.color"></div>
         </div>
         @if (!m.locked) {
-          <button class="mc-btn" [style.background]="m.status === 'Por ajustar' ? '#F59E0B' : m.color" (click)="startMission(m)">
+          <button class="mc-btn"
+                  [class.mc-btn--repasar]="m.status === 'Completado'"
+                  [style.background]="m.status === 'Completado' ? null
+                                    : m.status === 'Por ajustar' ? '#F59E0B' : m.color"
+                  [style.color]="m.status === 'Completado' ? m.color : null"
+                  [style.border-color]="m.status === 'Completado' ? m.color + '55' : null"
+                  (click)="startMission(m)">
             {{ m.status==='Completado' ? '🔁 Repasar' : m.status==='Por ajustar' ? '✏️ Mejorar mi respuesta' : m.progress > 0 ? '▶ Continuar' : '🚀 Iniciar' }}
           </button>
         } @else {

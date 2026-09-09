@@ -53,3 +53,36 @@
   border-radius: 999px; font-size: .68rem; font-weight: 800;
   background: rgba(255,255,255,.18);
 }
+
+/* ── HECHO vs PENDIENTE ──────────────────────────────────────────────────
+   Todas las tarjetas eran igual de verdes y la unica diferencia era una
+   palabra chica. Con 12 actividades el nino no distingue de un vistazo que
+   le falta, que es justo lo que necesita saber al entrar. */
+
+/* La completada se apaga: sigue accesible para repasar, pero deja de
+   competir por la atencion con las que faltan. */
+.mission-card.done {
+  border-color: rgba(16, 185, 129, .28);
+  background: rgba(16, 185, 129, .04);
+  opacity: .82;
+}
+.mission-card.done:hover { opacity: 1; }
+
+/* Palomita en el lugar del numero de orden. */
+.mc-paso--hecho {
+  background: var(--bk-green, #10B981);
+  font-size: .78rem;
+}
+
+/* La pendiente lleva boton lleno; la hecha, solo contorno. Lo que falta
+   por hacer es lo unico que debe verse como una llamada a la accion. */
+.mc-btn--repasar {
+  background: transparent !important;
+  border: 1.5px solid;
+  font-weight: 700;
+}
+.mc-btn--repasar:hover { background: rgba(255, 255, 255, .05) !important; }
+
+/* Y la que esta disponible se marca de su color, para que resalte entre
+   las apagadas. */
+.mission-card:not(.done):not(.locked) { border-left: 3px solid var(--bk-yellow, #F59E0B); }
