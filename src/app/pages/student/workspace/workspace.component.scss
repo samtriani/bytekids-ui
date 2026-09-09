@@ -33,7 +33,7 @@
   position:relative; overflow:hidden; flex-shrink:0;
   padding:28px 28px 24px; border-bottom:1px solid #1E2130;
 }
-.ws-hero-inner { position:relative; z-index:1; max-width:860px; margin:0 auto; }
+.ws-hero-inner { position:relative; z-index:1; max-width:1180px; margin:0 auto; }
 .ws-hero-glow {
   position:absolute; inset:0;
   background:var(--accent, rgba(124,58,237,.1));
@@ -77,11 +77,17 @@
 }
 
 /* ── Body ── */
-.ws-body { display:grid; grid-template-columns:1fr 1.5fr; gap:16px; padding:20px 28px 40px; max-width:920px; margin:0 auto; width:100%; box-sizing:border-box; }
-@media(max-width:700px) { .ws-body{grid-template-columns:1fr;} }
+/* 1180 y no 920: en una pantalla normal sobraban 300px a cada lado y las
+   instrucciones se leian en una columna angosta, con el texto partido en
+   muchos renglones cortos. Se mantiene el tope para que la linea de lectura
+   no se vuelva larguisima en un monitor ancho. Mismo ancho que el hero, que
+   estaba en 860 y desalineaba el titulo. */
+.ws-body { display:grid; grid-template-columns:1fr 1.4fr; gap:20px; padding:20px 28px 40px; max-width:1180px; margin:0 auto; width:100%; box-sizing:border-box; }
+@media(max-width:1000px) { .ws-body{grid-template-columns:1fr 1.2fr; gap:16px;} }
+@media(max-width:700px)  { .ws-body{grid-template-columns:1fr; padding:16px 18px 32px;} }
 
 /* ── Panel ── */
-.ws-panel { background:#161824; border:1px solid #2A2D3E; border-radius:16px; padding:20px; display:flex; flex-direction:column; gap:12px; }
+.ws-panel { background:#161824; border:1px solid #2A2D3E; border-radius:16px; padding:24px; display:flex; flex-direction:column; gap:12px; }
 .ws-panel-head { display:flex; align-items:center; gap:8px; }
 .ws-panel-icon { font-size:1rem; }
 .ws-panel-title { font-size:.85rem; font-weight:800; color:#A78BFA; flex:1; }
