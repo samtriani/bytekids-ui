@@ -211,16 +211,17 @@
           }
         </div>
 
-        <!-- Banner rechazo -->
+        <!-- Revision del maestro: no es un rechazo, es un ajuste pedido -->
         @if (isRejected) {
-          <div class="ws-rejected-banner">
-            <div class="ws-rejected-title">❌ Tu entrega anterior fue rechazada</div>
+          <div class="ws-revision-banner">
+            <div class="ws-revision-title">✏️ Tu maestro revisó tu trabajo</div>
             @if (rejectedSub?.teacherFeedback) {
-              <div class="ws-rejected-feedback">
-                <span style="font-weight:700">Comentario del maestro:</span> {{ rejectedSub.teacherFeedback }}
-              </div>
+              <div class="ws-revision-feedback">{{ rejectedSub.teacherFeedback }}</div>
             }
-            <div class="ws-rejected-hint">Corrige tu respuesta y vuelve a enviarla. Intento {{ (rejectedSub?.attemptsCount ?? 0) + 1 }}.</div>
+            <div class="ws-revision-hint">
+              Ajusta tu respuesta con eso y vuélvela a enviar. Nadie acierta a la
+              primera: los modelos de IA tampoco.
+            </div>
           </div>
         }
 

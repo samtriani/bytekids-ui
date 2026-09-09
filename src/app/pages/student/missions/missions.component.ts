@@ -110,7 +110,9 @@ export class MissionsComponent implements OnInit {
     const color = c.subjectColor || meta.color;
     const sub  = this.submissionMap[c.id];
     const status = sub
-      ? (sub.status === 'aprobado' ? 'Completado' : sub.status === 'rechazado' ? 'Rechazado' : 'En progreso')
+      // "Por ajustar" y no "Rechazado": el maestro pidio un cambio, no
+      // descarto el trabajo. El estado interno sigue siendo rechazado.
+      ? (sub.status === 'aprobado' ? 'Completado' : sub.status === 'rechazado' ? 'Por ajustar' : 'En progreso')
       : 'Disponible';
     const progress = sub
       ? (sub.status === 'aprobado' ? 100 : 50)
