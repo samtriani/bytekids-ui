@@ -1,0 +1,39 @@
+<!--
+  La caja SIEMPRE está en el árbol, aunque no haya llamada: si se montara con
+  un @if, el contenedor de abajo dejaría de existir y el iframe de Jitsi se
+  recargaría cada vez. Se apaga con una clase, no quitándola del DOM.
+-->
+<div class="lf-caja"
+     [class.lf-caja--acoplada]="modo === 'acoplada'"
+     [class.lf-caja--esquina]="modo === 'esquina'"
+     [class.lf-caja--apagada]="!llamada.datos() || modo === 'escondida'"
+     [class.lf-caja--minimizada]="llamada.minimizada() && modo === 'esquina'"
+     [style.top.px]="caja.top"
+     [style.left.px]="caja.left"
+     [style.width.px]="caja.width"
+     [style.height.px]="caja.height">
+
+  <!-- La barra solo se ve en la ventanita: acoplada, el aula pone la suya. -->
+  @if (modo === 'esquina') {
+    <div class="lf-barra" (mousedown)="empezarArrastre($event)">
+      <span class="lf-punto"></span>
+      <span class="lf-icono">{{ llamada.datos()?.icono }}</span>
+      <div class="lf-titulos">
+        <div class="lf-titulo">{{ llamada.datos()?.titulo }}</div>
+        <div class="lf-subtitulo">{{ llamada.datos()?.subtitulo }}</div>
+      </div>
+
+      <button class="lf-btn lf-btn--volver" (click)="volverAlAula()"
+              title="Volver a la clase">↩ Clase</button>
+      <button class="lf-btn" (click)="llamada.alternarMinimizada()"
+              [title]="llamada.minimizada() ? 'Mostrar el video' : 'Encoger'">
+        {{ llamada.minimizada() ? '▢' : '—' }}
+      </button>
+      <button class="lf-btn lf-btn--colgar" (click)="colgar()"
+              title="Salir del video (la clase sigue)">✕</button>
+    </div>
+  }
+
+  <!-- Aquí adentro nace el iframe, y aquí se queda hasta que se cuelgue. -->
+  <div #contenedor class="lf-video"></div>
+</div>

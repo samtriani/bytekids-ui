@@ -182,7 +182,7 @@
       <div class="aula-chat-panel">
         <!-- Tabs -->
         <div class="aula-tabs">
-          <button class="aula-tab" [class.active]="activeTab==='chat'" (click)="activeTab='chat'">
+          <button class="aula-tab" [class.active]="activeTab==='chat'" (click)="cambiarPestana('chat')">
             💬 Chat
             @if (chatMessages.length) { <span class="aula-tab-count">{{ chatMessages.length }}</span> }
           </button>
@@ -192,10 +192,10 @@
           </button>
           <button class="aula-tab aula-tab--video"
                   [class.active]="activeTab==='video'"
-                  (click)="activeTab='video'">
+                  (click)="cambiarPestana('video')">
             📷 Video @if (teacherVideoActive) { <span class="aula-vid-dot"></span> }
           </button>
-          <button class="aula-tab" [class.active]="activeTab==='bot'" (click)="activeTab='bot'">
+          <button class="aula-tab" [class.active]="activeTab==='bot'" (click)="cambiarPestana('bot')">
             🤖 ByteBot
           </button>
         </div>
@@ -222,11 +222,12 @@
               <div class="aula-video-live-bar">
                 <span class="aula-vid-dot"></span> Videollamada activa
                 @if (vistaDividida) {
-                  <button class="aula-video-mini-btn" (click)="verVideoAlLado = false">✕ Ocultar</button>
+                  <button class="aula-video-mini-btn" (click)="mostrarVideoAlLado(false)">✕ Ocultar</button>
                 }
                 <button class="aula-video-end-btn" (click)="startVideo()">⏹ Finalizar</button>
               </div>
-              <div id="jitsi-teacher" class="aula-jitsi-container"></div>
+              <!-- El hueco: la videollamada se acopla encima, no vive aqui. -->
+              <div #huecoVideo class="aula-jitsi-container"></div>
             }
           </div>
 
@@ -300,7 +301,7 @@
                     </div>
                   </div>
                   @if (teacherVideoActive && !verVideoAlLado) {
-                    <button class="aula-work-showvid" (click)="verVideoAlLado = true">📷 Ver video</button>
+                    <button class="aula-work-showvid" (click)="mostrarVideoAlLado(true)">📷 Ver video</button>
                   }
                 </div>
                 @if (activeMission.description) {

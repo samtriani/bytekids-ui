@@ -158,7 +158,7 @@
       <div class="aula-chat-panel">
         <!-- Tabs -->
         <div class="aula-tabs">
-          <button class="aula-tab" [class.active]="activeTab==='chat'" (click)="activeTab='chat'">
+          <button class="aula-tab" [class.active]="activeTab==='chat'" (click)="cambiarPestana('chat')">
             💬 Chat
             @if (chatMessages.length) { <span class="aula-tab-count">{{ chatMessages.length }}</span> }
           </button>
@@ -168,10 +168,10 @@
           </button>
           <button class="aula-tab aula-tab--video"
                   [class.active]="activeTab==='video'"
-                  (click)="activeTab='video'">
+                  (click)="cambiarPestana('video')">
             📷 Video @if (teacherVideoActive) { <span class="aula-vid-dot"></span> }
           </button>
-          <button class="aula-tab" [class.active]="activeTab==='bot'" (click)="activeTab='bot'">
+          <button class="aula-tab" [class.active]="activeTab==='bot'" (click)="cambiarPestana('bot')">
             🤖 ByteBot
           </button>
         </div>
@@ -179,11 +179,11 @@
         <div class="aula-panel-body" [class.aula-panel-body--split]="vistaDividida">
 
           <!--
-            El panel de video NUNCA sale del DOM. Montado dentro de un
-            @if (activeTab === 'video'), cambiar de pestaña lo sacaba del árbol
-            y destruía el iframe de Jitsi: la llamada se caía y, como jitsiApi
-            seguía distinto de null, mountJitsi() salía temprano y el video ya
-            no volvía. Se oculta con CSS, que deja la llamada viva.
+            El panel de video NUNCA sale del DOM: adentro está el hueco donde
+            se acopla la videollamada, y el servicio necesita poder medirlo.
+            Se oculta con CSS. Montado dentro de un @if (activeTab === 'video')
+            el hueco desaparecía al cambiar de pestaña y la llamada se quedaba
+            sin dónde colocarse.
           -->
           <div class="aula-video-panel" [class.aula-pane-oculta]="!videoVisible">
             @if (!teacherVideoActive) {
@@ -197,17 +197,19 @@
               <div class="aula-video-live-bar">
                 <span class="aula-vid-dot"></span> Videollamada activa
                 @if (vistaDividida) {
-                  <button class="aula-video-mini-btn" (click)="verVideoAlLado = false">✕ Ocultar</button>
+                  <button class="aula-video-mini-btn" (click)="mostrarVideoAlLado(false)">✕ Ocultar</button>
                 }
               </div>
-              @if (!jitsiApi) {
+              @if (!llamada.esDe(scheduleId)) {
                 <div class="aula-video-join-wrap">
-                  <button class="aula-video-btn" (click)="joinVideo()">
-                    🎥 Unirse a la videollamada
+                  <button class="aula-video-btn" (click)="joinVideo()"
+                          [disabled]="uniendose">
+                    {{ uniendose ? 'Conectando…' : '🎥 Unirse a la videollamada' }}
                   </button>
                 </div>
               }
-              <div id="jitsi-student" class="aula-jitsi-container"></div>
+              <!-- El hueco: la videollamada se acopla encima, no vive aqui. -->
+              <div #huecoVideo class="aula-jitsi-container"></div>
             }
           </div>
 
@@ -281,7 +283,7 @@
                     </div>
                   </div>
                   @if (teacherVideoActive && !verVideoAlLado) {
-                    <button class="aula-work-showvid" (click)="verVideoAlLado = true">📷 Ver video</button>
+                    <button class="aula-work-showvid" (click)="mostrarVideoAlLado(true)">📷 Ver video</button>
                   }
                 </div>
                 @if (activeMission.description) {

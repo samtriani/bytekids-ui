@@ -3,6 +3,7 @@ import { HttpErrorResponse, HttpInterceptorFn } from '@angular/common/http';
 import { Router } from '@angular/router';
 import { catchError, retry, tap, throwError, timer } from 'rxjs';
 import { BackendStatusService } from '../services/backend-status.service';
+import { LlamadaService } from '../services/llamada.service';
 
 /**
  * Reintentos y espera entre ellos. Estaban calibrados para un backend caido
@@ -38,6 +39,7 @@ function esTransitorio(e: HttpErrorResponse): boolean {
 export const resilienceInterceptor: HttpInterceptorFn = (req, next) => {
   const estado = inject(BackendStatusService);
   const router = inject(Router);
+  const llamada = inject(LlamadaService);
 
   return next(req).pipe(
     retry({
@@ -54,6 +56,9 @@ export const resilienceInterceptor: HttpInterceptorFn = (req, next) => {
     catchError((error: HttpErrorResponse) => {
       if (error.status === 401) {
         // Sesion realmente vencida: aqui si corresponde mandar al login.
+        // La videollamada vive fuera del router, asi que hay que colgarla
+        // a mano o seguiria sonando encima de la pantalla de login.
+        llamada.terminar();
         estado.reiniciar();
         localStorage.removeItem('bk_token');
         localStorage.removeItem('bk_user');

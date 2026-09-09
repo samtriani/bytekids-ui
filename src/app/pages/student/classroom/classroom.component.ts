@@ -6,6 +6,7 @@ import { SessionApiService } from '../../../services/api/session-api.service';
 import { SubmissionApiService } from '../../../services/api/submission-api.service';
 import { AiTutorService, ChatMessage } from '../../../services/ai-tutor.service';
 import { AuthService } from '../../../services/auth.service';
+import { LlamadaService } from '../../../services/llamada.service';
 import { CuerpoActividad, CUERPO_VACIO } from '../../../shared/mission-body';
 import { catchError, of } from 'rxjs';
 
@@ -18,6 +19,8 @@ import { catchError, of } from 'rxjs';
 })
 export class StudentClassroomComponent implements OnInit, OnDestroy, AfterViewChecked {
   @ViewChild('chatEnd') chatEnd!: ElementRef;
+  /** El hueco donde se acopla la videollamada mientras estas en el aula. */
+  @ViewChild('huecoVideo') huecoVideo?: ElementRef<HTMLElement>;
 
   scheduleId   = '';
   session: any = null;
@@ -41,9 +44,10 @@ export class StudentClassroomComponent implements OnInit, OnDestroy, AfterViewCh
   errorEntrega  = '';
   /** El alumno puede cerrar el video para trabajar a pantalla completa. */
   verVideoAlLado = true;
+  /** Pidiendo el token de la videollamada. */
+  uniendose = false;
   activeTab:          'chat' | 'bot' | 'video' | 'work' = 'chat';
   teacherVideoActive  = false;
-  jitsiApi:   any = null;
   chatMessages:  any[] = [];
   chatMsg        = '';
   sendingChat    = false;
@@ -117,6 +121,7 @@ export class StudentClassroomComponent implements OnInit, OnDestroy, AfterViewCh
     private submissionApi: SubmissionApiService,
     private aiService:     AiTutorService,
     public  auth:          AuthService,
+    public  llamada:       LlamadaService,
   ) {}
 
   ngOnInit() {
@@ -205,39 +210,71 @@ export class StudentClassroomComponent implements OnInit, OnDestroy, AfterViewCh
   }
 
   joinVideo() {
+    // esDe() y no activa: con una llamada de OTRA clase en curso, el
+    // alumno si debe poder entrar a esta; el servicio cuelga la anterior.
+    if (this.llamada.esDe(this.scheduleId) || this.uniendose) return;
     // Si el video ya se esta viendo --pestana Video o al lado de la
     // actividad-- no hay por que mover al alumno de donde esta.
     if (!this.videoVisible) this.activeTab = 'video';
-    setTimeout(() => this.mountJitsi(), 300);
-  }
-
-  private mountJitsi() {
-    const container = document.getElementById('jitsi-student');
-    if (!container || this.jitsiApi) return;
-    this.sessionApi.getJaasToken(this.scheduleId).pipe(catchError(() => of(null))).subscribe(jwt => {
-      const load = () => {
-        this.jitsiApi = new (window as any).JitsiMeetExternalAPI('8x8.vc', {
-          roomName: this.jitsiRoom,
-          parentNode: container,
-          width: '100%', height: '100%',
+    this.uniendose = true;
+    this.sessionApi.getJaasToken(this.scheduleId)
+      .pipe(catchError(() => of(null)))
+      .subscribe(jwt => {
+        this.uniendose = false;
+        this.llamada.iniciar({
+          scheduleId: this.scheduleId,
+          sala:       this.jitsiRoom,
           jwt,
-          userInfo: { displayName: this.studentName },
-          configOverwrite: { prejoinPageEnabled: false, disableDeepLinking: true },
-          interfaceConfigOverwrite: { SHOW_JITSI_WATERMARK: false },
+          nombre:     this.studentName,
+          titulo:     this.session?.subjectName ?? 'Clase',
+          subtitulo:  this.session?.teacherName ?? '',
+          icono:      this.session?.subjectIcon ?? '\u{1F4F7}',
+          volverA:    `/student/classroom/${this.scheduleId}`,
         });
-      };
-      const apiUrl = `https://8x8.vc/${this.jitsiRoom.split('/')[0]}/external_api.js`;
-      if ((window as any).JitsiMeetExternalAPI) { load(); return; }
-      const s = document.createElement('script');
-      s.src = apiUrl;
-      s.onload = load;
-      document.body.appendChild(s);
-    });
+        this.recolocar();
+      });
   }
 
-  private destroyJitsi() {
-    if (this.jitsiApi) { this.jitsiApi.dispose(); this.jitsiApi = null; }
+  /**
+   * Le presta el hueco al servicio para que la llamada se coloque encima.
+   * acoplar() se ignora si el hueco ya es ese, asi que llamarlo de mas
+   * no cuesta nada.
+   */
+  private acoplarLlamada(): void {
+    const el = this.huecoVideo?.nativeElement;
+    if (el) this.llamada.acoplar(el);
   }
+
+  /**
+   * Cambio el acomodo: la llamada acoplada tiene que recolocarse.
+   *
+   * Va en un setTimeout para que el DOM ya se haya repintado cuando se mida
+   * el hueco, y se llama SOLO desde manejadores de eventos. Colgarlo de
+   * ngAfterViewChecked haria un bucle: recolocar escribe estilos, los
+   * estilos disparan otro ciclo de deteccion, y ese ciclo vuelve a recolocar.
+   */
+  private recolocar(): void {
+    // Dos intentos: al volver al aula desde otra pantalla, el hueco puede no
+    // estar pintado todavia en el primero --depende de que ya haya llegado
+    // teacherVideoActive-- y sin el segundo la llamada se quedaria en la
+    // esquina encima de su propia aula.
+    const intento = () => { this.acoplarLlamada(); this.llamada.refrescar(); };
+    setTimeout(intento, 0);
+    setTimeout(intento, 300);
+  }
+
+  /** Las pestanas cambian el tamano del hueco, no solo lo que se ve. */
+  cambiarPestana(t: 'chat' | 'bot' | 'video' | 'work'): void {
+    this.activeTab = t;
+    this.recolocar();
+  }
+
+  mostrarVideoAlLado(v: boolean): void {
+    this.verVideoAlLado = v;
+    this.recolocar();
+  }
+
+
 
   private pollAll() {
     this.sessionApi.getAttendance(this.scheduleId).pipe(catchError(() => of({ participants: [], teacherVideoActive: false }))).subscribe(data => {
@@ -245,6 +282,9 @@ export class StudentClassroomComponent implements OnInit, OnDestroy, AfterViewCh
       const wasActive = this.teacherVideoActive;
       this.teacherVideoActive = data.teacherVideoActive ?? false;
       // Notificar si el maestro acaba de iniciar la videollamada
+      // Con la llamada en curso, encender el video hace aparecer el hueco:
+      // hay que reacoplarla para que se coloque encima.
+      if (this.teacherVideoActive && this.llamada.esDe(this.scheduleId)) this.recolocar();
       if (!wasActive && this.teacherVideoActive) {
         this.messages.push({ role: 'assistant', content: '📷 ¡El maestro inició la videollamada! Haz clic en la pestaña **Video** para unirte.', timestamp: new Date() });
         this.scrollNeeded = true;
@@ -309,13 +349,6 @@ export class StudentClassroomComponent implements OnInit, OnDestroy, AfterViewCh
     });
   }
 
-  get jitsiRoomUrl(): string {
-    const room = 'ByteKids-' + this.scheduleId.replace(/-/g, '');
-    const name = encodeURIComponent(this.studentName);
-    return `https://meet.jit.si/${room}#userInfo.displayName="${name}"`;
-  }
-
-  openVideo() { window.open(this.jitsiRoomUrl, '_blank'); }
 
   /** Deja lista la actividad cuando el maestro lanza o cambia la mision. */
   private aplicarMision(m: any): void {
@@ -337,6 +370,7 @@ export class StudentClassroomComponent implements OnInit, OnDestroy, AfterViewCh
   abrirActividad(): void {
     this.activeTab = 'work';
     this.entregaOk = false;
+    this.recolocar();
   }
 
   /** Un material se consulta; no se escribe nada. */
@@ -380,13 +414,16 @@ export class StudentClassroomComponent implements OnInit, OnDestroy, AfterViewCh
   }
 
   ngOnDestroy() {
-    this.destroyJitsi();
+    // La llamada NO se cuelga al salir del aula: esa es toda la gracia.
+    // Solo se le retira el hueco y se va a la ventanita de la esquina.
+    this.llamada.desacoplar(this.huecoVideo?.nativeElement);
     clearInterval(this.timerRef);
     clearInterval(this.attendanceRef);
   }
 
   exitClass() {
-    this.destroyJitsi();
+    // Salir de clase si cuelga: es la decision explicita del alumno.
+    this.llamada.terminar();
     this.sessionApi.leave(this.scheduleId).pipe(catchError(() => of(null))).subscribe(() => {
       this.router.navigate(['/student/calendar']);
     });
