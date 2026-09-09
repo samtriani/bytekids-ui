@@ -5,6 +5,7 @@ import { RouterLink } from '@angular/router';
 import { ShellComponent } from '../../../shared/shell/shell.component';
 import { TEACHER_NAV } from '../shared/teacher-nav';
 import { ClassroomApiService } from '../../../services/api/classroom-api.service';
+import { SubmissionApiService } from '../../../services/api/submission-api.service';
 import { ProgressApiService } from '../../../services/api/progress-api.service';
 import { AuthService } from '../../../services/auth.service';
 import { forkJoin, of } from 'rxjs';
@@ -35,6 +36,10 @@ export class ReportsComponent implements OnInit {
   periods: string[] = [];
 
   private students: any[] = [];
+
+  /** Avance real por alumno y por salon, sacado de las libretas. */
+  private avance = new Map<string, { hechas: number; totales: number }>();
+  porSalon: { nombre: string; promedio: number }[] = [];
   private barChart: Chart | null = null;
   private dntChart: Chart | null = null;
 
@@ -53,6 +58,7 @@ export class ReportsComponent implements OnInit {
 
   constructor(
     private classroomApi: ClassroomApiService,
+    private submissionApi: SubmissionApiService,
     private progressApi: ProgressApiService,
     private auth: AuthService
   ) {}
@@ -91,6 +97,7 @@ export class ReportsComponent implements OnInit {
                 this.refresh();
                 this.loading = false;
                 setTimeout(() => this.renderCharts(), 80);
+                this.cargarAvanceReal();
               },
               error: () => { this.loading = false; }
             });
@@ -115,9 +122,12 @@ export class ReportsComponent implements OnInit {
   private buildStudent(r: any): any {
     const s = r.student;
     const prog = this.calcProg(r.subjects);
+    // StudentSubjectProgress trae la materia anidada en subject. Con
+    // subjectName y name --que no existen-- la lista quedaba vacia
+    // siempre, y por eso la grafica decia "Sin materias".
     const subjects = r.subjects.map((sub: any) => ({
-      name: sub.subjectName || sub.name || '',
-      progress: this.subjectProg(sub),
+      name: sub.subject?.name || sub.subjectName || sub.name || '',
+      xp:   sub.xpInSubject ?? 0,
     })).filter((s: any) => s.name);
     const av = s.initials || (s.displayName || '').split(' ').map((w: string) => w[0] || '').join('').slice(0, 2).toUpperCase();
     return {
@@ -130,6 +140,64 @@ export class ReportsComponent implements OnInit {
       activity: r.activity,
       status: prog >= 80 ? 'Excelente' : prog >= 50 ? 'Regular' : 'Necesita apoyo',
     };
+  }
+
+  /**
+   * El avance real sale de la libreta de cada salon: aprobadas +
+   * materiales leidos sobre las piezas asignadas. Lo que habia antes
+   * leia sub.progress y sub.totalMissions, que StudentSubjectProgress no
+   * tiene, asi que todos los alumnos aparecian en 0% y en "Necesita
+   * apoyo".
+   */
+  private cargarAvanceReal(): void {
+    if (!this.classrooms.length) return;
+    forkJoin(this.classrooms.map((c: any) =>
+      this.submissionApi.getGradebook(c.id).pipe(catchError(() => of(null)))
+    )).subscribe(libretas => {
+      this.porSalon = [];
+      (libretas as any[]).forEach((l, i) => {
+        const promedio = this.acumular(l);
+        if (l) this.porSalon.push({ nombre: this.classrooms[i].name, promedio });
+      });
+
+      this.students = this.students.map(a => {
+        const v = this.avance.get(a.id);
+        if (!v?.totales) return a;
+        const prog = Math.round((v.hechas / v.totales) * 100);
+        return { ...a, prog, hechas: v.hechas, totales: v.totales,
+                 status: prog >= 80 ? 'Excelente' : prog >= 50 ? 'Regular' : 'Necesita apoyo' };
+      });
+      this.refresh();
+      setTimeout(() => this.renderCharts(), 40);
+    });
+  }
+
+  /** Suma la libreta al avance de cada alumno y devuelve el promedio del salon. */
+  private acumular(libreta: any): number {
+    if (!libreta) return 0;
+    const contenidos: any[] = libreta.content   ?? [];
+    const materiales: any[] = libreta.materials ?? [];
+    const grades = libreta.grades ?? {};
+    const reads  = libreta.reads  ?? {};
+    const piezas = contenidos.length + materiales.length;
+    const alumnos: any[] = libreta.students ?? [];
+    if (!piezas || !alumnos.length) return 0;
+
+    let suma = 0;
+    for (const alumno of alumnos) {
+      const suyas  = grades[alumno.id] ?? {};
+      const leidos = reads[alumno.id]  ?? {};
+      const hechas = contenidos.filter(c => suyas[c.id]?.status === 'aprobado').length
+                   + materiales.filter(m => leidos[m.id]).length;
+      suma += Math.round((hechas / piezas) * 100);
+
+      const previo = this.avance.get(alumno.id) ?? { hechas: 0, totales: 0 };
+      this.avance.set(alumno.id, {
+        hechas: previo.hechas + hechas,
+        totales: previo.totales + piezas,
+      });
+    }
+    return Math.round(suma / alumnos.length);
   }
 
   private calcProg(subjects: any[]): number {
@@ -152,7 +220,10 @@ export class ReportsComponent implements OnInit {
   private activitiesInPeriod(activity: any[], period: string): any[] {
     const { month, year } = this.periodToMonthYear(period);
     return activity.filter(a => {
-      const d = new Date(a.createdAt);
+      // DailyActivity trae activityDate, no createdAt. Con el campo
+      // equivocado la fecha salia invalida, ningun periodo tenia
+      // actividades y la tendencia era siempre "igual".
+      const d = new Date(a.activityDate);
       return d.getMonth() === month && d.getFullYear() === year;
     });
   }
@@ -242,17 +313,12 @@ export class ReportsComponent implements OnInit {
       }
     });
 
-    // Doughnut: avg progress per subject across all students
-    const subjectMap = new Map<string, number[]>();
-    this.students.forEach(s => s.subjects.forEach((sub: any) => {
-      if (!subjectMap.has(sub.name)) subjectMap.set(sub.name, []);
-      subjectMap.get(sub.name)!.push(sub.progress);
-    }));
-    const subLabels = Array.from(subjectMap.keys()).slice(0, 6);
-    const subData = subLabels.map(k => {
-      const vals = subjectMap.get(k)!;
-      return Math.round(vals.reduce((a, b) => a + b, 0) / vals.length);
-    });
+    // Avance promedio POR SALON. Antes era por materia, con un progreso
+    // que siempre valia 0 y un nombre que nunca se resolvia: la grafica
+    // salia vacia. El promedio por salon si es un dato que el maestro usa
+    // y sale de la libreta, que es la fuente correcta.
+    const subLabels = this.porSalon.map(s => s.nombre).slice(0, 6);
+    const subData   = this.porSalon.map(s => s.promedio).slice(0, 6);
     const COLORS = ['#7A1535','#C4992A','#1A6B3C','#0A4D7A','#5C0F27','#3A7A1A'];
 
     this.dntChart = new Chart(this.dntC.nativeElement, {

@@ -5,6 +5,7 @@ import { ShellComponent } from '../../../shared/shell/shell.component';
 import { TEACHER_NAV } from '../shared/teacher-nav';
 import { ClassroomApiService } from '../../../services/api/classroom-api.service';
 import { ProgressApiService } from '../../../services/api/progress-api.service';
+import { SubmissionApiService } from '../../../services/api/submission-api.service';
 import { AuthService } from '../../../services/auth.service';
 import { forkJoin, of } from 'rxjs';
 import { catchError, map, switchMap } from 'rxjs/operators';
@@ -39,6 +40,7 @@ export class ClassroomsComponent implements OnInit {
   constructor(
     private classroomApi: ClassroomApiService,
     private progressApi: ProgressApiService,
+    private submissionApi: SubmissionApiService,
     private auth: AuthService
   ) {}
 
@@ -75,7 +77,51 @@ export class ClassroomsComponent implements OnInit {
       this.sel = this.rooms[0] || null;
       this.loading = false;
       setTimeout(() => this.renderChart(), 80);
+      this.corregirPromedios();
     });
+  }
+
+  /**
+   * El promedio se estimaba con xpInSubject/5 --500 XP = 100%--, que mide
+   * cuanto XP junto el alumno, no cuanto del temario lleva. El Panel, la
+   * Libreta y Reportes ya usan el avance real, y ver tres cifras distintas
+   * del mismo alumno en el mismo modulo es peor que verlas todas mal.
+   */
+  private corregirPromedios(): void {
+    if (!this.rooms.length) return;
+    forkJoin(this.rooms.map((r: any) =>
+      this.submissionApi.getGradebook(r._id || r.id).pipe(catchError(() => of(null)))
+    )).subscribe(libretas => {
+      (libretas as any[]).forEach((l, i) => {
+        const real = this.promedioDeLibreta(l);
+        if (real !== null) this.rooms[i].avg = real;
+      });
+      if (this.sel) {
+        this.sel = this.rooms.find((r: any) => (r._id || r.id) === (this.sel._id || this.sel.id)) ?? this.sel;
+      }
+      setTimeout(() => this.renderChart(), 40);
+    });
+  }
+
+  /** Aprobadas + materiales leidos sobre las piezas asignadas al salon. */
+  private promedioDeLibreta(libreta: any): number | null {
+    if (!libreta) return null;
+    const contenidos: any[] = libreta.content   ?? [];
+    const materiales: any[] = libreta.materials ?? [];
+    const alumnos: any[]    = libreta.students  ?? [];
+    const piezas = contenidos.length + materiales.length;
+    if (!piezas || !alumnos.length) return 0;
+
+    const grades = libreta.grades ?? {};
+    const reads  = libreta.reads  ?? {};
+    const suma = alumnos.reduce((acc, a) => {
+      const suyas  = grades[a.id] ?? {};
+      const leidos = reads[a.id]  ?? {};
+      const hechas = contenidos.filter(c => suyas[c.id]?.status === 'aprobado').length
+                   + materiales.filter(m => leidos[m.id]).length;
+      return acc + Math.round((hechas / piezas) * 100);
+    }, 0);
+    return Math.round(suma / alumnos.length);
   }
 
   private buildRoom(data: { classroom: any; enriched: any[] }): any {

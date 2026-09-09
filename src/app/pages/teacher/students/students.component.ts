@@ -5,6 +5,7 @@ import { ActivatedRoute, RouterLink, Router } from '@angular/router';
 import { ShellComponent } from '../../../shared/shell/shell.component';
 import { TEACHER_NAV } from '../shared/teacher-nav';
 import { ClassroomApiService } from '../../../services/api/classroom-api.service';
+import { SubmissionApiService } from '../../../services/api/submission-api.service';
 import { ProgressApiService } from '../../../services/api/progress-api.service';
 import { AuthService } from '../../../services/auth.service';
 import { forkJoin, of } from 'rxjs';
@@ -32,6 +33,15 @@ export class StudentsComponent implements OnInit {
   /** Salones para filtrar, con el color de su materia como en el Panel. */
   salones: { id: string; nombre: string; color: string }[] = [];
   salonFiltro = '';
+
+  /**
+   * Avance real por alumno, sacado de la libreta de cada salon:
+   * aprobadas + materiales leidos sobre las piezas asignadas.
+   * Antes se estimaba con xpInSubject/5 --500 XP = 100%-- que es una
+   * regla inventada: no mide cuanto del temario lleva, mide cuanto XP
+   * junto, y un alumno puede juntar XP sin avanzar en su curso.
+   */
+  private avance = new Map<string, { hechas: number; totales: number; siguiente: string }>();
 
   get teacherName(): string { return this.teacher?.displayName || 'Maestro'; }
   get teacherInitials(): string { return this.teacher?.initials || 'M'; }
@@ -78,6 +88,7 @@ export class StudentsComponent implements OnInit {
     private router: Router,
     private route: ActivatedRoute,
     private classroomApi: ClassroomApiService,
+    private submissionApi: SubmissionApiService,
     private progressApi: ProgressApiService,
     private auth: AuthService
   ) {}
@@ -101,6 +112,16 @@ export class StudentsComponent implements OnInit {
             nombre: c.name,
             color: (materias as any[])[i]?.[0]?.color || '#7C3AED',
           }));
+        });
+
+        // Una libreta por salon: trae piezas asignadas, calificaciones y
+        // materiales leidos, que es lo unico con lo que se puede decir
+        // cuanto del temario lleva un alumno.
+        forkJoin(classrooms.map((c: any) =>
+          this.submissionApi.getGradebook(c.id).pipe(catchError(() => of(null)))
+        )).subscribe(libretas => {
+          (libretas as any[]).forEach(l => this.acumularAvance(l));
+          if (this.all.length) this.all = this.all.map(a => this.conAvance(a));
         });
 
         // Cargar alumnos de TODOS los salones en paralelo
@@ -145,7 +166,7 @@ export class StudentsComponent implements OnInit {
               });
             })).subscribe({
               next: results => {
-                this.all = results.map(r => this.buildStudent(r));
+                this.all = results.map(r => this.conAvance(this.buildStudent(r)));
                 this.loading = false;
               },
               error: () => { this.loading = false; }
@@ -156,6 +177,48 @@ export class StudentsComponent implements OnInit {
       },
       error: () => { this.loading = false; }
     });
+  }
+
+  /** Suma lo de esta libreta al avance de cada alumno que aparezca en ella. */
+  private acumularAvance(libreta: any): void {
+    if (!libreta) return;
+    const contenidos: any[] = libreta.content   ?? [];
+    const materiales: any[] = libreta.materials ?? [];
+    const grades = libreta.grades ?? {};
+    const reads  = libreta.reads  ?? {};
+    const piezas = contenidos.length + materiales.length;
+
+    for (const alumno of (libreta.students ?? [])) {
+      const suyas  = grades[alumno.id] ?? {};
+      const leidos = reads[alumno.id]  ?? {};
+      const aprobadas = contenidos.filter(c => suyas[c.id]?.status === 'aprobado').length;
+      const vistos    = materiales.filter(m => leidos[m.id]).length;
+
+      // La siguiente es la primera del temario que aun no aprueba. El
+      // backend ya devuelve el contenido en orden de curriculo.
+      const pendiente = contenidos.find(c => suyas[c.id]?.status !== 'aprobado');
+
+      const previo = this.avance.get(alumno.id) ?? { hechas: 0, totales: 0, siguiente: '' };
+      this.avance.set(alumno.id, {
+        hechas:  previo.hechas  + aprobadas + vistos,
+        totales: previo.totales + piezas,
+        siguiente: previo.siguiente || pendiente?.title || '',
+      });
+    }
+  }
+
+  private conAvance(a: any): any {
+    const v = this.avance.get(a.id);
+    if (!v || !v.totales) return a;
+    const prog = Math.round((v.hechas / v.totales) * 100);
+    return {
+      ...a,
+      prog,
+      hechas: v.hechas,
+      totales: v.totales,
+      status: prog >= 80 ? 'Excelente' : prog >= 50 ? 'Regular' : 'Necesita apoyo',
+      nextMission: v.siguiente || 'Terminó el temario',
+    };
   }
 
   private buildStudent(r: any): any {
@@ -189,9 +252,12 @@ export class StudentsComponent implements OnInit {
     };
   }
 
+  /**
+   * Provisional, hasta que llega la libreta: XP por materia como proxy.
+   * conAvance() lo reemplaza por el avance real en cuanto responde.
+   */
   private calcProg(subjects: any[]): number {
     if (!subjects.length) return 0;
-    // xpInSubject de la API: 500 XP = 100% por materia
     const sum = subjects.reduce((acc: number, sub: any) => {
       const xp = sub.xpInSubject ?? sub.xp ?? 0;
       return acc + Math.min(100, Math.round(xp / 5));
