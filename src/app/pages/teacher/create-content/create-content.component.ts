@@ -32,7 +32,8 @@ export class CreateContentComponent implements OnInit {
   diff = 'Medio';
   diffs = ['Fácil', 'Medio', 'Difícil'];
   title = ''; desc = ''; xp = 50; mins = 30; dueDate = '';
-  forStudent = '';
+  forStudent   = '';   // nombre, solo para el aviso
+  forStudentId = '';   // a quien se le asigna de verdad
   showPreview = false;
   toast = ''; toastType = 'ok';
 
@@ -48,12 +49,19 @@ export class CreateContentComponent implements OnInit {
     return this.classrooms.find(c => (c._id || c.id) === this.classroomId)?.name || '—';
   }
 
+  /**
+   * Atajos de formato, no de materia. Los de antes nombraban Python,
+   * Scratch, Roblox y Robotica: materias que esta escuela no tiene, asi
+   * que el find por nombre nunca encontraba nada y la plantilla dejaba la
+   * materia sin tocar. Prellenan XP, minutos y dificultad, que es lo que
+   * de verdad ahorra tiempo, y respetan la materia ya elegida.
+   */
   tpls = [
-    {n:'Misión Python básica',    s:'Python',        xp:50,  m:30,  d:'Fácil'},
-    {n:'Proyecto web HTML/CSS',   s:'HTML/CSS/JS',   xp:120, m:90,  d:'Medio'},
-    {n:'Quiz de Scratch',         s:'Scratch',       xp:40,  m:20,  d:'Fácil'},
-    {n:'Reto Roblox Studio',      s:'Roblox Studio', xp:200, m:120, d:'Difícil'},
-    {n:'Ejercicio robótica',      s:'Robótica',      xp:80,  m:60,  d:'Medio'},
+    {n:'Nueva misión',      t:'Misión',   xp:50,  m:30,  d:'Fácil'},
+    {n:'Tarea para casa',   t:'Tarea',    xp:30,  m:20,  d:'Fácil'},
+    {n:'Quiz de repaso',    t:'Quiz',     xp:40,  m:20,  d:'Fácil'},
+    {n:'Material de apoyo', t:'Material', xp:20,  m:15,  d:'Fácil'},
+    {n:'Proyecto final',    t:'Proyecto', xp:200, m:120, d:'Difícil'},
   ];
 
   published: any[] = [];
@@ -65,7 +73,12 @@ export class CreateContentComponent implements OnInit {
     private auth: AuthService
   ) {
     const forParam = this.route.snapshot.queryParamMap.get('for');
-    if (forParam) { this.forStudent = forParam; this.title = `Tarea personalizada para ${forParam}`; }
+    const nombre   = this.route.snapshot.queryParamMap.get('nombre');
+    if (forParam) {
+      this.forStudentId = forParam;
+      this.forStudent   = nombre || 'ese alumno';
+      this.title = `Tarea personalizada para ${this.forStudent}`;
+    }
   }
 
   ngOnInit(): void {
@@ -125,10 +138,15 @@ export class CreateContentComponent implements OnInit {
     return this.subjects.find(s => s.id === this.subjectId)?.name ?? '';
   }
 
+  /** Escape: se llego desde un alumno pero se decide publicar para el grupo. */
+  paraTodoElSalon(): void {
+    this.forStudentId = '';
+    this.forStudent = '';
+    if (this.title.startsWith('Tarea personalizada para')) this.title = '';
+  }
+
   useTpl(t: any): void {
-    // Busca el ID de la materia por nombre
-    const match = this.subjects.find(s => s.name === t.s);
-    if (match) this.subjectId = match.id;
+    this.type = t.t;
     this.xp = t.xp; this.mins = t.m; this.title = t.n; this.diff = t.d;
   }
 
@@ -183,7 +201,13 @@ export class CreateContentComponent implements OnInit {
         next: created => {
           const cid = created._id || created.id;
           this.contentApi.publish(cid).subscribe(() => {
-            if (this.classroomId) {
+            // Si viene de la ficha de un alumno se le asigna SOLO a el.
+            // Antes el aviso decia "contenido personalizado para X" y por
+            // debajo se asignaba al salon entero: hacia algo distinto de lo
+            // que decia, y nadie se enteraba.
+            if (this.forStudentId) {
+              this.contentApi.assign(cid, { studentId: this.forStudentId }).subscribe();
+            } else if (this.classroomId) {
               this.contentApi.assign(cid, { classroomId: this.classroomId }).subscribe();
             }
           });
@@ -193,7 +217,9 @@ export class CreateContentComponent implements OnInit {
             mins: this.mins, desc: this.desc,
             date: new Date().toISOString().substring(0, 10),
           });
-          this.showToast(`✅ "${this.title}" publicado`, 'ok');
+          this.showToast(this.forStudentId
+            ? `✅ "${this.title}" asignado a ${this.forStudent}`
+            : `✅ "${this.title}" publicado para ${this.classroomLabel}`, 'ok');
           this.title = ''; this.desc = ''; this.showPreview = false;
         },
         error: () => this.showToast('❌ Error al publicar. Verifica la sesión.', 'error')
