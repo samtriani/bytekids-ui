@@ -6,7 +6,7 @@ import { ContentApiService } from '../../../services/api/content-api.service';
 import { SubmissionApiService } from '../../../services/api/submission-api.service';
 import { QuizApiService } from '../../../services/api/quiz-api.service';
 import { AuthService } from '../../../services/auth.service';
-import { catchError, of } from 'rxjs';
+import { catchError, forkJoin, of } from 'rxjs';
 
 type Screen = 'loading' | 'work' | 'quiz' | 'done' | 'error';
 
@@ -35,10 +35,29 @@ export class WorkspaceComponent implements OnInit {
   answers: Record<string, string> = {};      // questionId → optionId
   currentQ = 0;
   quizResult: any = null;
+  /**
+   * Intentos anteriores. Sin esto el alumno reabria el quiz y lo empezaba
+   * de cero, sin ver nunca que calificacion habia sacado.
+   */
+  intentos: any[] = [];
   quizSubmitting = false;
 
   readonly Object = Object;
   get isQuiz(): boolean { return this.content?.type === 'quiz'; }
+
+  /** El intento mas reciente, que es el que se le muestra. */
+  get ultimoIntento(): any { return this.quizResult ?? this.intentos[0] ?? null; }
+
+  get califica(): number { return this.ultimoIntento?.score ?? 0; }
+  get aprobo(): boolean  { return this.califica >= 70; }
+
+  /** Vuelve a abrir el cuestionario, con las respuestas en blanco. */
+  reintentarQuiz(): void {
+    this.answers = {};
+    this.currentQ = 0;
+    this.quizResult = null;
+    this.screen = 'quiz';
+  }
 
   /**
    * Un material se consulta, no se entrega: el maestro no lo califica y ni
@@ -177,9 +196,15 @@ export class WorkspaceComponent implements OnInit {
       this.rejectedSub = rejectedSubs[0] ?? null;
 
       if (this.isQuiz) {
-        this.quizApi.getQuestions(id).pipe(catchError(() => of([]))).subscribe(qs => {
+        forkJoin({
+          qs:       this.quizApi.getQuestions(id).pipe(catchError(() => of([]))),
+          intentos: this.quizApi.getMyAttempts(id).pipe(catchError(() => of([]))),
+        }).subscribe(({ qs, intentos }) => {
           this.questions = qs;
-          this.screen = this.alreadyDone ? 'done' : 'quiz';
+          this.intentos  = intentos ?? [];
+          // Si ya lo contesto, primero ve su resultado. Puede repetirlo desde
+          // ahi, pero enterandose de como le fue.
+          this.screen = (this.alreadyDone || this.intentos.length) ? 'done' : 'quiz';
         });
       } else {
         // Pre-fill: approved/pending > rejected code > empty
