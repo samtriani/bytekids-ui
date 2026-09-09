@@ -6,6 +6,7 @@ import { SessionApiService } from '../../../services/api/session-api.service';
 import { SubmissionApiService } from '../../../services/api/submission-api.service';
 import { AiTutorService, ChatMessage } from '../../../services/ai-tutor.service';
 import { AuthService } from '../../../services/auth.service';
+import { CuerpoActividad, CUERPO_VACIO } from '../../../shared/mission-body';
 import { catchError, of } from 'rxjs';
 
 @Component({
@@ -27,7 +28,20 @@ export class StudentClassroomComponent implements OnInit, OnDestroy, AfterViewCh
   attendance:       any[]  = [];
   activeMission:    any   = null;
   mySubmission:     any   = null;
-  activeTab:          'chat' | 'bot' | 'video' = 'chat';
+
+  // ── Actividad dentro del aula ───────────────────────────────────────
+  /** El content_body ya interpretado. Se rearma solo cuando cambia. */
+  cuerpo: CuerpoActividad = CUERPO_VACIO;
+  private cuerpoCrudo  = '';
+  private misionAbierta = '';
+  private prellenado   = false;
+  respuesta     = '';
+  entregando    = false;
+  entregaOk     = false;
+  errorEntrega  = '';
+  /** El alumno puede cerrar el video para trabajar a pantalla completa. */
+  verVideoAlLado = true;
+  activeTab:          'chat' | 'bot' | 'video' | 'work' = 'chat';
   teacherVideoActive  = false;
   jitsiApi:   any = null;
   chatMessages:  any[] = [];
@@ -61,6 +75,39 @@ export class StudentClassroomComponent implements OnInit, OnDestroy, AfterViewCh
     };
     const name = this.session?.subjectName ?? '';
     return Object.entries(colors).find(([k]) => name.includes(k))?.[1] ?? '#7A1535';
+  }
+
+  get esQuiz():     boolean { return this.activeMission?.type === 'quiz'; }
+  get esMaterial(): boolean { return this.activeMission?.type === 'material'; }
+  get yaAprobada(): boolean { return this.mySubmission?.status === 'aprobado'; }
+  get porAjustar(): boolean { return this.mySubmission?.status === 'rechazado'; }
+
+  /** Entregada y esperando: no se le pide que vuelva a escribir. */
+  get enRevision(): boolean {
+    return this.mySubmission?.status === 'enviado'
+        || this.mySubmission?.status === 'revisado';
+  }
+
+  /**
+   * Video y actividad a la vez. Solo tiene sentido con la llamada montada;
+   * el ancho lo decide el CSS, no un listener de resize.
+   */
+  get vistaDividida(): boolean {
+    return this.activeTab === 'work' && this.teacherVideoActive && this.verVideoAlLado;
+  }
+
+  /**
+   * El panel de video NUNCA se saca del DOM: si se monta con @if, cambiar
+   * de pestana destruye el iframe de Jitsi y el alumno se cae de la clase.
+   * Se oculta con CSS, que deja la llamada viva.
+   */
+  get videoVisible(): boolean {
+    return this.activeTab === 'video' || this.vistaDividida;
+  }
+
+  /** Punto rojo en la pestana: hay algo que hacer y no lo ha abierto. */
+  get actividadPendiente(): boolean {
+    return !!this.activeMission && !this.yaAprobada && this.activeTab !== 'work';
   }
 
   constructor(
@@ -158,7 +205,9 @@ export class StudentClassroomComponent implements OnInit, OnDestroy, AfterViewCh
   }
 
   joinVideo() {
-    this.activeTab = 'video';
+    // Si el video ya se esta viendo --pestana Video o al lado de la
+    // actividad-- no hay por que mover al alumno de donde esta.
+    if (!this.videoVisible) this.activeTab = 'video';
     setTimeout(() => this.mountJitsi(), 300);
   }
 
@@ -207,11 +256,19 @@ export class StudentClassroomComponent implements OnInit, OnDestroy, AfterViewCh
     this.sessionApi.getMission(this.scheduleId).pipe(catchError(() => of(null))).subscribe(m => {
       const wasNull = !this.activeMission;
       this.activeMission = m;
+      this.aplicarMision(m);
       if (m?.contentId) {
         this.submissionApi.getMySubmissions().pipe(catchError(() => of([]))).subscribe(subs => {
           this.mySubmission = (subs as any[]).find(s =>
             (s.contentId || s.content?.id) === m.contentId
           ) ?? null;
+          // El borrador se rellena UNA vez por mision. Si se hiciera en
+          // cada sondeo --cada 8 s-- le borraria al alumno lo que va
+          // escribiendo a media clase.
+          if (!this.prellenado) {
+            this.prellenado = true;
+            this.respuesta  = this.mySubmission?.codeSubmitted ?? '';
+          }
         });
       } else {
         this.mySubmission = null;
@@ -220,7 +277,7 @@ export class StudentClassroomComponent implements OnInit, OnDestroy, AfterViewCh
       if (wasNull && m) {
         this.messages.push({
           role: 'assistant',
-          content: `🎯 ¡Tu maestro acaba de lanzar la misión del día!\n\n**${m.title}** · +${m.xpReward} XP\n\nHaz clic en "Ir a la misión" cuando estés listo. ¡Tú puedes! 💪`,
+          content: `🎯 ¡Tu maestro acaba de lanzar la actividad del día!\n\n**${m.title}** · +${m.xpReward} XP\n\nÁbrela en la pestaña **Actividad**: se resuelve aquí mismo, sin salirte de la clase. ¡Tú puedes! 💪`,
           timestamp: new Date(),
         });
         this.scrollNeeded = true;
@@ -260,9 +317,62 @@ export class StudentClassroomComponent implements OnInit, OnDestroy, AfterViewCh
 
   openVideo() { window.open(this.jitsiRoomUrl, '_blank'); }
 
+  /** Deja lista la actividad cuando el maestro lanza o cambia la mision. */
+  private aplicarMision(m: any): void {
+    const crudo = m?.contentBody ?? '';
+    if (crudo !== this.cuerpoCrudo) {
+      this.cuerpoCrudo = crudo;
+      this.cuerpo      = new CuerpoActividad(crudo);
+    }
+    const id = m?.contentId ?? '';
+    if (id !== this.misionAbierta) {
+      this.misionAbierta = id;
+      this.prellenado    = false;
+      this.respuesta     = '';
+      this.entregaOk     = false;
+      this.errorEntrega  = '';
+    }
+  }
+
+  abrirActividad(): void {
+    this.activeTab = 'work';
+    this.entregaOk = false;
+  }
+
+  /** Un material se consulta; no se escribe nada. */
+  marcarVisto(): void {
+    if (this.entregando || this.yaAprobada) return;
+    this.respuesta = 'Material consultado';
+    this.entregar();
+  }
+
+  entregar(): void {
+    const texto = this.respuesta.trim();
+    if (!texto || this.entregando || !this.activeMission?.contentId) return;
+    this.entregando   = true;
+    this.errorEntrega = '';
+    this.submissionApi.submit({
+      contentId: this.activeMission.contentId,
+      codeSubmitted: texto,
+    }).pipe(catchError(() => of(null))).subscribe(res => {
+      this.entregando = false;
+      if (!res) {
+        this.errorEntrega = 'No se pudo enviar. Revisa tu conexión e inténtalo otra vez.';
+        return;
+      }
+      this.mySubmission = res;
+      this.entregaOk    = true;
+    });
+  }
+
+  /**
+   * El quiz sigue viviendo en el workspace: necesita su propio recorrido de
+   * preguntas. Es el unico caso en el que el alumno sale del aula, y se le
+   * avisa antes de mandarlo.
+   */
   goToMission() {
     if (!this.activeMission?.contentId) return;
-    // returnUrl para volver al aula al terminar la misión
+    // returnUrl para volver al aula al terminar
     this.router.navigate(
       ['/student/missions', this.activeMission.contentId],
       { queryParams: { returnUrl: `/student/classroom/${this.scheduleId}` } }

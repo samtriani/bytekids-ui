@@ -122,11 +122,10 @@
                 </div>
               }
 
-              @if (mySubmission?.status !== 'aprobado') {
-                <button class="aula-go-mission-btn" (click)="goToMission()">
-                  {{ mySubmission ? '🔄 Ver mi entrega' : '🚀 Ir a la misión' }}
-                </button>
-              }
+              <button class="aula-go-mission-btn" (click)="abrirActividad()">
+                {{ yaAprobada ? '👀 Ver la actividad'
+                   : mySubmission ? '🔄 Ver mi entrega' : '🚀 Abrir la actividad' }}
+              </button>
             </div>
           </div>
         }
@@ -163,6 +162,10 @@
             💬 Chat
             @if (chatMessages.length) { <span class="aula-tab-count">{{ chatMessages.length }}</span> }
           </button>
+          <button class="aula-tab aula-tab--work" [class.active]="activeTab==='work'" (click)="abrirActividad()">
+            📝 Actividad
+            @if (actividadPendiente) { <span class="aula-tab-dot"></span> }
+          </button>
           <button class="aula-tab aula-tab--video"
                   [class.active]="activeTab==='video'"
                   (click)="activeTab='video'">
@@ -172,6 +175,44 @@
             🤖 ByteBot
           </button>
         </div>
+
+        <div class="aula-panel-body" [class.aula-panel-body--split]="vistaDividida">
+
+          <!--
+            El panel de video NUNCA sale del DOM. Montado dentro de un
+            @if (activeTab === 'video'), cambiar de pestaña lo sacaba del árbol
+            y destruía el iframe de Jitsi: la llamada se caía y, como jitsiApi
+            seguía distinto de null, mountJitsi() salía temprano y el video ya
+            no volvía. Se oculta con CSS, que deja la llamada viva.
+          -->
+          <div class="aula-video-panel" [class.aula-pane-oculta]="!videoVisible">
+            @if (!teacherVideoActive) {
+              <div class="aula-video-start">
+                <div class="aula-video-start-icon">📷</div>
+                <div class="aula-video-start-title">Videollamada</div>
+                <div class="aula-video-start-sub">Esperando a que el maestro inicie la videollamada…</div>
+                <div class="aula-video-waiting-dots"><span></span><span></span><span></span></div>
+              </div>
+            } @else {
+              <div class="aula-video-live-bar">
+                <span class="aula-vid-dot"></span> Videollamada activa
+                @if (vistaDividida) {
+                  <button class="aula-video-mini-btn" (click)="verVideoAlLado = false">✕ Ocultar</button>
+                }
+              </div>
+              @if (!jitsiApi) {
+                <div class="aula-video-join-wrap">
+                  <button class="aula-video-btn" (click)="joinVideo()">
+                    🎥 Unirse a la videollamada
+                  </button>
+                </div>
+              }
+              <div id="jitsi-student" class="aula-jitsi-container"></div>
+            }
+          </div>
+
+          @if (activeTab !== 'video') {
+          <div class="aula-tab-pane">
 
         <!-- Tab: Chat del aula -->
         @if (activeTab === 'chat') {
@@ -214,28 +255,149 @@
           </div>
         }
 
-        <!-- Tab: Video -->
-        @if (activeTab === 'video') {
-          <div class="aula-video-panel">
-            @if (!teacherVideoActive) {
-              <div class="aula-video-start">
-                <div class="aula-video-start-icon">📷</div>
-                <div class="aula-video-start-title">Videollamada</div>
-                <div class="aula-video-start-sub">Esperando a que el maestro inicie la videollamada…</div>
-                <div class="aula-video-waiting-dots"><span></span><span></span><span></span></div>
+        <!-- Tab: Actividad del día -->
+        @if (activeTab === 'work') {
+          <div class="aula-work">
+            @if (!activeMission) {
+              <div class="aula-work-empty">
+                <span>🎯</span>
+                <p>Tu maestro todavía no lanza la actividad de hoy</p>
+                <small>Aparecerá aquí en cuanto la comparta. Mientras tanto, sigue la clase.</small>
               </div>
             } @else {
-              <div class="aula-video-live-bar">
-                <span class="aula-vid-dot"></span> Videollamada activa
-              </div>
-              @if (!jitsiApi) {
-                <div class="aula-video-join-wrap">
-                  <button class="aula-video-btn" (click)="joinVideo()">
-                    🎥 Unirse a la videollamada
-                  </button>
+              <div class="aula-work-head"
+                   [style.background]="subjectColor + '12'"
+                   [style.border-color]="subjectColor + '35'">
+                <div class="aula-work-head-top">
+                  <span class="aula-work-icon">{{ activeMission.subjectIcon }}</span>
+                  <div class="aula-work-titles">
+                    <div class="aula-work-title">{{ activeMission.title }}</div>
+                    <div class="aula-work-meta">
+                      <span class="aula-work-chip" [style.background]="subjectColor">⭐ +{{ activeMission.xpReward }} XP</span>
+                      <span class="aula-work-chip aula-work-chip--soft">{{ activeMission.difficulty }}</span>
+                      @if (activeMission.estimatedMinutes) {
+                        <span class="aula-work-chip aula-work-chip--soft">⏱ {{ activeMission.estimatedMinutes }} min</span>
+                      }
+                    </div>
+                  </div>
+                  @if (teacherVideoActive && !verVideoAlLado) {
+                    <button class="aula-work-showvid" (click)="verVideoAlLado = true">📷 Ver video</button>
+                  }
                 </div>
-              }
-              <div id="jitsi-student" class="aula-jitsi-container"></div>
+                @if (activeMission.description) {
+                  <p class="aula-work-desc">{{ activeMission.description }}</p>
+                }
+              </div>
+
+              <div class="aula-work-scroll">
+                @if (esQuiz) {
+                  <div class="aula-work-block">
+                    <div class="aula-work-block-title">📝 Cuestionario</div>
+                    <p class="aula-work-note">
+                      El cuestionario se abre en su propia pantalla, con una pregunta a la vez.
+                      Al abrirlo <strong>saldrás de la videollamada</strong>; al terminar puedes
+                      volver al aula con el botón de regresar.
+                    </p>
+                    <button class="aula-work-btn" [style.background]="subjectColor" (click)="goToMission()">
+                      Abrir el cuestionario →
+                    </button>
+                  </div>
+                } @else {
+                  @if (yaAprobada) {
+                    <div class="aula-work-status aula-work-status--ok">
+                      ✅ ¡Aprobada! Ganaste +{{ activeMission.xpReward }} XP
+                    </div>
+                  } @else if (porAjustar) {
+                    <div class="aula-work-status aula-work-status--ajuste">
+                      <div class="aula-work-status-t">✏️ Tu maestro te pidió un ajuste</div>
+                      @if (mySubmission?.teacherFeedback) {
+                        <div class="aula-work-fb">{{ mySubmission.teacherFeedback }}</div>
+                      }
+                      <div class="aula-work-status-h">Mejora tu respuesta aquí abajo y vuélvela a enviar.</div>
+                    </div>
+                  } @else if (enRevision) {
+                    <div class="aula-work-status aula-work-status--espera">
+                      ⏳ Entregada — tu maestro la está revisando
+                    </div>
+                  }
+
+                  @if (cuerpo.instrucciones) {
+                    <div class="aula-work-block">
+                      <div class="aula-work-block-title">📋 Qué tienes que hacer</div>
+                      <p class="aula-work-text">{{ cuerpo.instrucciones }}</p>
+                    </div>
+                  }
+
+                  @if (cuerpo.checklist.length) {
+                    <div class="aula-work-block">
+                      <div class="aula-work-block-title">✅ Para no olvidar nada</div>
+                      <ul class="aula-work-check">
+                        @for (item of cuerpo.checklist; track $index) { <li>{{ item }}</li> }
+                      </ul>
+                    </div>
+                  }
+
+                  @if (cuerpo.starterCode) {
+                    <div class="aula-work-block">
+                      <div class="aula-work-block-title">💻 Para empezar</div>
+                      <pre class="aula-work-code">{{ cuerpo.starterCode }}</pre>
+                    </div>
+                  }
+
+                  @if (cuerpo.url) {
+                    <a class="aula-work-link" [href]="cuerpo.url" target="_blank" rel="noopener"
+                       [style.border-color]="subjectColor + '55'" [style.color]="subjectColor">
+                      {{ cuerpo.tipoRecurso }} ↗
+                    </a>
+                  }
+
+                  @if (cuerpo.textoPlano) {
+                    <div class="aula-work-block">
+                      <p class="aula-work-text">{{ cuerpo.textoPlano }}</p>
+                    </div>
+                  }
+
+                  @if (!cuerpo.tieneDetalle && !activeMission.description) {
+                    <div class="aula-work-block">
+                      <p class="aula-work-note">
+                        Tu maestro va a explicar esta actividad en clase. Escucha las
+                        indicaciones y escribe tu respuesta aquí abajo.
+                      </p>
+                    </div>
+                  }
+
+                  @if (esMaterial) {
+                    @if (!yaAprobada) {
+                      <button class="aula-work-btn" [style.background]="subjectColor"
+                              [disabled]="entregando" (click)="marcarVisto()">
+                        {{ entregando ? 'Guardando…' : '👍 Ya lo consulté' }}
+                      </button>
+                    }
+                  } @else if (!yaAprobada) {
+                    <div class="aula-work-block">
+                      <div class="aula-work-block-title">✍️ Tu respuesta</div>
+                      <textarea class="aula-work-textarea" [(ngModel)]="respuesta"
+                                [disabled]="entregando"
+                                placeholder="Escribe aquí tu respuesta…"></textarea>
+                      <div class="aula-work-actions">
+                        <button class="aula-work-btn" [style.background]="subjectColor"
+                                [disabled]="entregando || !respuesta.trim()" (click)="entregar()">
+                          {{ entregando ? 'Enviando…'
+                             : (porAjustar || enRevision) ? '🔄 Volver a enviar' : '🚀 Entregar' }}
+                        </button>
+                        <span class="aula-work-hint">Se envía sin salir de la clase.</span>
+                      </div>
+                    </div>
+                  }
+
+                  @if (entregaOk) {
+                    <div class="aula-work-ok">🎉 ¡Listo! Tu entrega ya le llegó a tu maestro.</div>
+                  }
+                  @if (errorEntrega) {
+                    <div class="aula-work-err">{{ errorEntrega }}</div>
+                  }
+                }
+              </div>
             }
           </div>
         }
@@ -266,6 +428,9 @@
                     [style.background]="subjectColor">↑</button>
           </div>
         }
+          </div>
+          }
+        </div>
       </div>
     </div>
   </div>

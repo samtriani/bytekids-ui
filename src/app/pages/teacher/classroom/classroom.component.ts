@@ -8,6 +8,7 @@ import { ContentApiService } from '../../../services/api/content-api.service';
 import { SubmissionApiService } from '../../../services/api/submission-api.service';
 import { AiTutorService, ChatMessage } from '../../../services/ai-tutor.service';
 import { AuthService } from '../../../services/auth.service';
+import { CuerpoActividad, CUERPO_VACIO } from '../../../shared/mission-body';
 import { catchError, of, forkJoin } from 'rxjs';
 
 @Component({
@@ -37,7 +38,14 @@ export class TeacherClassroomComponent implements OnInit, OnDestroy, AfterViewCh
   reviewFeedback       = '';
   reviewScore:         number | null = null;
   reviewing            = false;
-  activeTab:         'chat' | 'bot' | 'video' = 'chat';
+
+  // ── Actividad dentro del aula ───────────────────────────────────────
+  /** El content_body ya interpretado. Se rearma solo cuando cambia. */
+  cuerpo: CuerpoActividad = CUERPO_VACIO;
+  private cuerpoCrudo = '';
+  /** El maestro puede cerrar el video para ver la actividad completa. */
+  verVideoAlLado = true;
+  activeTab:         'chat' | 'bot' | 'video' | 'work' = 'chat';
   teacherVideoActive = false;
   private jitsiApi:  any = null;
   chatMessages: any[] = [];
@@ -67,6 +75,25 @@ export class TeacherClassroomComponent implements OnInit, OnDestroy, AfterViewCh
   }
 
   get presentCount(): number { return this.presentStudents.filter(s => s.present).length; }
+
+  get esQuiz():     boolean { return this.activeMission?.type === 'quiz'; }
+  get esMaterial(): boolean { return this.activeMission?.type === 'material'; }
+
+  /**
+   * Video y actividad a la vez, para explicar sobre lo que los alumnos
+   * tienen enfrente. El ancho lo decide el CSS, no un listener de resize.
+   */
+  get vistaDividida(): boolean {
+    return this.activeTab === 'work' && this.teacherVideoActive && this.verVideoAlLado;
+  }
+
+  /**
+   * El panel de video NUNCA se saca del DOM: montado con @if, cambiar de
+   * pestana destruye el iframe de Jitsi y se cae la clase entera.
+   */
+  get videoVisible(): boolean {
+    return this.activeTab === 'video' || this.vistaDividida;
+  }
 
   get subjectColor(): string {
     const colors: Record<string, string> = {
@@ -113,6 +140,7 @@ export class TeacherClassroomComponent implements OnInit, OnDestroy, AfterViewCh
         this.availableContent  = content.filter((c: any) =>
           ['mision','tarea','quiz','proyecto'].includes(c.type));
         this.activeMission     = mission;
+        this.aplicarMision(mission);
         this.joining = false;
         this.initTimer(data);
         this.initBot(data);
@@ -186,7 +214,8 @@ export class TeacherClassroomComponent implements OnInit, OnDestroy, AfterViewCh
     this.sessionApi.toggleVideo(this.scheduleId).pipe(catchError(() => of(false))).subscribe(active => {
       this.teacherVideoActive = active;
       if (active) {
-        this.activeTab = 'video';
+        // Desde la actividad se queda ahi: el video aparece a un lado.
+        if (this.activeTab !== 'work') this.activeTab = 'video';
         setTimeout(() => this.mountJitsi(), 300);
       } else {
         this.destroyJitsi();
@@ -235,6 +264,17 @@ export class TeacherClassroomComponent implements OnInit, OnDestroy, AfterViewCh
       });
     }
   }
+
+  /** Deja lista la actividad cuando se lanza o cambia la mision. */
+  private aplicarMision(m: any): void {
+    const crudo = m?.contentBody ?? '';
+    if (crudo !== this.cuerpoCrudo) {
+      this.cuerpoCrudo = crudo;
+      this.cuerpo      = new CuerpoActividad(crudo);
+    }
+  }
+
+  abrirActividad(): void { this.activeTab = 'work'; }
 
   get studentsWithSubmission(): any[] {
     return this.enrolledStudents.map(s => ({
@@ -290,8 +330,11 @@ export class TeacherClassroomComponent implements OnInit, OnDestroy, AfterViewCh
       .subscribe({
         next: mission => {
           this.activeMission     = mission;
+          this.aplicarMision(mission);
           this.launchingMission  = false;
           this.selectedContentId = '';
+          // Se abre sola: lanzarla es justo el momento de explicarla.
+          this.activeTab = 'work';
         },
         error: (e: any) => {
           this.launchingMission = false;
