@@ -27,7 +27,13 @@ function esTransitorio(e: HttpErrorResponse): boolean {
 /**
  * Un backend dormido NO es una sesion invalida. Antes cualquier fallo terminaba
  * en pantallas con ceros y el usuario tenia que volver a iniciar sesion a mano.
- * Ahora solo un 401/403 cierra la sesion; todo lo demas se reintenta.
+ *
+ * Solo el 401 cierra la sesion. El 403 NO: significa que la sesion es valida
+ * pero el rol no alcanza para ese endpoint, y sacar al usuario por eso se ve
+ * como si la app estuviera rota. Paso de verdad: la pantalla de Logros pedia
+ * el catalogo de materias, que es solo para personal, y al alumno lo mandaba
+ * al login sin explicacion. El backend distingue los dos casos desde el
+ * 9-sep: sin sesion valida responde 401, y 403 solo cuando falta permiso.
  */
 export const resilienceInterceptor: HttpInterceptorFn = (req, next) => {
   const estado = inject(BackendStatusService);
@@ -46,12 +52,17 @@ export const resilienceInterceptor: HttpInterceptorFn = (req, next) => {
     tap(() => estado.marcarOk()),
 
     catchError((error: HttpErrorResponse) => {
-      if (error.status === 401 || error.status === 403) {
+      if (error.status === 401) {
         // Sesion realmente vencida: aqui si corresponde mandar al login.
         estado.reiniciar();
         localStorage.removeItem('bk_token');
         localStorage.removeItem('bk_user');
         router.navigate(['/login'], { queryParams: { expirada: 1 } });
+      } else if (error.status === 403) {
+        // Sesion valida, permiso insuficiente. Se deja pasar el error para que
+        // la pantalla lo maneje; cerrar la sesion seria castigar al usuario por
+        // un limite de permisos que no eligio.
+        estado.marcarOk();
       } else if (esTransitorio(error)) {
         estado.marcarCaido();
       } else {
