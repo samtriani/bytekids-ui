@@ -809,3 +809,46 @@ input,select,textarea { font-family:inherit; }
   .filtro-lbl { flex-basis: 100%; }
   .filtro-fila { gap: 8px; }
 }
+
+/* ── PILDORAS DE FILTRO ──────────────────────────────────────────────────
+   Global a proposito. Vivian dentro de missions y achievements, con scope
+   de componente, asi que cualquier pantalla nueva que las usara salia con
+   botones cuadrados sin estilo. Paso literalmente con el Panel del Maestro. */
+.filter-btn {
+  padding: 7px 16px;
+  border-radius: 20px;
+  border: 1px solid var(--bk-border, var(--border));
+  background: transparent;
+  color: var(--bk-text-muted, var(--tx3));
+  font-size: .8rem;
+  font-weight: 700;
+  font-family: 'Nunito', sans-serif;
+  cursor: pointer;
+  transition: all .2s;
+}
+.filter-btn:hover:not(.active) {
+  border-color: rgba(124, 58, 237, .4);
+  color: var(--bk-text, var(--tx1));
+}
+.filter-btn.active {
+  background: var(--bk-purple, #7C3AED);
+  border-color: var(--bk-purple, #7C3AED);
+  color: #fff;
+}
+.filter-btn:focus-visible { outline: 2px solid var(--guinda); outline-offset: 2px; }
+
+.filter-btn--tipo { font-size: .78rem; }
+
+.filter-n {
+  display: inline-block;
+  margin-left: 5px;
+  padding: 1px 6px;
+  border-radius: 999px;
+  font-size: .68rem;
+  font-weight: 800;
+  background: rgba(255, 255, 255, .18);
+}
+.filter-btn:not(.active) .filter-n {
+  background: var(--bk-bg-card2, var(--surface2));
+  color: var(--bk-text-muted, var(--tx3));
+}

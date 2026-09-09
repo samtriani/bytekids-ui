@@ -43,6 +43,9 @@
           <div class="filtro-chips">
             @for (s of salones; track s.id) {
               <button class="filter-btn" [class.active]="salon?.id === s.id"
+                      [style.background]="salon?.id === s.id ? s.color : null"
+                      [style.border-color]="s.color"
+                      [style.color]="salon?.id === s.id ? null : s.color"
                       (click)="cambiarSalon(s.id)">
                 {{ s.nombre }}
                 <span class="filter-n">{{ s.alumnos.length }}</span>

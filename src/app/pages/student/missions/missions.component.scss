@@ -15,9 +15,6 @@
 .ms-lbl { font-size:.75rem; color:var(--bk-text-muted); font-weight:700; text-transform:uppercase; }
 
 .filters { display:flex; gap:8px; margin-bottom:20px; flex-wrap:wrap; }
-.filter-btn { padding:7px 16px; border-radius:20px; border:1px solid var(--bk-border); background:transparent; color:var(--bk-text-muted); font-size:.8rem; font-weight:700; cursor:pointer; transition:all .2s; font-family:'Nunito',sans-serif; }
-.filter-btn.active { background:var(--bk-purple); color:#fff; border-color:var(--bk-purple); box-shadow:0 4px 12px rgba(124,58,237,0.3); }
-.filter-btn:hover:not(.active) { border-color:rgba(124,58,237,0.4); color:var(--bk-text); }
 
 .missions-grid { display:grid; grid-template-columns:repeat(auto-fill, minmax(260px,1fr)); gap:16px; }
 .mission-card { background:var(--bk-bg-card); border:1px solid var(--bk-border); border-radius:16px; padding:20px; display:flex; flex-direction:column; gap:10px; transition:all .2s; }
@@ -51,7 +48,6 @@
 
 /* Filtro por tipo de actividad */
 .filters--tipo { margin-top: -6px; }
-.filter-btn--tipo { font-size: .78rem; }
 .filter-n {
   display: inline-block; margin-left: 5px; padding: 1px 6px;
   border-radius: 999px; font-size: .68rem; font-weight: 800;
