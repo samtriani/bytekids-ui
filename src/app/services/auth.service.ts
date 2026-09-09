@@ -1,6 +1,7 @@
 import { Injectable } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { Router } from '@angular/router';
+import { LlamadaService } from './llamada.service';
 import { firstValueFrom } from 'rxjs';
 import { environment } from '../../environments/environment';
 
@@ -40,7 +41,8 @@ function roleToPanels(role: string): string[] {
 @Injectable({ providedIn: 'root' })
 export class AuthService {
 
-  constructor(private http: HttpClient, private router: Router) {}
+  constructor(private http: HttpClient, private router: Router,
+              private llamada: LlamadaService) {}
 
   async login(username: string, password: string): Promise<{ ok: boolean; error?: string }> {
     try {
@@ -72,6 +74,9 @@ export class AuthService {
   }
 
   logout(): void {
+    // La videollamada vive fuera del router: sin esto seguiria sonando
+    // despues de cerrar sesion, ya en la pantalla de login.
+    this.llamada.terminar();
     localStorage.removeItem(TOKEN_KEY);
     localStorage.removeItem(USER_KEY);
     this.router.navigate(['/login']);

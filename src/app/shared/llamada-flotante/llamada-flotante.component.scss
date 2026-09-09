@@ -1,0 +1,76 @@
+.lf-caja {
+  position: fixed;
+  z-index: 900;              /* debajo de los modales, encima del contenido */
+  display: flex; flex-direction: column;
+  background: #0d0d1a;
+  overflow: hidden;
+}
+
+/* Apagada, no desmontada: el iframe sigue vivo aunque no se vea. */
+.lf-caja--apagada {
+  opacity: 0; pointer-events: none;
+  width: 1px !important; height: 1px !important;
+  top: -9999px !important; left: -9999px !important;
+}
+
+/* Acoplada al hueco del aula: sin adornos, es parte de la pantalla. */
+.lf-caja--acoplada {
+  border-radius: 0;
+  box-shadow: none;
+  transition: none;          /* seguir al hueco sin ir un paso atrás */
+}
+
+/* Ventanita: aquí sí es una ventana, y se nota. */
+.lf-caja--esquina {
+  border-radius: 14px;
+  border: 1px solid rgba(255,255,255,.14);
+  box-shadow: 0 12px 40px rgba(0,0,0,.45);
+  transition: height .16s ease;
+}
+
+.lf-barra {
+  display: flex; align-items: center; gap: 8px;
+  height: 38px; flex-shrink: 0; padding: 0 8px 0 11px;
+  background: linear-gradient(135deg, #1a0a12, #7A1535);
+  cursor: grab;
+  user-select: none;
+  &:active { cursor: grabbing; }
+}
+.lf-punto {
+  width: 7px; height: 7px; border-radius: 50%; background: #34d399;
+  flex-shrink: 0; box-shadow: 0 0 0 2px rgba(52,211,153,.3);
+  animation: lfPulso 1.4s ease-in-out infinite;
+}
+@keyframes lfPulso { 0%,100% { opacity: 1 } 50% { opacity: .35 } }
+
+.lf-icono { font-size: .95rem; flex-shrink: 0; }
+.lf-titulos { flex: 1; min-width: 0; }
+.lf-titulo {
+  font-size: .74rem; font-weight: 800; color: #fff;
+  white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+}
+.lf-subtitulo {
+  font-size: .64rem; color: rgba(255,255,255,.6);
+  white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+}
+
+.lf-btn {
+  flex-shrink: 0; height: 24px; padding: 0 8px; border-radius: 7px;
+  border: 1px solid rgba(255,255,255,.18); background: rgba(255,255,255,.08);
+  color: rgba(255,255,255,.85); font-size: .68rem; font-weight: 800;
+  cursor: pointer; transition: background .15s;
+  &:hover { background: rgba(255,255,255,.2); color: #fff; }
+
+  &--volver { background: rgba(52,211,153,.2); border-color: rgba(52,211,153,.4); }
+  &--volver:hover { background: rgba(52,211,153,.35); }
+  &--colgar:hover { background: #dc2626; border-color: #dc2626; }
+}
+
+.lf-video { flex: 1; min-height: 0; }
+
+/* Encogida a la barra: el video mide cero, pero sigue conectado. */
+.lf-caja--minimizada .lf-video { display: none; }
+
+@media (max-width: 640px) {
+  .lf-caja--esquina { width: calc(100vw - 24px) !important; left: 12px !important; }
+}
