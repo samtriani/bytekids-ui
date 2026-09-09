@@ -10,7 +10,13 @@
     <div class="alert" [class]="toastType==='error'?'alert-warn':'alert-ok'" style="margin-bottom:14px">{{ toast }}</div>
   }
   @if (forStudent) {
-    <div class="alert alert-info" style="margin-bottom:14px">📌 Creando contenido personalizado para <strong>{{ forStudent }}</strong></div>
+    <div class="alert alert-info" style="margin-bottom:14px;display:flex;align-items:center;justify-content:space-between;gap:12px">
+      <span>
+        📌 Esta actividad se asignará <strong>solo a {{ forStudent }}</strong>,
+        no al salón completo.
+      </span>
+      <button class="btn btn-ghost btn-sm" (click)="paraTodoElSalon()">Asignar a todo el salón</button>
+    </div>
   }
   @if (editingId) {
     <div class="alert alert-info" style="margin-bottom:14px;display:flex;align-items:center;justify-content:space-between">
@@ -92,7 +98,7 @@
         <div class="card-title" style="margin-bottom:10px">⚡ Plantillas rápidas</div>
         @for (t of tpls; track t.n) {
           <div class="tpl-row" (click)="useTpl(t)">
-            <div style="flex:1"><div style="font-weight:700;font-size:.83rem;color:var(--tx1)">{{ t.n }}</div><div style="font-size:.71rem;color:var(--tx3);margin-top:1px">{{ t.s }} · +{{ t.xp }} XP · {{ t.m }} min · {{ t.d }}</div></div>
+            <div style="flex:1"><div style="font-weight:700;font-size:.83rem;color:var(--tx1)">{{ t.n }}</div><div style="font-size:.71rem;color:var(--tx3);margin-top:1px">{{ t.t }} · +{{ t.xp }} XP · {{ t.m }} min · {{ t.d }}</div></div>
             <span style="font-size:.74rem;font-weight:800;color:var(--guinda)">Usar →</span>
           </div>
         }

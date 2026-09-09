@@ -146,6 +146,11 @@
         <button class="modal-close" (click)="closeModal()">✕</button>
       </div>
       <div class="modal-body" style="display:flex;flex-direction:column;gap:12px">
+        <p class="modal-nota">
+          📌 Es un recordatorio tuyo: se guarda en <strong>este navegador</strong>,
+          no se comparte ni les llega a tus alumnos. Las clases del horario
+          vienen de Asignaciones y no se editan aquí.
+        </p>
         <div>
           <label class="label">Título *</label>
           <input class="input" [(ngModel)]="newEvent.title" placeholder="Ej: Examen Python 4°A">

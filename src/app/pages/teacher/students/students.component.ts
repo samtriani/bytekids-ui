@@ -355,7 +355,9 @@ export class StudentsComponent implements OnInit {
 
   assignMission(s: any) {
     this.closeModal();
-    this.router.navigate(['/teacher/create'], { queryParams: { for: s.n } });
+    // El id, para poder asignarsela solo a el. El nombre, para el aviso.
+    this.router.navigate(['/teacher/create'],
+      { queryParams: { for: s.id, nombre: s.n } });
   }
 
   sendAlert(s: any) {

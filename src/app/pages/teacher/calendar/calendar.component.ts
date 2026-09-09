@@ -43,7 +43,15 @@ export class CalendarComponent implements OnInit {
   // Schedule entries from backend
   schedules: any[] = [];
 
-  // Local events added by the teacher (session only, not persisted yet)
+  /**
+   * Recordatorios que el maestro agrega a mano. No hay tabla ni endpoint
+   * de eventos: las clases del horario vienen de class_schedules y estos
+   * son otra cosa. Antes vivian solo en memoria, asi que el maestro
+   * anotaba algo y al recargar habia desaparecido, sin aviso.
+   *
+   * Se guardan en el navegador: no es sincronizacion, pero sobrevive la
+   * recarga, que es lo que rompia la funcion. La UI dice que son locales.
+   */
   private localEvents: Record<number, any[]> = {};
 
   // Merged: schedule repeating + local
@@ -106,6 +114,7 @@ export class CalendarComponent implements OnInit {
 
   ngOnInit() {
     this.initMonths();
+    this.cargarLocales();
     this.loadSchedules();
   }
 
@@ -181,6 +190,7 @@ export class CalendarComponent implements OnInit {
     if (this.monthIdx > 0) {
       this.monthIdx--;
       this.selectedDay = 1;
+      this.cargarLocales();   // los recordatorios se guardan por mes
       this.buildGrid();
       this.buildScheduleCache();
     }
@@ -190,6 +200,7 @@ export class CalendarComponent implements OnInit {
     if (this.monthIdx < this.months.length - 1) {
       this.monthIdx++;
       this.selectedDay = 1;
+      this.cargarLocales();   // los recordatorios se guardan por mes
       this.buildGrid();
       this.buildScheduleCache();
     }
@@ -215,7 +226,34 @@ export class CalendarComponent implements OnInit {
       color: this.typeColors[this.newEvent.type],
       isSchedule: false,
     });
+    this.guardarLocales();
     this.closeModal();
+  }
+
+  /** Una clave por maestro y por mes: no se mezclan meses ni cuentas. */
+  private claveMes(): string {
+    const m = this.month;
+    const uid = this.auth.getUser()?.userId ?? 'anon';
+    return `bk_recordatorios_${uid}_${m?.year}-${m?.month}`;
+  }
+
+  private guardarLocales(): void {
+    try {
+      localStorage.setItem(this.claveMes(), JSON.stringify(this.localEvents));
+    } catch {
+      // Modo privado o almacenamiento bloqueado: se pierde al recargar,
+      // pero no vale la pena tumbar la pantalla por un recordatorio.
+    }
+  }
+
+  private cargarLocales(): void {
+    this.localEvents = {};
+    try {
+      const crudo = localStorage.getItem(this.claveMes());
+      if (crudo) this.localEvents = JSON.parse(crudo) ?? {};
+    } catch {
+      this.localEvents = {};
+    }
   }
 
   deleteEvent(e: any) {
@@ -224,6 +262,7 @@ export class CalendarComponent implements OnInit {
     if (!list) return;
     const i = list.indexOf(e);
     if (i > -1) list.splice(i, 1);
+    this.guardarLocales();
     this.selectedEvent = null;
   }
 
