@@ -1,7 +1,7 @@
 import { Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
-import { RouterLink, Router } from '@angular/router';
+import { ActivatedRoute, RouterLink, Router } from '@angular/router';
 import { ShellComponent } from '../../../shared/shell/shell.component';
 import { TEACHER_NAV } from '../shared/teacher-nav';
 import { ClassroomApiService } from '../../../services/api/classroom-api.service';
@@ -29,12 +29,25 @@ export class StudentsComponent implements OnInit {
   teacher: any = null;
   private classrooms: any[] = [];
 
+  /** Salones para filtrar, con el color de su materia como en el Panel. */
+  salones: { id: string; nombre: string; color: string }[] = [];
+  salonFiltro = '';
+
   get teacherName(): string { return this.teacher?.displayName || 'Maestro'; }
   get teacherInitials(): string { return this.teacher?.initials || 'M'; }
+  /** El titulo dice lo que se esta viendo, no lo que se tiene. */
   get classroomName(): string {
+    if (this.salonActivo) return this.salonActivo.nombre;
     if (this.classrooms.length === 1) return this.classrooms[0].name;
     if (this.classrooms.length > 1) return `${this.classrooms.length} salones`;
     return 'Mis Salones';
+  }
+
+  get subtitulo(): string {
+    const n = this.rows.length;
+    const alumnos = `${n} ${n === 1 ? 'alumno' : 'alumnos'}`;
+    if (this.salonActivo) return `${alumnos} en ${this.salonActivo.nombre}`;
+    return `Seguimiento individual de ${alumnos}`;
   }
 
   get excelentes(): number { return this.all.filter(s => s.status === 'Excelente').length; }
@@ -45,12 +58,25 @@ export class StudentsComponent implements OnInit {
   get rows() {
     return this.all.filter(s =>
       (this.filt === 'Todos' || s.status === this.filt) &&
+      // Un alumno puede estar en varios salones: se queda si esta en el
+      // elegido, no solo si es el primero que le tocó al deduplicar.
+      (!this.salonFiltro || (s.classroomIds ?? []).includes(this.salonFiltro)) &&
       s.n.toLowerCase().includes(this.search.toLowerCase())
     );
   }
 
+  get salonActivo() { return this.salones.find(s => s.id === this.salonFiltro) ?? null; }
+
+  contarEnSalon(id: string): number {
+    return id ? this.all.filter(s => (s.classroomIds ?? []).includes(id)).length
+              : this.all.length;
+  }
+
+  filtrarPorSalon(id: string): void { this.salonFiltro = id; }
+
   constructor(
     private router: Router,
+    private route: ActivatedRoute,
     private classroomApi: ClassroomApiService,
     private progressApi: ProgressApiService,
     private auth: AuthService
@@ -58,25 +84,54 @@ export class StudentsComponent implements OnInit {
 
   ngOnInit(): void {
     this.teacher = this.auth.getUser();
+    // Viene del Panel del Maestro al pulsar el contador de un salon.
+    this.salonFiltro = this.route.snapshot.queryParamMap.get('salon') ?? '';
+
     this.classroomApi.getMyClassrooms().subscribe({
       next: classrooms => {
         if (!classrooms.length) { this.loading = false; return; }
         this.classrooms = classrooms;
 
+        // El color sale de la materia del salon, igual que en el Panel.
+        forkJoin(classrooms.map((c: any) =>
+          this.classroomApi.getSubjects(c.id).pipe(catchError(() => of([])))
+        )).subscribe(materias => {
+          this.salones = classrooms.map((c: any, i: number) => ({
+            id: c.id,
+            nombre: c.name,
+            color: (materias as any[])[i]?.[0]?.color || '#7C3AED',
+          }));
+        });
+
         // Cargar alumnos de TODOS los salones en paralelo
         forkJoin(classrooms.map(c =>
           this.classroomApi.getStudents(c._id || c.id).pipe(
-            map(students => students.map((s: any) => ({ ...s, _classroomName: c.name }))),
+            map(students => students.map((s: any) => ({
+              ...s, _classroomName: c.name, _classroomId: c._id || c.id,
+            }))),
             catchError(() => of([]))
           )
         )).subscribe({
           next: allArrays => {
-            const seen = new Set<string>();
-            const allStudents = (allArrays as any[][]).flat().filter(s => {
+            // Un alumno puede estar en varios salones. Antes se guardaba solo
+            // el primero y los demas se perdian, asi que filtrar por salon
+            // lo habria escondido de los otros a los que si pertenece.
+            const porAlumno = new Map<string, any>();
+            for (const s of (allArrays as any[][]).flat()) {
               const id = s._id || s.id;
-              if (seen.has(id)) return false;
-              seen.add(id); return true;
-            });
+              const previo = porAlumno.get(id);
+              if (previo) {
+                previo._classroomIds.push(s._classroomId);
+                previo._classroomNames.push(s._classroomName);
+              } else {
+                porAlumno.set(id, {
+                  ...s,
+                  _classroomIds:   [s._classroomId],
+                  _classroomNames: [s._classroomName],
+                });
+              }
+            }
+            const allStudents = [...porAlumno.values()];
             if (!allStudents.length) { this.loading = false; return; }
 
             forkJoin(allStudents.map(s => {
@@ -120,7 +175,8 @@ export class StudentsComponent implements OnInit {
       id: sid,
       n: s.displayName || s.username,
       av,
-      cls: s._classroomName || '—',
+      cls: (s._classroomNames ?? [s._classroomName]).filter(Boolean).join(' · ') || '—',
+      classroomIds: s._classroomIds ?? (s._classroomId ? [s._classroomId] : []),
       prog,
       xp: r.xp,
       streak: r.streak,

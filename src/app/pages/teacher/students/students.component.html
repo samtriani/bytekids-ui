@@ -4,7 +4,7 @@
   <div class="ph">
     <div class="ph-left">
       <h1>Alumnos — {{ classroomName }}</h1>
-      <p>Seguimiento individual de los {{ all.length }} estudiantes activos</p>
+      <p>{{ subtitulo }}</p>
     </div>
     <a routerLink="/teacher/ai-assistant" class="btn btn-primary">🤖 Análisis IA</a>
   </div>
@@ -15,6 +15,31 @@
     <div class="kpi red"><div class="kpi-ico">⚠️</div><div><div class="kpi-val">{{ needSupport }}</div><div class="kpi-lbl">Necesitan apoyo</div></div></div>
     <div class="kpi gold"><div class="kpi-ico">🔥</div><div><div class="kpi-val">{{ maxStreak }}d</div><div class="kpi-lbl">Racha máx.</div></div></div>
   </div>
+
+  <!-- Filtro por salon. Llega preseleccionado desde el Panel del Maestro,
+       para no obligar a re-elegir lo que el maestro ya habia elegido. -->
+  @if (salones.length > 1) {
+    <div class="filtros-panel">
+      <div class="filtro-fila">
+        <span class="filtro-lbl">Salones</span>
+        <div class="filtro-chips">
+          <button class="filter-btn" [class.active]="!salonFiltro"
+                  (click)="filtrarPorSalon('')">
+            Todos <span class="filter-n">{{ contarEnSalon('') }}</span>
+          </button>
+          @for (s of salones; track s.id) {
+            <button class="filter-btn" [class.active]="salonFiltro === s.id"
+                    [style.background]="salonFiltro === s.id ? s.color : null"
+                    [style.border-color]="s.color"
+                    [style.color]="salonFiltro === s.id ? null : s.color"
+                    (click)="filtrarPorSalon(s.id)">
+              {{ s.nombre }} <span class="filter-n">{{ contarEnSalon(s.id) }}</span>
+            </button>
+          }
+        </div>
+      </div>
+    </div>
+  }
 
   <div class="toolbar mb14">
     <input class="input" [(ngModel)]="search" placeholder="🔍 Buscar alumno..." style="max-width:240px">

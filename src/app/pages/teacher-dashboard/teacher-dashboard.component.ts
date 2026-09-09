@@ -260,9 +260,16 @@ export class TeacherDashboardComponent implements OnInit {
     setTimeout(() => this.pintarGraficas(), 30);
   }
 
-  irALibreta(): void   { this.router.navigate(['/teacher/gradebook']); }
-  irAAlumnos(): void   { this.router.navigate(['/teacher/students']); }
-  irAReportes(): void  { this.router.navigate(['/teacher/reports']); }
+  // El salon viaja en la URL: mandar al maestro a una lista de TODOS sus
+  // alumnos, despues de que hizo clic en el contador de UN salon, lo obliga
+  // a volver a filtrar lo que ya habia elegido.
+  irALibreta(): void   { this.router.navigate(['/teacher/gradebook'], this.conSalon()); }
+  irAAlumnos(): void   { this.router.navigate(['/teacher/students'],  this.conSalon()); }
+  irAReportes(): void  { this.router.navigate(['/teacher/reports'],   this.conSalon()); }
+
+  private conSalon() {
+    return this.salon ? { queryParams: { salon: this.salon.id } } : {};
+  }
 
   /** Desde el KPI de riesgo: en vez de solo informar, filtra la lista. */
   verEnRiesgo(): void {
