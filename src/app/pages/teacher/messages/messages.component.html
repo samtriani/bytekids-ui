@@ -86,7 +86,7 @@
       </div>
 
       <div class="chat-input">
-        <textarea class="chat-textarea" [(ngModel)]="newMsg" (keydown)="onKey($event)"
+        <textarea #cajaTexto class="chat-textarea" [(ngModel)]="newMsg" (keydown)="onKey($event)"
           placeholder="Escribe un mensaje... (Enter para enviar)" rows="2"
           [disabled]="sending"></textarea>
         <button class="send-btn" [class.active]="newMsg.trim() && !sending" (click)="send()" [disabled]="sending">→</button>

@@ -19,6 +19,7 @@ import { catchError } from 'rxjs/operators';
 })
 export class MessagesComponent implements OnInit, AfterViewChecked {
   @ViewChild('msgBottom') msgBottom!: ElementRef;
+  @ViewChild('cajaTexto') cajaTexto?: ElementRef<HTMLTextAreaElement>;
   navItems = TEACHER_NAV;
 
   teacher: any = null;
@@ -162,6 +163,7 @@ export class MessagesComponent implements OnInit, AfterViewChecked {
     const conv = this.conversations.find(c => c.id === id);
     if (conv) conv.unread = 0;
     this.shouldScroll = true;
+    this.devolverFoco();
   }
 
   private buildThread(userId: string): void {
@@ -187,9 +189,20 @@ export class MessagesComponent implements OnInit, AfterViewChecked {
         this.newMsg = '';
         this.sending = false;
         this.shouldScroll = true;
+        this.devolverFoco();
       },
-      error: () => { this.sending = false; }
+      error: () => { this.sending = false; this.devolverFoco(); }
     });
+  }
+
+
+  /**
+   * Devuelve el cursor al recuadro. Va en setTimeout porque en este punto
+   * Angular todavia no quita el atributo disabled del textarea, y un
+   * elemento deshabilitado ignora focus().
+   */
+  private devolverFoco(): void {
+    setTimeout(() => this.cajaTexto?.nativeElement.focus(), 0);
   }
 
   onKey(e: KeyboardEvent): void {

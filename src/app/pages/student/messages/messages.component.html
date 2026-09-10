@@ -103,7 +103,7 @@
           @if (error) { <div class="msg-error">{{ error }}</div> }
 
           <div class="msg-escribir">
-            <textarea class="msg-input" [(ngModel)]="borrador" (keydown)="alTeclear($event)"
+            <textarea #cajaTexto class="msg-input" [(ngModel)]="borrador" (keydown)="alTeclear($event)"
                       [disabled]="enviando" rows="2"
                       placeholder="Escribe tu mensaje…"></textarea>
             <button class="msg-enviar" (click)="enviar()"
