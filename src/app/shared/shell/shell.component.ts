@@ -231,10 +231,16 @@ export class ShellComponent implements OnInit, OnDestroy {
     return `Hace ${Math.floor(h / 24)}d`;
   }
 
+  /** Cuantas trae el panel. El recorte lo hace el backend, no el cliente. */
+  private static readonly CUANTAS = 20;
+
   private loadNotifications(): void {
-    this.notifApi.getAll().subscribe(list => {
-      this.notifications = list.slice(0, 15);
-      this.unreadCount = list.filter((n: any) => !n.isRead).length;
+    this.notifApi.getAll(ShellComponent.CUANTAS).subscribe(list => {
+      this.notifications = list;
+      // El contador NO sale de esta lista: viene de countUnread, que cuenta
+      // todas. Si hubiera no leidas mas alla de las 20 que se pintan,
+      // sacarlo de aqui dejaria el numerito por debajo de la verdad.
+      this.loadUnreadCount();
     });
   }
 
