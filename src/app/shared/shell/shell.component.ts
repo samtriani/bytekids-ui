@@ -152,12 +152,48 @@ export class ShellComponent implements OnInit, OnDestroy {
     if (this.showNotif) this.loadNotifications();
   }
 
+  /**
+   * Marca como leida y, si sabemos a donde lleva, navega.
+   *
+   * Se navega SIN esperar al marcado: si la peticion tarda --el backend de
+   * Fly puede estar despertando-- el nino ya dio clic y no entiende por que
+   * no pasa nada. Marcarla es un efecto secundario, no un requisito.
+   */
   markAsRead(n: any): void {
-    if (n.isRead) return;
-    this.notifApi.markAsRead(n.id).subscribe(() => {
+    if (!n.isRead) {
       n.isRead = true;
       this.unreadCount = Math.max(0, this.unreadCount - 1);
-    });
+      this.notifApi.markAsRead(n.id).subscribe({ error: () => {} });
+    }
+    const destino = this.rutaDe(n);
+    if (destino) {
+      this.showNotif = false;
+      this.router.navigate(destino.ruta, { queryParams: destino.params });
+    }
+  }
+
+  /**
+   * A donde lleva cada notificacion. referenceType lo pone el backend al
+   * crearla; el destino depende ademas del rol, porque la misma
+   * conversacion vive en tres pantallas distintas.
+   */
+  private rutaDe(n: any): { ruta: any[]; params?: any } | null {
+    const id = n.referenceId;
+    switch (n.referenceType) {
+      case 'conversacion':
+        if (this.role === 'student') return { ruta: ['/student/messages'] };
+        if (this.role === 'teacher') return { ruta: ['/teacher/messages'], params: { to: id } };
+        if (this.role === 'parent')  return { ruta: ['/parent/messages'] };
+        return null;
+      case 'actividad':
+        return id && this.role === 'student' ? { ruta: ['/student/missions', id] } : null;
+      case 'logro':
+        return this.role === 'student' ? { ruta: ['/student/achievements'] } : null;
+      case 'entrega':
+        return this.role === 'teacher' ? { ruta: ['/teacher/gradebook'] } : null;
+      default:
+        return null;
+    }
   }
 
   markAllAsRead(): void {
@@ -167,15 +203,21 @@ export class ShellComponent implements OnInit, OnDestroy {
     });
   }
 
+  /**
+   * Las llaves son los valores del enum notification_type de la base, en
+   * espanol. Antes estaban en ingles --message, achievement_unlocked-- y
+   * ninguna casaba: todas caian en el icono por defecto. No se noto porque
+   * hasta ahora nadie creaba notificaciones.
+   */
   typeIcon(type: string): string {
     const icons: Record<string, string> = {
-      mission_assigned:    '🎯',
-      submission_reviewed: '✅',
-      submission_rejected: '❌',
-      class_starting:      '🔔',
-      achievement_unlocked:'🏆',
-      message:             '💬',
-      system:              'ℹ️',
+      mensaje:             '💬',
+      calificacion:        '✅',
+      logro_desbloqueado:  '🏆',
+      mision_asignada:     '🎯',
+      proyecto_asignado:   '🏗️',
+      alerta_inactividad:  '⏰',
+      sistema:             'ℹ️',
     };
     return icons[type] ?? '📩';
   }
