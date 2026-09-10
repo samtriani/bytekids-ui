@@ -189,7 +189,15 @@ export class ShellComponent implements OnInit, OnDestroy {
         return id && this.role === 'student' ? { ruta: ['/student/missions', id] } : null;
       case 'logro':
         return this.role === 'student' ? { ruta: ['/student/achievements'] } : null;
+      case 'salon':
+        // La Libreta se abre por salón. Sin este parámetro caía en el salón
+        // por defecto: un quiz de Intermedio abría la libreta de Principiante.
+        return id && this.role === 'teacher'
+          ? { ruta: ['/teacher/gradebook'], params: { salon: id } } : null;
       case 'entrega':
+        // Notificaciones viejas, de antes de que la referencia fuera el salón.
+        // Llevan a la Libreta sin preseleccionar: es lo mejor que se puede
+        // hacer con lo que traen.
         return this.role === 'teacher' ? { ruta: ['/teacher/gradebook'] } : null;
       default:
         return null;
