@@ -6,6 +6,7 @@ import { ShellComponent, NavItem } from '../../../shared/shell/shell.component';
 import { AiTutorService, ChatMessage } from '../../../services/ai-tutor.service';
 import { MissionStateService } from '../../../services/mission-state.service';
 import { AuthService } from '../../../services/auth.service';
+import { STUDENT_NAV } from '../shared/student-nav';
 
 @Component({
   selector: 'app-ai-tutor',
@@ -18,17 +19,7 @@ export class AiTutorComponent implements AfterViewChecked, OnInit {
   @ViewChild('chatEnd') chatEnd!: ElementRef;
   @ViewChild('inputRef') inputRef!: ElementRef;
 
-  navItems: NavItem[] = [
-    { label: 'Mi Dashboard',  icon: '🏠', route: '/student' },
-    { label: 'Mis Actividades',  icon: '🎯', route: '/student/missions' },
-    { label: 'Mi Progreso',   icon: '📈', route: '/student/progress' },
-    { label: 'Logros',        icon: '🏆', route: '/student/achievements' },
-    { label: 'Tutor IA',      icon: '🤖', route: '/student/ai-tutor', badge: '✨' },
-    { label: 'Proyectos',     icon: '💻', route: '/student/projects' },
-    // { label: 'Roblox Studio', icon: '🎮', route: '/student/roblox' },
-    { label: 'Calendario',     icon: '📅', route: '/student/calendar' },
-    { label: 'Comunidad',     icon: '👥', route: '/student/community' },
-  ];
+  navItems: NavItem[] = STUDENT_NAV;
 
   messages: ChatMessage[] = [
     {

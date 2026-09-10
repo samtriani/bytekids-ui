@@ -1,0 +1,119 @@
+<app-shell role="student" [userName]="miNombre" [userAvatar]="misIniciales" [navItems]="navItems"></app-shell>
+
+<div class="msg-page fade-in-up">
+  <div class="page-header">
+    <h1>💬 Mensajes</h1>
+    <p>Escríbele a tu maestro cuando tengas una duda. Te contesta en cuanto pueda.</p>
+  </div>
+
+  @if (cargando) {
+    <div class="msg-cargando">
+      <span class="msg-spinner"></span>
+      <p>Cargando tus mensajes…</p>
+    </div>
+  } @else {
+    <div class="msg-layout">
+
+      <!-- ── Columna izquierda: con quién hablar ── -->
+      <aside class="msg-lista">
+        @if (conversaciones.length) {
+          <div class="msg-lista-titulo">
+            Tus conversaciones
+            @if (sinLeerTotal) { <span class="msg-pin">{{ sinLeerTotal }}</span> }
+          </div>
+          @for (c of conversaciones; track c.id) {
+            <button class="msg-conv" [class.activa]="c.id === seleccionado" (click)="abrir(c.id)">
+              <span class="msg-av">{{ c.iniciales }}</span>
+              <span class="msg-conv-texto">
+                <span class="msg-conv-linea">
+                  <span class="msg-conv-nombre">{{ c.nombre }}</span>
+                  <span class="msg-conv-hora">{{ c.hora }}</span>
+                </span>
+                @if (c.motivo) { <span class="msg-conv-motivo">{{ c.motivo }}</span> }
+                <span class="msg-conv-ultimo">{{ c.ultimo || 'Escríbele lo que necesites' }}</span>
+              </span>
+              @if (c.sinLeer) { <span class="msg-pin">{{ c.sinLeer }}</span> }
+            </button>
+          }
+        }
+
+        @if (contactosNuevos.length) {
+          <div class="msg-lista-titulo">
+            {{ conversaciones.length ? 'Escríbele a alguien más' : '¿A quién le quieres escribir?' }}
+          </div>
+          @for (c of contactosNuevos; track c.id) {
+            <button class="msg-conv msg-conv--nuevo" (click)="escribirle(c)">
+              <span class="msg-av msg-av--nuevo">{{ c.initials || c.displayName.charAt(0) }}</span>
+              <span class="msg-conv-texto">
+                <span class="msg-conv-nombre">{{ c.displayName }}</span>
+                <span class="msg-conv-motivo">{{ c.motivo }}</span>
+              </span>
+              <span class="msg-mas">✎</span>
+            </button>
+          }
+        }
+
+        @if (!conversaciones.length && !contactosNuevos.length) {
+          <div class="msg-vacio-lista">
+            <span>🙋</span>
+            <p>Todavía no tienes a quién escribirle</p>
+            <small>Cuando estés inscrito en un salón, aquí va a aparecer tu maestro.</small>
+          </div>
+        }
+      </aside>
+
+      <!-- ── Columna derecha: la conversación ── -->
+      <section class="msg-hilo-panel">
+        @if (!actual) {
+          <div class="msg-vacio">
+            <span>💬</span>
+            <p>Elige a quién escribirle</p>
+            <small>Tus maestros están en la lista de la izquierda.</small>
+          </div>
+        } @else {
+          <header class="msg-hilo-head">
+            <span class="msg-av">{{ actual.iniciales }}</span>
+            <div>
+              <div class="msg-hilo-nombre">{{ actual.nombre }}</div>
+              @if (actual.motivo) { <div class="msg-hilo-motivo">{{ actual.motivo }}</div> }
+            </div>
+          </header>
+
+          <div class="msg-hilo">
+            @if (!hilo.length) {
+              <div class="msg-primera">
+                <span>👋</span>
+                <p>Esta es tu primera vez escribiéndole a {{ actual.nombre }}.</p>
+                <small>Cuéntale tu duda con tus palabras. No hay preguntas tontas.</small>
+              </div>
+            }
+            @for (m of hilo; track $index) {
+              <div class="msg-burbuja-fila" [class.mia]="m.mio">
+                @if (!m.mio) { <span class="msg-av msg-av--chico">{{ actual.iniciales }}</span> }
+                <div class="msg-burbuja" [class.mia]="m.mio">
+                  <div class="msg-texto">{{ m.texto }}</div>
+                  <div class="msg-hora">{{ m.hora }}</div>
+                </div>
+                @if (m.mio) { <span class="msg-av msg-av--chico msg-av--yo">{{ misIniciales }}</span> }
+              </div>
+            }
+            <div #finHilo></div>
+          </div>
+
+          @if (error) { <div class="msg-error">{{ error }}</div> }
+
+          <div class="msg-escribir">
+            <textarea class="msg-input" [(ngModel)]="borrador" (keydown)="alTeclear($event)"
+                      [disabled]="enviando" rows="2"
+                      placeholder="Escribe tu mensaje…"></textarea>
+            <button class="msg-enviar" (click)="enviar()"
+                    [disabled]="enviando || !borrador.trim()">
+              {{ enviando ? '…' : 'Enviar' }}
+            </button>
+          </div>
+        }
+      </section>
+
+    </div>
+  }
+</div>

@@ -7,6 +7,7 @@ import { ContentApiService } from '../../../services/api/content-api.service';
 import { SubmissionApiService } from '../../../services/api/submission-api.service';
 import { AuthService } from '../../../services/auth.service';
 import { forkJoin } from 'rxjs';
+import { STUDENT_NAV } from '../shared/student-nav';
 
 const TIPO_LABEL: Record<string, string> = {
   mision: 'Misión', tarea: 'Tarea', quiz: 'Quiz', proyecto: 'Proyecto', material: 'Material',
@@ -38,17 +39,7 @@ export class MissionsComponent implements OnInit {
     private auth: AuthService
   ) {}
 
-  navItems: NavItem[] = [
-    { label:'Mi Dashboard', icon:'🏠', route:'/student' },
-    { label:'Mis Actividades', icon:'🎯', route:'/student/missions' },
-    { label:'Mi Progreso',  icon:'📈', route:'/student/progress' },
-    { label:'Logros',       icon:'🏆', route:'/student/achievements' },
-    { label:'Tutor IA',     icon:'🤖', route:'/student/ai-tutor', badge:'✨' },
-    { label:'Proyectos',    icon:'💻', route:'/student/projects' },
-    // { label:'Roblox Studio',icon:'🎮', route:'/student/roblox' },
-    { label:'Calendario',    icon:'📅', route:'/student/calendar' },
-    { label:'Comunidad',     icon:'👥', route:'/student/community' },
-  ];
+  navItems: NavItem[] = STUDENT_NAV;
 
   activeFilter = 'Todas';
   filters: string[] = ['Todas'];

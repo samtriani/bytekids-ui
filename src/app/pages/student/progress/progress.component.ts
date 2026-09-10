@@ -8,19 +8,9 @@ import { ContentApiService } from '../../../services/api/content-api.service';
 import { AuthService } from '../../../services/auth.service';
 import { forkJoin } from 'rxjs';
 import { Chart, registerables } from 'chart.js';
+import { STUDENT_NAV } from '../shared/student-nav';
 Chart.register(...registerables);
 
-const NAV: NavItem[] = [
-  { label:'Mi Dashboard',  icon:'🏠', route:'/student' },
-  { label:'Mis Actividades',  icon:'🎯', route:'/student/missions' },
-  { label:'Mi Progreso',   icon:'📈', route:'/student/progress' },
-  { label:'Logros',        icon:'🏆', route:'/student/achievements' },
-  { label:'Tutor IA',      icon:'🤖', route:'/student/ai-tutor', badge:'✨' },
-  { label:'Proyectos',     icon:'💻', route:'/student/projects' },
-  // { label:'Roblox Studio', icon:'🎮', route:'/student/roblox' },
-  { label:'Calendario',    icon:'📅', route:'/student/calendar' },
-  { label:'Comunidad',     icon:'👥', route:'/student/community' },
-];
 
 @Component({
   selector: 'app-student-progress',
@@ -34,7 +24,7 @@ export class ProgressComponent implements OnInit, AfterViewInit {
   @ViewChild('skillBar')   skillBar!: ElementRef;
   @ViewChild('subjectPie') subjectPie!: ElementRef;
 
-  navItems = NAV;
+  navItems = STUDENT_NAV;
   private COLORS = ['#06B6D4','#7C3AED','#2563EB','#F59E0B','#10B981','#EC4899'];
 
   // KPIs

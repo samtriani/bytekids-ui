@@ -8,17 +8,8 @@ import { ScheduleApiService } from '../../../services/api/schedule-api.service';
 import { AuthService } from '../../../services/auth.service';
 import { forkJoin, of } from 'rxjs';
 import { catchError } from 'rxjs/operators';
+import { STUDENT_NAV } from '../shared/student-nav';
 
-const NAV: NavItem[] = [
-  { label: 'Mi Dashboard',  icon: '🏠', route: '/student' },
-  { label: 'Mis Actividades',  icon: '🎯', route: '/student/missions' },
-  { label: 'Mi Progreso',   icon: '📈', route: '/student/progress' },
-  { label: 'Logros',        icon: '🏆', route: '/student/achievements' },
-  { label: 'Tutor IA',      icon: '🤖', route: '/student/ai-tutor', badge: '✨' },
-  { label: 'Proyectos',     icon: '💻', route: '/student/projects' },
-  { label: 'Calendario',    icon: '📅', route: '/student/calendar' },
-  { label: 'Comunidad',     icon: '👥', route: '/student/community' },
-];
 
 const MONTH_NAMES = ['Enero','Febrero','Marzo','Abril','Mayo','Junio',
                      'Julio','Agosto','Septiembre','Octubre','Noviembre','Diciembre'];
@@ -42,7 +33,7 @@ interface MonthMeta { label: string; year: number; month: number; days: number; 
   styleUrls: ['./calendar.component.scss'],
 })
 export class StudentCalendarComponent implements OnInit {
-  navItems = NAV;
+  navItems = STUDENT_NAV;
   days     = ['Dom','Lun','Mar','Mié','Jue','Vie','Sáb'];
   loading  = true;
 

@@ -6,17 +6,8 @@ import { ContentApiService } from '../../../services/api/content-api.service';
 import { SubmissionApiService } from '../../../services/api/submission-api.service';
 import { AuthService } from '../../../services/auth.service';
 import { forkJoin } from 'rxjs';
+import { STUDENT_NAV } from '../shared/student-nav';
 
-const NAV: NavItem[] = [
-  { label:'Mi Dashboard',  icon:'🏠', route:'/student' },
-  { label:'Mis Actividades',  icon:'🎯', route:'/student/missions' },
-  { label:'Mi Progreso',   icon:'📈', route:'/student/progress' },
-  { label:'Logros',        icon:'🏆', route:'/student/achievements' },
-  { label:'Tutor IA',      icon:'🤖', route:'/student/ai-tutor', badge:'✨' },
-  { label:'Proyectos',     icon:'💻', route:'/student/projects' },
-  // { label:'Roblox Studio', icon:'🎮', route:'/student/roblox' },
-  { label:'Comunidad',     icon:'👥', route:'/student/community' },
-];
 
 @Component({
   selector: 'app-roblox',
@@ -26,7 +17,7 @@ const NAV: NavItem[] = [
   styleUrls: ['./roblox.component.scss']
 })
 export class RobloxComponent implements OnInit {
-  navItems = NAV;
+  navItems = STUDENT_NAV;
   toast = '';
   loading = true;
   modules: any[] = [];

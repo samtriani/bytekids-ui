@@ -30,6 +30,10 @@ export class MessagesComponent implements OnInit, AfterViewChecked {
   sending = false;
   private shouldScroll = false;
 
+  /** A quien puede escribirle. La lista la decide el backend. */
+  contactos: any[] = [];
+  mostrandoContactos = false;
+
   private inboxRaw: any[] = [];
   private sentRaw: any[] = [];
 
@@ -38,6 +42,12 @@ export class MessagesComponent implements OnInit, AfterViewChecked {
   get totalUnread(): number { return this.conversations.reduce((s, c) => s + c.unread, 0); }
   get selected(): any { return this.conversations.find(c => c.id === this.selectedId) ?? null; }
 
+  /** Los que todavia no tienen conversacion: son los que puede estrenar. */
+  get contactosNuevos(): any[] {
+    const yaHay = new Set(this.conversations.map(c => c.id));
+    return this.contactos.filter(c => !yaHay.has(c.id));
+  }
+
   constructor(
     private route: ActivatedRoute,private messageApi: MessageApiService, private auth: AuthService) {}
 
@@ -45,10 +55,12 @@ export class MessagesComponent implements OnInit, AfterViewChecked {
     this.teacher = this.auth.getUser();
     forkJoin({
       inbox: this.messageApi.getInbox().pipe(catchError(() => of([]))),
-      sent:  this.messageApi.getSent().pipe(catchError(() => of([])))
-    }).subscribe(({ inbox, sent }) => {
+      sent:  this.messageApi.getSent().pipe(catchError(() => of([]))),
+      contactos: this.messageApi.getContactos().pipe(catchError(() => of([])))
+    }).subscribe(({ inbox, sent, contactos }) => {
       this.inboxRaw = inbox;
       this.sentRaw  = sent;
+      this.contactos = contactos;
       this.buildConversations();
       this.loading = false;
       this.abrirConversacionPedida();
@@ -121,6 +133,23 @@ export class MessagesComponent implements OnInit, AfterViewChecked {
         unread,
       };
     }).sort((a, b) => b.unread - a.unread);
+  }
+
+  /** Empieza una conversacion con alguien que no le ha escrito. */
+  escribirle(c: any): void {
+    this.mostrandoContactos = false;
+    if (!this.conversations.some(x => x.id === c.id)) {
+      this.conversations = [{
+        id: c.id,
+        name: c.displayName,
+        role: c.role,
+        av: this.toInitials(c.displayName, c.initials),
+        lastMsg: c.motivo || 'Sin mensajes todavía',
+        time: '',
+        unread: 0,
+      }, ...this.conversations];
+    }
+    this.select(c.id);
   }
 
   select(id: string): void {

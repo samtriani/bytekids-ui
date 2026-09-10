@@ -7,7 +7,29 @@
     <div class="conv-header">
       <span style="font-weight:800;font-size:.9rem;color:var(--tx1)">Mensajes</span>
       @if (totalUnread) { <span class="badge badge-guinda">{{ totalUnread }}</span> }
+      @if (contactosNuevos.length) {
+        <button class="conv-nueva" (click)="mostrandoContactos = !mostrandoContactos">
+          {{ mostrandoContactos ? '✕ Cerrar' : '✎ Nueva' }}
+        </button>
+      }
     </div>
+
+    @if (mostrandoContactos) {
+      <div class="conv-contactos">
+        <div class="conv-contactos-titulo">¿A quién le escribes?</div>
+        @for (c of contactosNuevos; track c.id) {
+          <div class="conv-contacto" (click)="escribirle(c)">
+            <div class="avatar" style="width:32px;height:32px;font-size:.7rem">
+              {{ c.initials || c.displayName.charAt(0) }}
+            </div>
+            <div style="flex:1;min-width:0">
+              <div class="conv-contacto-nombre">{{ c.displayName }}</div>
+              <div class="conv-contacto-motivo">{{ c.motivo }}</div>
+            </div>
+          </div>
+        }
+      </div>
+    }
 
     @if (loading) {
       <div style="padding:24px;text-align:center;color:var(--tx3);font-size:.8rem">Cargando...</div>

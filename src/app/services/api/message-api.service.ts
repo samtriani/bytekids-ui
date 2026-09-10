@@ -9,6 +9,15 @@ const BASE = `${environment.apiUrl}/messages`;
 export class MessageApiService {
   constructor(private http: HttpClient) {}
 
+  /**
+   * A quién le puede escribir el usuario. La lista la arma el backend con la
+   * misma regla que valida el envío, así que lo que aparece aquí es
+   * exactamente lo que se va a poder mandar.
+   */
+  getContactos(): Observable<any[]> {
+    return this.http.get<any>(`${BASE}/contactos`).pipe(map(r => r.data ?? []));
+  }
+
   getInbox(): Observable<any[]> {
     return this.http.get<any>(`${BASE}/inbox`).pipe(map(r => r.data ?? []));
   }

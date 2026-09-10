@@ -14,6 +14,7 @@ import { AiTutorComponent } from './pages/student/ai-tutor/ai-tutor.component';
 import { ProjectsComponent } from './pages/student/projects/projects.component';
 import { RobloxComponent } from './pages/student/roblox/roblox.component';
 import { CommunityComponent } from './pages/student/community/community.component';
+import { StudentMessagesComponent } from './pages/student/messages/messages.component';
 import { WorkspaceComponent } from './pages/student/workspace/workspace.component';
 import { StudentCalendarComponent } from './pages/student/calendar/calendar.component';
 import { StudentClassroomComponent } from './pages/student/classroom/classroom.component';
@@ -79,6 +80,7 @@ export const routes: Routes = [
   { path: 'student/projects', component: ProjectsComponent, canActivate: STUDENT },
   { path: 'student/roblox', component: RobloxComponent, canActivate: STUDENT },
   { path: 'student/community', component: CommunityComponent, canActivate: STUDENT },
+  { path: 'student/messages', component: StudentMessagesComponent, canActivate: STUDENT },
   { path: 'student/calendar',            component: StudentCalendarComponent,  canActivate: STUDENT },
   { path: 'student/classroom/:scheduleId', component: StudentClassroomComponent, canActivate: STUDENT },
 
