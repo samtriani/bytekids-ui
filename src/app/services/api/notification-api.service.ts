@@ -9,8 +9,9 @@ const BASE = `${environment.apiUrl}/notifications`;
 export class NotificationApiService {
   constructor(private http: HttpClient) {}
 
-  getAll(): Observable<any[]> {
-    return this.http.get<any>(BASE).pipe(map(r => r.data ?? []));
+  /** Las mas recientes primero. El backend topa en 100. */
+  getAll(limit = 20): Observable<any[]> {
+    return this.http.get<any>(`${BASE}?limit=${limit}`).pipe(map(r => r.data ?? []));
   }
 
   getUnreadCount(): Observable<number> {

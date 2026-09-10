@@ -146,6 +146,15 @@
 .notif-unread { background: color-mix(in srgb, var(--bk-purple) 6%, transparent); }
 .notif-unread:hover { background: color-mix(in srgb, var(--bk-purple) 10%, transparent); }
 
+/* Las leidas se apagan. Sin esto, una leida y una nueva se ven casi
+   igual --solo cambiaba un tinte del 6%-- y el niño no distingue lo
+   que ya vio de lo que le acaba de llegar. */
+.notif-item.notif-leida .notif-title { font-weight: 600; color: var(--bk-text-muted); }
+.notif-item.notif-leida .notif-body,
+.notif-item.notif-leida .notif-time  { color: var(--bk-text-muted); opacity: .75; }
+.notif-item.notif-leida .notif-type-icon { opacity: .5; }
+.notif-item.notif-leida:hover .notif-title { color: var(--bk-text); }
+
 .notif-type-icon { font-size: 1.1rem; margin-top: 1px; flex-shrink: 0; }
 
 .notif-content { flex: 1; min-width: 0; }
