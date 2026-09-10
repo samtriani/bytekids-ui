@@ -45,10 +45,15 @@ export class AchievementsComponent implements OnInit {
     forkJoin({
       defs:     this.achievementApi.getAll(),
       earned:   this.achievementApi.getMyAchievements(),
-      // El color sale del feed y NO de /subjects: ese endpoint es solo para
-      // personal, y un 403 aqui no lo salva el catchError — el interceptor
-      // borra el token antes y saca al alumno de la sesion.
-      feed: this.contentApi.getMyFeed().pipe(catchError(() => of([]))),
+      // El color y las materias del alumno salen del feed, NO de /subjects:
+      // ese endpoint es solo para personal, y un 403 aqui no lo salva el
+      // catchError — el interceptor borra el token antes y saca al alumno.
+      //
+      // Devuelve null al fallar, no []: hay que poder distinguir "no tiene
+      // materias" de "no supe cuales son". Con [] se filtraria contra un
+      // conjunto vacio y el alumno se quedaria sin ningun logro por un error
+      // de red.
+      feed: this.contentApi.getMyFeed().pipe(catchError(() => of(null))),
     }).subscribe({
       next: ({ defs, earned, feed }) => {
         for (const c of feed ?? []) {
@@ -56,9 +61,27 @@ export class AchievementsComponent implements OnInit {
             this.coloresMateria[c.subjectName] = c.subjectColor;
           }
         }
+
+        // Las materias que de verdad lleva. getAll() devuelve las definiciones
+        // de TODA la plataforma, asi que sin esto un alumno de Principiante
+        // veia tambien los siete logros de Intermedio: diez medallas que no
+        // puede ganar, contra las que ademas se calculaba su porcentaje.
+        const misMaterias = feed
+          ? new Set<string>((feed as any[]).map(c => c?.subjectName).filter(Boolean))
+          : null;
         const earnedIds = new Set(earned.map((e: any) => e.achievement?.id ?? e.achievementId));
 
-        this.achievements = defs.map((d: any) => ({
+        // Se queda con los suyos: los generales --racha, XP-- y los de las
+        // materias que lleva. Si el feed fallo no se filtra nada: es mejor
+        // mostrar de mas que dejarle la pantalla vacia.
+        const mios = misMaterias
+          ? defs.filter((d: any) => {
+              const m = this.materiaDe(d);
+              return !m || misMaterias.has(m);
+            })
+          : defs;
+
+        this.achievements = mios.map((d: any) => ({
           title:    d.title,
           icon:     d.icon ?? '🏆',
           desc:     d.description,

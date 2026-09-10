@@ -59,6 +59,18 @@ export class StudentDashboardComponent implements OnInit, AfterViewInit {
     private auth:           AuthService
   ) {}
 
+  /**
+   * La materia de un logro vive en condition_value.subject. Los que no
+   * traen materia --racha, XP total-- son de todos.
+   */
+  private materiaDeLogro(d: any): string {
+    try {
+      const cond = typeof d?.conditionValue === 'string'
+        ? JSON.parse(d.conditionValue) : d?.conditionValue;
+      return cond?.subject || '';
+    } catch { return ''; }
+  }
+
   ngOnInit() {
     forkJoin({
       xp:        this.progressApi.getMyXp(),
@@ -72,6 +84,17 @@ export class StudentDashboardComponent implements OnInit, AfterViewInit {
     }).subscribe({
       next: ({ xp, streak, subjects, xpHistory, missions, subs, earned, defs }) => {
         const approvedIds = new Set(subs.filter((s:any) => s.status === 'aprobado').map((s:any) => s.contentId));
+
+        // getAll() trae las definiciones de TODA la plataforma. Sin acotar,
+        // a una alumna de Principiante le deciamos "de 16 posibles" cuando
+        // solo puede alcanzar 9, y la lista de abajo le mostraba medallas de
+        // una materia en la que no esta inscrita.
+        const misMaterias = new Set<string>(
+          missions.map((m:any) => m?.subjectName).filter(Boolean));
+        const misLogros = defs.filter((d:any) => {
+          const m = this.materiaDeLogro(d);
+          return !m || misMaterias.has(m);
+        });
         const pending     = missions.filter((m:any) => !approvedIds.has(m.id)).length;
 
         this.totalXpNum = xp;
@@ -83,7 +106,7 @@ export class StudentDashboardComponent implements OnInit, AfterViewInit {
         this.stats[1].value  = String(missions.length);
         this.stats[1].change = this.desglosePorTipo(missions);
         this.stats[2].value  = String(earned.length);
-        this.stats[2].change = `de ${defs.length} posibles`;
+        this.stats[2].change = `de ${misLogros.length} posibles`;
         this.stats[3].value  = `${streak}d`;
         this.stats[3].change = streak > 0 ? '¡Sigue así!' : 'Empieza hoy';
 
@@ -109,7 +132,7 @@ export class StudentDashboardComponent implements OnInit, AfterViewInit {
         // Logros: primero los que ya ganó. Mostrar 6 bloqueados al azar no
         // le dice nada al niño sobre lo que está haciendo.
         const earnedIds = new Set(earned.map((e:any) => e.achievement?.id ?? e.achievementId));
-        this.achievements = [...defs]
+        this.achievements = [...misLogros]
           .sort((a: any, b: any) =>
             Number(earnedIds.has(b.id)) - Number(earnedIds.has(a.id)))
           .slice(0, 6)
