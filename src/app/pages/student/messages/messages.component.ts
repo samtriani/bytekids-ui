@@ -46,6 +46,7 @@ interface Conversacion {
 })
 export class StudentMessagesComponent implements OnInit, AfterViewChecked {
   @ViewChild('finHilo') finHilo!: ElementRef;
+  @ViewChild('cajaTexto') cajaTexto?: ElementRef<HTMLTextAreaElement>;
 
   navItems = STUDENT_NAV;
 
@@ -178,6 +179,7 @@ export class StudentMessagesComponent implements OnInit, AfterViewChecked {
     const conv = this.conversaciones.find(c => c.id === id);
     if (conv) conv.sinLeer = 0;
     this.bajar = true;
+    this.devolverFoco();
   }
 
   private armarHilo(id: string): void {
@@ -201,6 +203,7 @@ export class StudentMessagesComponent implements OnInit, AfterViewChecked {
       .pipe(catchError(() => of(null)))
       .subscribe(res => {
         this.enviando = false;
+        this.devolverFoco();
         if (!res) {
           this.error = 'No se pudo enviar. Revisa tu conexión e inténtalo otra vez.';
           return;
@@ -217,6 +220,16 @@ export class StudentMessagesComponent implements OnInit, AfterViewChecked {
         this.borrador = '';
         this.bajar = true;
       });
+  }
+
+
+  /**
+   * Devuelve el cursor al recuadro. Va en setTimeout porque en este punto
+   * Angular todavia no quita el atributo disabled del textarea, y un
+   * elemento deshabilitado ignora focus().
+   */
+  private devolverFoco(): void {
+    setTimeout(() => this.cajaTexto?.nativeElement.focus(), 0);
   }
 
   alTeclear(e: KeyboardEvent): void {
