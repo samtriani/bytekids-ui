@@ -9,6 +9,7 @@ import { SubmissionApiService } from '../../services/api/submission-api.service'
 import { AuthService } from '../../services/auth.service';
 import { forkJoin } from 'rxjs';
 import { Chart, registerables } from 'chart.js';
+import { STUDENT_NAV } from '../student/shared/student-nav';
 Chart.register(...registerables);
 
 @Component({
@@ -22,17 +23,7 @@ export class StudentDashboardComponent implements OnInit, AfterViewInit {
   @ViewChild('xpChart')     xpChart!: ElementRef;
   @ViewChild('skillsChart') skillsChart!: ElementRef;
 
-  navItems: NavItem[] = [
-    { label: 'Mi Dashboard',  icon: '🏠', route: '/student' },
-    { label: 'Mis Actividades',  icon: '🎯', route: '/student/missions' },
-    { label: 'Mi Progreso',   icon: '📈', route: '/student/progress' },
-    { label: 'Logros',        icon: '🏆', route: '/student/achievements' },
-    { label: 'Tutor IA',      icon: '🤖', route: '/student/ai-tutor', badge: '✨' },
-    { label: 'Proyectos',     icon: '💻', route: '/student/projects' },
-    // { label: 'Roblox Studio', icon: '🎮', route: '/student/roblox' },
-    { label: 'Calendario',    icon: '📅', route: '/student/calendar' },
-    { label: 'Comunidad',     icon: '👥', route: '/student/community' },
-  ];
+  navItems: NavItem[] = STUDENT_NAV;
 
   stats = [
     { icon:'⭐', value:'—', label:'XP Total',    change:'cargando…', cls:'up',      color:'#06B6D4' },

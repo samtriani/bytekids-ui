@@ -5,18 +5,8 @@ import { RouterLink } from '@angular/router';
 import { ShellComponent, NavItem } from '../../../shared/shell/shell.component';
 import { ProgressApiService } from '../../../services/api/progress-api.service';
 import { AuthService } from '../../../services/auth.service';
+import { STUDENT_NAV } from '../shared/student-nav';
 
-const NAV: NavItem[] = [
-  { label:'Mi Dashboard',  icon:'🏠', route:'/student' },
-  { label:'Mis Actividades',  icon:'🎯', route:'/student/missions' },
-  { label:'Mi Progreso',   icon:'📈', route:'/student/progress' },
-  { label:'Logros',        icon:'🏆', route:'/student/achievements' },
-  { label:'Tutor IA',      icon:'🤖', route:'/student/ai-tutor', badge:'✨' },
-  { label:'Proyectos',     icon:'💻', route:'/student/projects' },
-  // { label:'Roblox Studio', icon:'🎮', route:'/student/roblox' },
-  { label:'Calendario',    icon:'📅', route:'/student/calendar' },
-  { label:'Comunidad',     icon:'👥', route:'/student/community' },
-];
 
 const COLORS = ['#7C3AED','#2563EB','#06B6D4','#10B981','#F59E0B','#EC4899','#EF4444','#8B5CF6'];
 
@@ -28,7 +18,7 @@ const COLORS = ['#7C3AED','#2563EB','#06B6D4','#10B981','#F59E0B','#EC4899','#EF
   styleUrls: ['./community.component.scss']
 })
 export class CommunityComponent implements OnInit {
-  navItems = NAV;
+  navItems = STUDENT_NAV;
 
   me: any = null;
   topStudents: any[] = [];

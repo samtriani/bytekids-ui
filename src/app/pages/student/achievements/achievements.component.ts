@@ -7,6 +7,7 @@ import { AuthService } from '../../../services/auth.service';
 import { forkJoin, of } from 'rxjs';
 import { catchError } from 'rxjs/operators';
 import { ContentApiService } from '../../../services/api/content-api.service';
+import { STUDENT_NAV } from '../shared/student-nav';
 
 @Component({ selector:'app-achievements', standalone:true, imports:[CommonModule, RouterLink, ShellComponent],
   templateUrl:'./achievements.component.html', styleUrls:['./achievements.component.scss']
@@ -18,17 +19,7 @@ export class AchievementsComponent implements OnInit {
               private contentApi: ContentApiService,
               private auth: AuthService) {}
 
-  navItems: NavItem[] = [
-    { label:'Mi Dashboard',  icon:'🏠', route:'/student' },
-    { label:'Mis Actividades',  icon:'🎯', route:'/student/missions' },
-    { label:'Mi Progreso',   icon:'📈', route:'/student/progress' },
-    { label:'Logros',        icon:'🏆', route:'/student/achievements' },
-    { label:'Tutor IA',      icon:'🤖', route:'/student/ai-tutor', badge:'✨' },
-    { label:'Proyectos',     icon:'💻', route:'/student/projects' },
-    // { label:'Roblox Studio', icon:'🎮', route:'/student/roblox' },
-    { label:'Calendario',    icon:'📅', route:'/student/calendar' },
-    { label:'Comunidad',     icon:'👥', route:'/student/community' },
-  ];
+  navItems: NavItem[] = STUDENT_NAV;
 
   categories: string[] = ['Todos'];
   activeCategory = 'Todos';
