@@ -28,3 +28,22 @@
   background: rgba(255, 255, 255, .2);
 }
 .chip:not(.on) .chip-n { background: var(--surface2); color: var(--tx3); }
+
+
+/* ── Logros dentro del detalle del alumno ── */
+.stu-logros {
+  display: grid; grid-template-columns: repeat(auto-fill, minmax(190px, 1fr));
+  gap: 6px; max-height: 168px; overflow-y: auto;
+}
+.stu-logro {
+  display: flex; align-items: center; gap: 8px;
+  padding: 7px 9px; border-radius: 9px;
+  background: var(--oro-lt); border: 1px solid var(--oro-a15);
+}
+.stu-logro-ico { font-size: 1.15rem; flex-shrink: 0; }
+.stu-logro-txt { display: flex; flex-direction: column; min-width: 0; }
+.stu-logro-tit {
+  font-size: .76rem; font-weight: 800; color: var(--tx1);
+  white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+}
+.stu-logro-fec { font-size: .66rem; color: var(--tx3); }

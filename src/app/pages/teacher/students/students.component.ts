@@ -7,6 +7,7 @@ import { TEACHER_NAV } from '../shared/teacher-nav';
 import { ClassroomApiService } from '../../../services/api/classroom-api.service';
 import { SubmissionApiService } from '../../../services/api/submission-api.service';
 import { ProgressApiService } from '../../../services/api/progress-api.service';
+import { AchievementApiService } from '../../../services/api/achievement-api.service';
 import { AuthService } from '../../../services/auth.service';
 import { forkJoin, of } from 'rxjs';
 import { catchError, map } from 'rxjs/operators';
@@ -26,6 +27,13 @@ export class StudentsComponent implements OnInit {
   // una pantalla y "Necesita apoyo" en otra.
   filters = ['Todos', 'Excelente', 'Bien', 'Regular', 'Apoyo', 'Sin empezar'];
   selected: any = null;
+
+  /** Los logros del alumno abierto. Se piden al abrirlo, no antes. */
+  logros: any[] = [];
+  cargandoLogros = false;
+
+  /** Alumno que pidieron abrir por URL, hasta que la lista este cargada. */
+  private abrirAlCargar = '';
   toast = '';
   loading = true;
   all: any[] = [];
@@ -131,6 +139,7 @@ export class StudentsComponent implements OnInit {
     private classroomApi: ClassroomApiService,
     private submissionApi: SubmissionApiService,
     private progressApi: ProgressApiService,
+    private achievementApi: AchievementApiService,
     private auth: AuthService
   ) {}
 
@@ -138,6 +147,8 @@ export class StudentsComponent implements OnInit {
     this.teacher = this.auth.getUser();
     // Viene del Panel del Maestro al pulsar el contador de un salon.
     this.salonFiltro = this.route.snapshot.queryParamMap.get('salon') ?? '';
+    // Viene del aula en vivo al tocar a un alumno en la lista de asistencia.
+    this.abrirAlCargar = this.route.snapshot.queryParamMap.get('abrir') ?? '';
 
     this.classroomApi.getMyClassrooms().subscribe({
       next: classrooms => {
@@ -210,6 +221,7 @@ export class StudentsComponent implements OnInit {
               next: results => {
                 this.all = results.map(r => this.conAvance(this.buildStudent(r)));
                 this.loading = false;
+                this.abrirPedido();
               },
               error: () => { this.loading = false; }
             });
@@ -341,8 +353,38 @@ export class StudentsComponent implements OnInit {
     return `Hace ${days} días`;
   }
 
-  openStudent(s: any) { this.selected = s; }
-  closeModal() { this.selected = null; }
+  /**
+   * Abre el alumno que venia en la URL. Si el maestro llega desde el aula
+   * buscando a uno en concreto, dejarlo en la lista completa lo obliga a
+   * buscarlo a mano delante del grupo.
+   */
+  private abrirPedido(): void {
+    if (!this.abrirAlCargar) return;
+    const alumno = this.all.find(a => a.id === this.abrirAlCargar);
+    this.abrirAlCargar = '';
+    if (alumno) this.openStudent(alumno);
+  }
+
+  openStudent(s: any) {
+    this.selected = s;
+    this.logros = [];
+    this.cargandoLogros = true;
+    this.achievementApi.getStudentAchievements(s.id)
+      .pipe(catchError(() => of([])))
+      .subscribe(lista => {
+        // La API devuelve la medalla anidada y la fecha afuera.
+        this.logros = (lista as any[]).map(l => ({
+          titulo: l.achievement?.title ?? l.title ?? 'Logro',
+          icono:  l.achievement?.icon  ?? l.icon  ?? '🏆',
+          desc:   l.achievement?.description ?? l.description ?? '',
+          xp:     l.achievement?.xpReward ?? l.xpReward ?? 0,
+          fecha:  (l.earnedAt ?? '').substring(0, 10),
+        }));
+        this.cargandoLogros = false;
+      });
+  }
+
+  closeModal() { this.selected = null; this.logros = []; }
 
   msgStudent(s: any) {
     this.closeModal();

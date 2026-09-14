@@ -162,7 +162,10 @@
           @if (enrolledStudents.length) {
             <div class="aula-students-list">
               @for (s of presentStudents; track s.id) {
-                <div class="aula-student-item" [class.aula-student-item--present]="s.present">
+                <div class="aula-student-item aula-student-item--abrible"
+                     [class.aula-student-item--present]="s.present"
+                     (click)="verAlumno(s)"
+                     [title]="'Ver el progreso y los logros de ' + s.displayName">
                   <div class="aula-student-av"
                        [style.background]="s.present ? subjectColor + '25' : 'var(--bg2)'"
                        [style.color]="s.present ? subjectColor : 'var(--tx3)'">

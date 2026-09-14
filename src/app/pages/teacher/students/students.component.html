@@ -162,6 +162,30 @@
         }
 
         <div style="margin-bottom:14px">
+          <div style="font-size:.72rem;font-weight:800;color:var(--tx3);text-transform:uppercase;margin-bottom:6px">
+            Logros
+            @if (!cargandoLogros) { <span style="color:var(--oro)">{{ logros.length }}</span> }
+          </div>
+          @if (cargandoLogros) {
+            <div style="font-size:.82rem;color:var(--tx3)">Cargando…</div>
+          } @else if (logros.length) {
+            <div class="stu-logros">
+              @for (l of logros; track l.titulo) {
+                <div class="stu-logro" [title]="l.desc">
+                  <span class="stu-logro-ico">{{ l.icono }}</span>
+                  <span class="stu-logro-txt">
+                    <span class="stu-logro-tit">{{ l.titulo }}</span>
+                    <span class="stu-logro-fec">{{ l.fecha }} · +{{ l.xp }} XP</span>
+                  </span>
+                </div>
+              }
+            </div>
+          } @else {
+            <div style="font-size:.82rem;color:var(--tx3)">Todavía no desbloquea ninguno.</div>
+          }
+        </div>
+
+        <div style="margin-bottom:14px">
           <div style="font-size:.72rem;font-weight:800;color:var(--tx3);text-transform:uppercase;margin-bottom:6px">Actividad reciente</div>
           @if (selected.missions.length) {
             <div style="display:flex;flex-direction:column;gap:4px">
