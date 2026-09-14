@@ -210,3 +210,8 @@
   white-space: nowrap; transition: background .15s;
   &:hover { background: rgba(255,255,255,.22); }
 }
+
+
+/* La ficha del alumno abre su detalle: tiene que verse tocable. */
+.aula-student-item--abrible { cursor: pointer; transition: background .15s; }
+.aula-student-item--abrible:hover { background: var(--guinda-lt); }

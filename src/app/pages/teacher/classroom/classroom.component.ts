@@ -259,6 +259,21 @@ export class TeacherClassroomComponent implements OnInit, OnDestroy, AfterViewCh
   abrirActividad(): void { this.activeTab = 'work'; this.recolocar(); }
 
   /**
+   * Abre el progreso y los logros de un alumno, sin colgar la clase.
+   *
+   * Se navega a la pantalla de Alumnos en vez de repetir el modal aqui
+   * dentro: la videollamada sobrevive a navegar, asi que el maestro mira,
+   * explica y regresa con el boton de la ventanita. Ademas resuelve el caso
+   * del alumno con iPad, que no puede compartir su pantalla porque Safari
+   * no expone esa API -- el maestro abre lo que el nino queria ensenarle.
+   */
+  verAlumno(alumno: any): void {
+    this.router.navigate(['/teacher/students'], {
+      queryParams: { salon: this.session?.classroomId, abrir: alumno.id },
+    });
+  }
+
+  /**
    * Le presta el hueco al servicio para que la llamada se coloque encima.
    * acoplar() se ignora si el hueco ya es ese, asi que llamarlo de mas
    * no cuesta nada.
