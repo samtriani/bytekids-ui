@@ -12,8 +12,14 @@
 }
 
 <div class="shell">
+  <!-- Tapa el contenido mientras el menu esta encima, y lo cierra al tocarla.
+       Solo existe en pantalla angosta: el CSS lo esconde en escritorio. -->
+  @if (menuAbierto) {
+    <div class="sh-menu-fondo" (click)="cerrarMenu()"></div>
+  }
+
   <!-- ══ SIDEBAR ══ -->
-  <aside class="sidebar" [attr.data-role]="role">
+  <aside class="sidebar" [class.sidebar--abierto]="menuAbierto" [attr.data-role]="role">
     <!-- Logo -->
     <div class="sb-logo" (click)="goHome()">
       <img src="assets/logo-bytekids.jpeg" alt="ByteKids Academy" class="logo-img">
@@ -29,7 +35,7 @@
     </div>
 
     <!-- Nav -->
-    <nav class="sb-nav">
+    <nav class="sb-nav" (click)="cerrarMenu()">
       @for (item of visibleNavItems; track item.route) {
         <a class="nav-item"
            [routerLink]="item.route ?? null"
@@ -62,6 +68,10 @@
     <!-- Topbar -->
     <header class="topbar">
       <div class="tb-left">
+        <button class="tb-menu-btn" (click)="alternarMenu($event)"
+                [attr.aria-expanded]="menuAbierto" aria-label="Abrir el menú">
+          {{ menuAbierto ? '✕' : '☰' }}
+        </button>
         <span class="tb-date">📅 {{ today }}</span>
       </div>
       <div class="tb-right">

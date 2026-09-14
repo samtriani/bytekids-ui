@@ -33,6 +33,9 @@
   height: 38px; flex-shrink: 0; padding: 0 8px 0 11px;
   background: linear-gradient(135deg, #1a0a12, #7A1535);
   cursor: grab;
+  /* Sin esto, en tablet el navegador entiende el arrastre como scroll
+     de la pagina y la ventanita no se mueve. */
+  touch-action: none;
   user-select: none;
   &:active { cursor: grabbing; }
 }
@@ -55,7 +58,7 @@
 }
 
 .lf-btn {
-  flex-shrink: 0; height: 24px; padding: 0 8px; border-radius: 7px;
+  flex-shrink: 0; height: 28px; min-width: 30px; padding: 0 9px; border-radius: 7px;
   border: 1px solid rgba(255,255,255,.18); background: rgba(255,255,255,.08);
   color: rgba(255,255,255,.85); font-size: .68rem; font-weight: 800;
   cursor: pointer; transition: background .15s;

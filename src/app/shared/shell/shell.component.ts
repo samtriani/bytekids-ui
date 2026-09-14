@@ -85,6 +85,9 @@ export class ShellComponent implements OnInit, OnDestroy {
   showUserMenu = false;
   confirmarSalida = false;
 
+  /** En pantalla angosta el menu lateral se recoge. */
+  menuAbierto = false;
+
   readonly today = new Date().toLocaleDateString('es-MX', { weekday: 'long', day: 'numeric', month: 'long' });
 
   private pollInterval: any;
@@ -113,6 +116,10 @@ export class ShellComponent implements OnInit, OnDestroy {
     this.showNotif = false;
     this.showUserMenu = false;
   }
+
+  /** Escape cierra el menu, como cualquier panel que tapa la pantalla. */
+  @HostListener('document:keydown.escape')
+  onEscape(): void { this.menuAbierto = false; }
 
   /** Recarga la vista actual para volver a pedir los datos al backend. */
   reintentar(): void {
@@ -145,6 +152,18 @@ export class ShellComponent implements OnInit, OnDestroy {
     this.confirmarSalida = false;
     this.auth.logout();
   }
+
+  /**
+   * stopPropagation porque el listener de documento cierra los menus del
+   * topbar: sin esto, abrir y cerrar caerian en el mismo clic.
+   */
+  alternarMenu(e: Event): void {
+    e.stopPropagation();
+    this.menuAbierto = !this.menuAbierto;
+  }
+
+  /** Al elegir una pantalla el menu se quita de en medio solo. */
+  cerrarMenu(): void { this.menuAbierto = false; }
 
   toggleNotif(e: Event): void {
     e.stopPropagation();
