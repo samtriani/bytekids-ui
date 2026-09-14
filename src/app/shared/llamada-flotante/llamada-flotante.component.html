@@ -15,7 +15,7 @@
 
   <!-- La barra solo se ve en la ventanita: acoplada, el aula pone la suya. -->
   @if (modo === 'esquina') {
-    <div class="lf-barra" (mousedown)="empezarArrastre($event)">
+    <div class="lf-barra" (pointerdown)="empezarArrastre($event)">
       <span class="lf-punto"></span>
       <span class="lf-icono">{{ llamada.datos()?.icono }}</span>
       <div class="lf-titulos">

@@ -554,6 +554,7 @@ input,select,textarea { font-family:inherit; }
 .community-page,
 .projects-page,
 .roblox-page,
+.msg-page,
 .achievements-page {
   margin-left: var(--sw);
   margin-top:  var(--th);
@@ -1039,3 +1040,68 @@ input,select,textarea { font-family:inherit; }
   border-radius: 12px; padding: 11px 15px;
   font-size: .82rem; font-weight: 700; color: #DC2626;
 }
+
+
+/* ═══════════════════════════════════════════════════════════════════
+   MENU LATERAL EN TABLET
+
+   Todo el desplazamiento del contenido se hace con var(--sw), asi que
+   ponerla en cero mueve de golpe el topbar, el page-wrap, las paginas del
+   alumno, los dashboards y el msg-layout. La barra recupera su ancho propio
+   y se sale de la pantalla.
+
+   El corte son 900 px: un iPad acostado (1024) conserva el menu, que ahi
+   cabe y es mas comodo; parado (768) lo recoge.
+
+   OJO con el orden: las reglas base van ANTES de la media query. Con la
+   misma especificidad gana la ultima del archivo, y ponerlas despues
+   dejaba el boton escondido justo donde tiene que salir.
+   ═══════════════════════════════════════════════════════════════════ */
+
+/* Apagado por defecto: si se redimensiona de tablet a escritorio con el menu
+   abierto, no queda un div suelto en medio del contenido. */
+.sh-menu-fondo {
+  display: none;
+  position: fixed; inset: 0; z-index: 250;
+  background: rgba(26,16,32,.45);
+  animation: fadeIn .18s ease;
+}
+
+/* Solo aparece cuando el menu se recoge: en escritorio no hace falta. */
+.tb-menu-btn {
+  display: none;
+  align-items: center; justify-content: center;
+  width: 40px; height: 40px; margin-right: 4px;
+  border-radius: 10px; border: 1.5px solid var(--border);
+  background: var(--surface); color: var(--tx1);
+  font-size: 1.05rem; cursor: pointer; flex-shrink: 0;
+  /* --surface2 y no --bg2: esa ultima se usa en 13 archivos pero no esta
+     definida en ningun lado, asi que resuelve a nada. */
+  &:hover { background: var(--surface2); }
+}
+
+@media (max-width: 900px) {
+  :root { --sw: 0px; }
+
+  .sidebar {
+    width: 265px;
+    transform: translateX(-100%);
+    transition: transform .22s ease;
+    box-shadow: 6px 0 28px rgba(26,16,32,.18);
+    z-index: 300;
+  }
+  .sidebar--abierto { transform: none; }
+
+  .sh-menu-fondo { display: block; }
+  .tb-menu-btn   { display: flex; }
+
+  /* La fecha completa no cabe junto al boton en 768 px. */
+  .tb-date { font-size: .78rem; }
+}
+
+/* En pantallas muy angostas la barra no puede ser mas ancha que la pantalla. */
+@media (max-width: 380px) {
+  .sidebar { width: 88vw; }
+}
+
+@keyframes fadeIn { from { opacity: 0 } to { opacity: 1 } }

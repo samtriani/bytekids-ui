@@ -86,8 +86,9 @@ export class LlamadaFlotanteComponent implements AfterViewInit, OnDestroy {
     this.observador?.disconnect();
     window.removeEventListener('resize', this.alMoverseElMundo);
     window.removeEventListener('scroll', this.alMoverseElMundo, true);
-    document.removeEventListener('mousemove', this.alMover);
-    document.removeEventListener('mouseup', this.alSoltar);
+    document.removeEventListener('pointermove', this.alMover);
+    document.removeEventListener('pointerup', this.alSoltar);
+    document.removeEventListener('pointercancel', this.alSoltar);
   }
 
   private alMoverseElMundo = () => this.sincronizar();
@@ -160,15 +161,27 @@ export class LlamadaFlotanteComponent implements AfterViewInit, OnDestroy {
 
   // ── Arrastrar la ventanita ──────────────────────────────────────────────
 
-  empezarArrastre(e: MouseEvent): void {
+  /**
+   * Eventos de puntero y no de ratón: cubren dedo, lápiz y ratón con una sola
+   * API. Con mousedown/mousemove la ventanita no se podía mover en tablet, que
+   * es justo donde más estorba por el tamaño de la pantalla.
+   *
+   * El CSS pone touch-action:none en la barra; sin eso el navegador entiende
+   * el arrastre como scroll de la página y se lleva el gesto.
+   */
+  empezarArrastre(e: PointerEvent): void {
     if (this.modo !== 'esquina') return;
     e.preventDefault();
     this.arrastre = { dx: e.clientX - this.caja.left, dy: e.clientY - this.caja.top };
-    document.addEventListener('mousemove', this.alMover);
-    document.addEventListener('mouseup', this.alSoltar);
+    document.addEventListener('pointermove', this.alMover);
+    document.addEventListener('pointerup', this.alSoltar);
+    // Si el dedo se sale de la pantalla o el sistema se roba el gesto, el
+    // arrastre tiene que terminar igual: sin esto la caja se queda pegada
+    // al puntero.
+    document.addEventListener('pointercancel', this.alSoltar);
   }
 
-  private alMover = (e: MouseEvent) => {
+  private alMover = (e: PointerEvent) => {
     if (!this.arrastre) return;
     const pos = this.limitar(e.clientY - this.arrastre.dy, e.clientX - this.arrastre.dx, this.caja.height);
     this.esquina = pos;
@@ -177,8 +190,9 @@ export class LlamadaFlotanteComponent implements AfterViewInit, OnDestroy {
 
   private alSoltar = () => {
     this.arrastre = null;
-    document.removeEventListener('mousemove', this.alMover);
-    document.removeEventListener('mouseup', this.alSoltar);
+    document.removeEventListener('pointermove', this.alMover);
+    document.removeEventListener('pointerup', this.alSoltar);
+    document.removeEventListener('pointercancel', this.alSoltar);
   };
 
   // ── Acciones de la barra ────────────────────────────────────────────────
