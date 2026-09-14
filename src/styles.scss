@@ -45,7 +45,12 @@
   --info-lt:#E8F2FA;
 
   /* Layout — deben coincidir con el cromo real que pinta app-shell */
-  --sw: 265px;   /* sidebar width */
+  /* Cuanto se recorre el contenido para dejarle lugar a la barra.
+     En tablet vale 0 porque la barra pasa a ir encima. */
+  --sw: 265px;
+  /* Cuanto mide la barra. NO es lo mismo que lo anterior, y confundirlos
+     dejaba el menu de 0px de ancho en el telefono. */
+  --sw-panel: 265px;
   --th: 62px;    /* topbar height */
 
   /* Radios */
@@ -74,7 +79,7 @@ input,select,textarea { font-family:inherit; }
 /* ── SIDEBAR ─────────────────────────────────────────────────────── */
 .sidebar {
   position:fixed; inset:0 auto 0 0;
-  width:var(--sw);
+  width:var(--sw-panel);
   background:var(--surface);
   border-right:1.5px solid var(--border);
   display:flex; flex-direction:column;
@@ -1081,16 +1086,14 @@ input,select,textarea { font-family:inherit; }
 }
 
 @media (max-width: 900px) {
-  :root { --sw: 0px; }
+  /* Solo el recorrido del contenido. Como lo usan el topbar, el
+     page-wrap, las paginas del alumno y los dashboards, esta linea los
+     acomoda todos de golpe.
 
-  .sidebar {
-    width: 265px;
-    transform: translateX(-100%);
-    transition: transform .22s ease;
-    box-shadow: 6px 0 28px rgba(26,16,32,.18);
-    z-index: 300;
-  }
-  .sidebar--abierto { transform: none; }
+     El esconder y mostrar de la barra vive en shell.component.scss: ahi
+     esta la regla que hay que ganar, y desde aqui se pierde por el
+     atributo que Angular le agrega a los estilos de componente. */
+  :root { --sw: 0px; }
 
   .sh-menu-fondo { display: block; }
   .tb-menu-btn   { display: flex; }
@@ -1099,9 +1102,11 @@ input,select,textarea { font-family:inherit; }
   .tb-date { font-size: .78rem; }
 }
 
-/* En pantallas muy angostas la barra no puede ser mas ancha que la pantalla. */
-@media (max-width: 380px) {
-  .sidebar { width: 88vw; }
+/* En pantallas muy angostas la barra no puede ser mas ancha que la
+   pantalla. Se toca la variable y no la regla: una propiedad personalizada
+   no compite por especificidad con nadie. */
+@media (max-width: 420px) {
+  :root { --sw-panel: 86vw; }
 }
 
 @keyframes fadeIn { from { opacity: 0 } to { opacity: 1 } }

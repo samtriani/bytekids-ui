@@ -6,7 +6,7 @@
 /* ── SIDEBAR ── */
 .sidebar {
   position: fixed; top: 0; left: 0;
-  width: var(--sw); height: 100vh;
+  width: var(--sw-panel); height: 100vh;
   background: var(--bk-bg-card);
   border-right: 1px solid var(--bk-border);
   display: flex; flex-direction: column;
@@ -255,3 +255,22 @@
 .sh-conn-btn:hover { background: rgba(255,255,255,.26); }
 
 @media (prefers-reduced-motion: reduce) { .sh-conn-spin { animation-duration: 2.5s; } }
+
+
+/* ── LA BARRA EN TABLET Y TELEFONO ──────────────────────────────────────
+   Vive aqui y no en styles.scss porque la regla que hay que ganar es la de
+   arriba, y los estilos de componente llevan un atributo que les da mas
+   peso: desde el archivo global se pierde siempre.
+
+   El corte son 900 px: un iPad acostado (1024) conserva la barra, que ahi
+   cabe; parado (768) y cualquier telefono la recogen.                     */
+@media (max-width: 900px) {
+  .sidebar {
+    transform: translateX(-100%);
+    transition: transform .22s ease;
+    box-shadow: 6px 0 28px rgba(26,16,32,.18);
+    /* Por encima del fondo oscuro, que va en 250. */
+    z-index: 300;
+  }
+  .sidebar--abierto { transform: none; }
+}
