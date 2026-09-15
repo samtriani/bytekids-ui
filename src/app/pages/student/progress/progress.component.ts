@@ -103,6 +103,23 @@ export class ProgressComponent implements OnInit, AfterViewInit {
           return { day, active: !!a?.missionsCompleted, missions: a?.missionsCompleted ?? 0, xp: a?.xpEarned ?? 0 };
         }).reverse();
 
+        // La barra se mide contra el mejor dia de ESTA semana, no contra un
+        // numero fijo. Antes era xp/180*100, o sea 180 XP dados por sentados
+        // como techo: un dia de 395 XP daba 219% de alto y la barra se salia
+        // de la tarjeta, encimandose sobre la grafica de arriba. Y al reves
+        // tambien fallaba: una semana floja se veia como puras rayitas.
+        // Se calcula aqui y no en la plantilla porque un metodo en el [style]
+        // se reevalua en cada ciclo de deteccion de cambios; esto cambia solo
+        // cuando llegan datos nuevos.
+        const xpDelMejorDia = Math.max(...this.weekActivity.map(d => d.xp), 0);
+        for (const d of this.weekActivity) {
+          d.alturaPct = (d.active && xpDelMejorDia > 0)
+            // El 8% de piso mantiene visible un dia de poco XP; el tope de 100
+            // es la red de seguridad si algun dia el maximo llegara torcido.
+            ? Math.max(8, Math.min(100, (d.xp / xpDelMejorDia) * 100))
+            : 8;
+        }
+
         this.updateCharts(subjects, xpHistory);
       }
     });

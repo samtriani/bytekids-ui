@@ -34,7 +34,7 @@
         @for (d of weekActivity; track d.day) {
           <div class="day-col" [class.active]="d.active">
             <div class="day-bar-wrap">
-              <div class="day-bar" [style.height]="d.active ? (d.xp/180*100)+'%' : '8%'" [style.background]="d.active ? 'linear-gradient(180deg,#7C3AED,#2563EB)' : 'var(--bk-bg-card2)'"></div>
+              <div class="day-bar" [style.height]="d.alturaPct+'%'" [style.background]="d.active ? 'linear-gradient(180deg,#7C3AED,#2563EB)' : 'var(--bk-bg-card2)'"></div>
             </div>
             <div class="day-xp">{{ d.active ? '+'+d.xp : '—' }}</div>
             <div class="day-label">{{ d.day }}</div>
