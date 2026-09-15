@@ -45,17 +45,61 @@ export class GradebookComponent implements OnInit {
   }
 
   leidosDe(materialId: string): number {
-    return this.filteredStudents.filter(s => this.leyo(s.id, materialId)).length;
+    return this.leidosPorMaterial[materialId] ?? 0;
   }
 
   filterStatus = 'Todos';
   readonly statusFilters = ['Todos', 'Aprobado', 'Rechazado', 'Pendiente', 'Sin entregar'];
 
-  get filteredStudents(): any[] {
-    if (this.filterStatus === 'Todos') return this.students;
-    return this.students.filter(s =>
-      this.content.some(c => this.matchFilter(this.getGrade(s.id, c.id)))
-    );
+  /**
+   * Todo lo derivado de la tabla se calcula UNA vez, cuando llegan los datos o
+   * cambia el filtro, y no en cada ciclo de deteccion de cambios.
+   *
+   * Antes `filteredStudents` era un getter O(alumnos x actividades), y la
+   * plantilla lo pedia una vez por columna --`submittedCount` y `avgScore` por
+   * cada una de las 29 piezas-- mas una vez por material. Cada clic en la
+   * pantalla, incluido Aprobar, rehacia ese trabajo completo decenas de veces
+   * antes de poder pintar. Con un salon de prueba se aguanta; con un grupo
+   * real el maestro paga esa cuenta en cada tecla.
+   */
+  alumnosFiltrados: any[] = [];
+  resumenPieza: Record<string, { entregadas: number; promedio: string }> = {};
+  leidosPorMaterial: Record<string, number> = {};
+
+  setFiltro(f: string) {
+    this.filterStatus = f;
+    this.recalcular();
+  }
+
+  private recalcular(): void {
+    this.alumnosFiltrados = this.filterStatus === 'Todos'
+      ? this.students
+      : this.students.filter(s =>
+          this.content.some(c => this.matchFilter(this.getGrade(s.id, c.id))));
+
+    this.resumenPieza = {};
+    for (const c of this.content) {
+      const notas: number[] = [];
+      let entregadas = 0;
+      for (const s of this.alumnosFiltrados) {
+        const g = this.getGrade(s.id, c.id);
+        if (!g) continue;
+        entregadas++;
+        if (g.score != null) notas.push(g.score as number);
+      }
+      this.resumenPieza[c.id] = {
+        entregadas,
+        promedio: notas.length
+          ? (notas.reduce((a, b) => a + b, 0) / notas.length / 10).toFixed(1)
+          : '—',
+      };
+    }
+
+    this.leidosPorMaterial = {};
+    for (const m of this.materials ?? []) {
+      this.leidosPorMaterial[m.id] =
+        this.alumnosFiltrados.filter(s => this.leyo(s.id, m.id)).length;
+    }
   }
 
   // ── Revision de una entrega ─────────────────────────────────────────────
@@ -68,6 +112,23 @@ export class GradebookComponent implements OnInit {
   errorRevision = '';
 
   formRevision = { score: null as number | null, feedback: '' };
+
+  /**
+   * El texto de la entrega, acotado para pintarlo.
+   *
+   * Un alumno puede recargarse en una tecla y mandar una sola "palabra" de
+   * miles de caracteres. Pintarla completa con overflow-wrap:anywhere obliga al
+   * navegador a buscar puntos de corte caracter por caracter, y eso llega a
+   * congelar la pestana entera: el maestro ni siquiera puede hacer clic en la
+   * nota, porque el navegador nunca termina de acomodar el modal.
+   *
+   * Se corta al pintar y no en la base: la entrega original se conserva intacta
+   * por si hay que revisarla. 4000 caracteres son varias cuartillas; ninguna
+   * respuesta real de un nino se acerca, y lo que se corta se avisa.
+   */
+  textoEntrega = '';
+  entregaRecortada = 0;
+  private static readonly MAX_TEXTO = 4000;
 
   private cacheEntregas: Record<string, any[]> = {};
 
@@ -88,6 +149,11 @@ export class GradebookComponent implements OnInit {
         score: e?.score != null ? e.score / 10 : null,
         feedback: e?.teacherFeedback ?? '',
       };
+
+      const texto = e?.codeSubmitted ?? '';
+      const tope = GradebookComponent.MAX_TEXTO;
+      this.textoEntrega = texto.length > tope ? texto.slice(0, tope) : texto;
+      this.entregaRecortada = Math.max(0, texto.length - tope);
       this.cargandoEntrega = false;
     };
 
@@ -166,6 +232,7 @@ export class GradebookComponent implements OnInit {
         this.materials = data.materials ?? [];
         this.reads     = data.reads     ?? {};
       }
+      this.recalcular();
       this.loading = false;
     });
   }
@@ -203,20 +270,15 @@ export class GradebookComponent implements OnInit {
    * rechazada con esa calificacion cuando no habia ninguna.
    */
   avgScore(contentId: string): string {
-    const scores = this.filteredStudents
-      .map(s => this.getGrade(s.id, contentId))
-      .filter(g => g?.score != null)
-      .map(g => g.score as number);
-    if (!scores.length) return '—';
-    return (scores.reduce((a, b) => a + b, 0) / scores.length / 10).toFixed(1);
+    return this.resumenPieza[contentId]?.promedio ?? '—';
   }
 
   submittedCount(contentId: string): number {
-    return this.filteredStudents.filter(s => !!this.getGrade(s.id, contentId)).length;
+    return this.resumenPieza[contentId]?.entregadas ?? 0;
   }
 
   /** Cuantos alumnos se estan mostrando, para los "x de y" del encabezado. */
-  get totalMostrado(): number { return this.filteredStudents.length; }
+  get totalMostrado(): number { return this.alumnosFiltrados.length; }
 
   /** Texto del vacio: nombra el filtro que dejo la tabla sin nadie. */
   get sinResultados(): string {
