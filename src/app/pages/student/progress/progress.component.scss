@@ -2,7 +2,10 @@
 .week-grid { display:flex; gap:10px; height:180px; padding:10px 0; }
 .day-col { display:flex; flex-direction:column; align-items:center; gap:4px; flex:1; }
 .day-col.active {}
-.day-bar-wrap { flex:1; width:100%; display:flex; align-items:flex-end; }
+// overflow:hidden es la red de seguridad: aunque el calculo del alto vuelva a
+// salirse de rango, la barra se recorta dentro de su columna en vez de
+// invadir la tarjeta de arriba.
+.day-bar-wrap { flex:1; width:100%; display:flex; align-items:flex-end; overflow:hidden; }
 .day-bar { width:100%; border-radius:6px 6px 0 0; min-height:8%; transition:height .4s ease; }
 .day-xp { font-size:.65rem; font-weight:800; color:var(--bk-yellow-light); white-space:nowrap; }
 .day-label { font-size:.78rem; font-weight:800; color:var(--bk-text-muted); }
