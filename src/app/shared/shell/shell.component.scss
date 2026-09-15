@@ -76,9 +76,9 @@
   background: rgba(13,21,48,0.92); backdrop-filter: blur(12px);
   border-bottom: 1px solid var(--bk-border);
   display: flex; align-items: center; justify-content: space-between;
-  padding: 0 28px; z-index: 90;
+  padding: 0 28px; z-index: 90; gap: 10px;
 }
-.tb-date   { font-size: .76rem; color: var(--bk-text-muted); font-weight: 600; }
+.tb-date   { font-size: .76rem; color: var(--bk-text-muted); font-weight: 600; white-space: nowrap; }
 .tb-right  { display: flex; align-items: center; gap: 16px; }
 .tb-notif  { position: relative; cursor: pointer; font-size: 1.05rem; padding: 4px; }
 .tb-dot    { position: absolute; top: 2px; right: 2px; width: 7px; height: 7px; background: var(--bk-pink); border-radius: 50%; border: 2px solid var(--bk-bg-card); }
@@ -273,4 +273,21 @@
     z-index: 300;
   }
   .sidebar--abierto { transform: none; }
+}
+
+
+/* ── EL ENCABEZADO EN TELEFONO ──────────────────────────────────────────
+   Vertical no caben la hamburguesa, la fecha larga y el nombre completo: la
+   fecha se partia en dos lineas y empujaba el resto. Se quita lo que menos
+   falta, en ese orden.                                                    */
+@media (max-width: 560px) {
+  .topbar { padding: 0 12px; gap: 8px; }
+
+  /* El telefono ya trae la fecha en su barra de estado. */
+  .tb-date { display: none; }
+
+  /* Del usuario basta el avatar: el nombre completo esta dentro del menu. */
+  .tb-uname { display: none; }
+  .tb-user  { gap: 4px; }
+  .tb-right { gap: 10px; }
 }

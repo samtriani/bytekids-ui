@@ -1098,8 +1098,8 @@ input,select,textarea { font-family:inherit; }
   .sh-menu-fondo { display: block; }
   .tb-menu-btn   { display: flex; }
 
-  /* La fecha completa no cabe junto al boton en 768 px. */
-  .tb-date { font-size: .78rem; }
+  /* Lo del encabezado --fecha y nombre-- vive en shell.component.scss:
+     esas reglas son del componente y desde aqui se pierde. */
 }
 
 /* En pantallas muy angostas la barra no puede ser mas ancha que la
