@@ -64,7 +64,7 @@ export class MissionsComponent implements OnInit {
     { k: 'material', label: '📚 Materiales' },
   ];
 
-  contarTipo(k: string): number { return this.missions.filter(m => m.type === k).length; }
+  contarTipo(k: string): number { return this.cuenta(this.activeFilter, k); }
   setTipo(k: string) { this.tipoFiltro = this.tipoFiltro === k ? '' : k; }
 
   ngOnInit() {
@@ -153,10 +153,7 @@ export class MissionsComponent implements OnInit {
   }
 
   get filtered() {
-    return this.missions.filter(m =>
-      (this.activeFilter === 'Todas' || m.subject.includes(this.activeFilter)) &&
-      (!this.tipoFiltro || m.type === this.tipoFiltro)
-    );
+    return this.missions.filter(m => this.coincide(m, this.activeFilter, this.tipoFiltro));
   }
 
   setFilter(f: string) { this.activeFilter = f; }
@@ -171,10 +168,31 @@ export class MissionsComponent implements OnInit {
     return this.missions.find(m => m.subject === nombre)?.color ?? '#7C3AED';
   }
 
-  contarMateria(nombre: string): number {
-    return nombre === 'Todas'
-      ? this.missions.length
-      : this.missions.filter(m => m.subject === nombre).length;
+  contarMateria(nombre: string): number { return this.cuenta(nombre, this.tipoFiltro); }
+
+  /**
+   * Cuantas actividades quedarian con esta combinacion de materia y tipo.
+   *
+   * Cada fila de chips muestra el conteo que resultaria de hacer clic en el,
+   * tomando en cuenta lo que ya esta elegido en la OTRA fila. Antes
+   * contarTipo() miraba la lista completa: al elegir una materia, los numeros
+   * de quiz, material y tarea seguian mostrando el total de las dos materias
+   * y no cuadraban con las tarjetas de abajo. El alumno veia "Quizzes 2",
+   * filtraba, y le salia uno.
+   *
+   * Comparte el predicado con `filtered` a proposito. Eran dos copias con
+   * criterios distintos --esta usaba === y la otra includes()-- que hoy dan
+   * lo mismo solo porque los filtros se arman con los nombres exactos de las
+   * materias. Con una sola regla, el numero del chip y la lista que se pinta
+   * no pueden separarse.
+   */
+  private cuenta(materia: string, tipo: string): number {
+    return this.missions.filter(m => this.coincide(m, materia, tipo)).length;
+  }
+
+  private coincide(m: any, materia: string, tipo: string): boolean {
+    return (materia === 'Todas' || m.subject.includes(materia))
+        && (!tipo || m.type === tipo);
   }
 
   startMission(m: any) {
