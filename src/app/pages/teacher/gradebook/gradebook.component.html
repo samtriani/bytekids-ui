@@ -25,7 +25,7 @@
         <label class="label">Filtrar</label>
         <div class="chips">
           @for (f of statusFilters; track f) {
-            <button class="chip" [class.on]="filterStatus===f" (click)="filterStatus=f">{{ f }}</button>
+            <button class="chip" [class.on]="filterStatus===f" (click)="setFiltro(f)">{{ f }}</button>
           }
         </div>
       </div>
@@ -64,7 +64,7 @@
           </tr>
         </thead>
         <tbody>
-          @for (s of filteredStudents; track s.id) {
+          @for (s of alumnosFiltrados; track s.id) {
             <tr class="gb-row">
               <td class="gb-td-student">
                 <div class="gb-student-cell">
@@ -93,7 +93,7 @@
           <!-- Fila promedio: solo si hay alguien de quien promediar. Con un
                filtro que no deja a nadie, una fila de promedios sola parece
                una entrega real. -->
-          @if (filteredStudents.length) {
+          @if (alumnosFiltrados.length) {
             <tr class="gb-row gb-avg-row">
               <td class="gb-td-student" style="font-weight:800;color:var(--tx2)">Promedio</td>
               @for (c of content; track c.id) {
@@ -104,7 +104,7 @@
         </tbody>
       </table>
 
-      @if (!filteredStudents.length) {
+      @if (!alumnosFiltrados.length) {
         <p class="gb-vacio">{{ sinResultados }}</p>
       }
     </div>
@@ -144,7 +144,7 @@
               </tr>
             </thead>
             <tbody>
-              @for (s of filteredStudents; track s.id) {
+              @for (s of alumnosFiltrados; track s.id) {
                 <tr class="gb-row">
                   <td class="gb-td-student">
                     <div class="gb-student-cell">
@@ -204,7 +204,13 @@
 
         <h3 class="rv-h3">📄 Lo que entregó</h3>
         @if (revisando.entrega.codeSubmitted) {
-          <pre class="rv-texto">{{ revisando.entrega.codeSubmitted }}</pre>
+          <pre class="rv-texto">{{ textoEntrega }}</pre>
+          @if (entregaRecortada) {
+            <p class="rv-recorte">
+              Se ocultaron {{ entregaRecortada | number }} caracteres para que la
+              pantalla responda. La entrega completa sigue guardada.
+            </p>
+          }
         } @else {
           <p class="rv-vacio">La entrega no traía texto.</p>
         }

@@ -79,7 +79,18 @@
   background: var(--surface2); border: 1.5px solid var(--border);
   border-radius: var(--r2); font-family: inherit; font-size: 13px;
   line-height: 1.6; color: var(--tx2); white-space: pre-wrap;
-  overflow-wrap: anywhere; max-height: 260px; overflow-y: auto;
+  // word-break:break-all en vez de overflow-wrap:anywhere: 'anywhere' hace que
+  // el texto participe en el calculo de ancho minimo del contenedor, asi que
+  // una palabra larguisima obliga a recorrer todos los cortes posibles y se
+  // paga en cada reacomodo del modal. 'break-all' corta igual y no arrastra
+  // ese calculo.
+  word-break: break-all; max-height: 260px; overflow-y: auto;
+  // Aisla el acomodo de esta caja del resto del modal: pase lo que pase con el
+  // texto, no puede volver a dejar sin respuesta los campos de calificar.
+  contain: content;
+}
+.rv-recorte {
+  margin: -12px 0 16px; font-size: 12px; color: var(--tx4); font-style: italic;
 }
 .rv-vacio { margin: 0 0 16px; font-size: 12.5px; color: var(--tx4); font-style: italic; }
 
