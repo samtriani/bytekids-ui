@@ -153,7 +153,12 @@ export class GradebookComponent implements OnInit {
       const texto = e?.codeSubmitted ?? '';
       const tope = GradebookComponent.MAX_TEXTO;
       this.textoEntrega = texto.length > tope ? texto.slice(0, tope) : texto;
-      this.entregaRecortada = Math.max(0, texto.length - tope);
+      // El backend ya manda el texto acotado, asi que el largo real viene
+      // aparte en codeLength: sin ese dato el aviso diria "no falta nada"
+      // justo cuando mas falta. Si un backend viejo no lo manda, se cae al
+      // largo de lo recibido y el aviso simplemente no aparece.
+      const largoReal = e?.codeLength ?? texto.length;
+      this.entregaRecortada = Math.max(0, largoReal - this.textoEntrega.length);
       this.cargandoEntrega = false;
     };
 
