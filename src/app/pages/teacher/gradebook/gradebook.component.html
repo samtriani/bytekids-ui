@@ -148,8 +148,8 @@
                 <tr class="gb-row">
                   <td class="gb-td-student">
                     <div class="gb-student-cell">
-                      <span class="gb-avatar">{{ s.initials }}</span>
-                      <span>{{ s.name }}</span>
+                      <div class="gb-av">{{ s.initials || '?' }}</div>
+                      <span class="gb-student-name">{{ s.name }}</span>
                     </div>
                   </td>
                   @for (m of materials; track m.id) {
