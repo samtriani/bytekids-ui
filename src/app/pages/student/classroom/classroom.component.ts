@@ -8,6 +8,7 @@ import { AiTutorService, ChatMessage } from '../../../services/ai-tutor.service'
 import { AuthService } from '../../../services/auth.service';
 import { LlamadaService } from '../../../services/llamada.service';
 import { catchError, of } from 'rxjs';
+import { formatearSaltos } from '../../../shared/formato-chat';
 
 @Component({
   selector: 'app-student-classroom',
@@ -17,6 +18,9 @@ import { catchError, of } from 'rxjs';
   styleUrls: ['./classroom.component.scss'],
 })
 export class StudentClassroomComponent implements OnInit, OnDestroy, AfterViewChecked {
+  /** La plantilla lo usa para pintar las burbujas del chat. */
+  readonly formatearSaltos = formatearSaltos;
+
   @ViewChild('chatEnd') chatEnd!: ElementRef;
   /** El hueco donde se acopla la videollamada mientras estas en el aula. */
   @ViewChild('huecoVideo') huecoVideo?: ElementRef<HTMLElement>;

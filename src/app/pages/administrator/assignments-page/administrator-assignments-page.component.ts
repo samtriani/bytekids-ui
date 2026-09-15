@@ -11,6 +11,7 @@ import { SubjectService } from '../../../services/api/subject-api.service';
 import { ContentApiService } from '../../../services/api/content-api.service';
 import { ScheduleApiService } from '../../../services/api/schedule-api.service';
 import { ADMINISTRATOR_NAV_ITEMS } from '../shared/administrator-nav';
+import { escaparHtml } from '../../../shared/formato-chat';
 
 @Component({
   selector: 'app-administrator-assignments-page',
@@ -342,7 +343,7 @@ export class AdministratorAssignmentsPageComponent implements OnInit {
     if (!c || !salon) return;
     this.openConfirm(
       'Quitar del salón',
-      `<strong>"${c.title}"</strong> dejará de aparecerles a los alumnos de este ` +
+      `<strong>"${escaparHtml(c.title)}"</strong> dejará de aparecerles a los alumnos de este ` +
       `salón. La pieza no se borra y sigue en el plan base; las entregas que ya ` +
       `hicieron se conservan.`,
       () => this.contentApi.unassignFromClassroom(c.id, salon).subscribe({
@@ -552,7 +553,7 @@ export class AdministratorAssignmentsPageComponent implements OnInit {
   deactivateClassroom(classroomId: string, name: string) {
     this.openConfirm(
       `Dar de baja salón`,
-      `¿Estás seguro de dar de baja el salón <strong>"${name}"</strong>? Quedará inactivo y no aparecerá en las vistas activas.`,
+      `¿Estás seguro de dar de baja el salón <strong>"${escaparHtml(name)}"</strong>? Quedará inactivo y no aparecerá en las vistas activas.`,
       () => this.run(
         this.administratorApi.deactivateClassroom(classroomId),
         `Salón "${name}" dado de baja`

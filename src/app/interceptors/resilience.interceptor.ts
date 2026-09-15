@@ -15,11 +15,19 @@ import { LlamadaService } from '../services/llamada.service';
 const MAX_REINTENTOS = 5;
 const ESPERA_MS = [800, 1500, 3000, 5000, 8000];
 
-/** Errores que valen la pena reintentar: el backend esta despertando o saturado. */
+/**
+ * Errores que valen la pena reintentar: el backend esta despertando o saturado.
+ *
+ * El 429 NO esta en la lista, aunque parezca transitorio. Desde que
+ * /auth/login tiene freno de fuerza bruta, un 429 es el servidor diciendo
+ * "ya fueron demasiados intentos": reintentarlo cinco veces con espera
+ * creciente golpea el endpoint justo cuando pidio calma y ademas alarga el
+ * castigo, porque cada intento cuenta. Es un error que el usuario tiene que
+ * ver, no uno que la app deba absorber a sus espaldas.
+ */
 function esTransitorio(e: HttpErrorResponse): boolean {
   return e.status === 0        // sin red o request abortado
       || e.status === 408      // timeout
-      || e.status === 429      // rate limit
       || e.status === 502      // bad gateway (la maquina aun no responde)
       || e.status === 503      // service unavailable
       || e.status === 504;     // gateway timeout

@@ -395,7 +395,7 @@
             @for (msg of messages; track $index) {
               <div class="aula-msg" [class.aula-msg--bot]="msg.role==='assistant'" [class.aula-msg--user]="msg.role==='user'">
                 @if (msg.role === 'assistant') { <div class="aula-msg-avatar">🤖</div> }
-                <div class="aula-msg-bubble" [innerHTML]="msg.content.replace('\n','<br>')"></div>
+                <div class="aula-msg-bubble" [innerHTML]="formatearSaltos(msg.content)"></div>
                 @if (msg.role === 'user') { <div class="aula-msg-avatar aula-msg-avatar--user">{{ teacherInitials }}</div> }
               </div>
             }

@@ -5,6 +5,7 @@ import { RouterLink } from '@angular/router';
 import { ShellComponent } from '../../../shared/shell/shell.component';
 import { TEACHER_NAV } from '../shared/teacher-nav';
 import { AiTutorService, ChatMessage } from '../../../services/ai-tutor.service';
+import { formatearMensaje } from '../../../shared/formato-chat';
 
 @Component({ selector: 'app-ai-assistant-teacher', standalone: true,
   imports: [CommonModule, FormsModule, RouterLink, ShellComponent],
@@ -47,6 +48,6 @@ export class AiAssistantComponent implements AfterViewChecked {
     this.isLoading=false; this.shouldScroll=true;
   }
   onKeydown(e: KeyboardEvent) { if(e.key==='Enter'&&!e.shiftKey){e.preventDefault();this.send();} }
-  formatMessage(c: string) { return c.replace(/```(\w*)\n?([\s\S]*?)```/g,'<pre class="code-block"><code>$2</code></pre>').replace(/`([^`]+)`/g,'<code class="inline-code">$1</code>').replace(/\*\*(.*?)\*\*/g,'<strong>$1</strong>').replace(/\n/g,'<br>'); }
+  formatMessage(c: string) { return formatearMensaje(c); }
   clearChat() { this.messages = [this.messages[0]]; }
 }
