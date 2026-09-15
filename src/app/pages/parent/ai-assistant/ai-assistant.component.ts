@@ -5,6 +5,7 @@ import { RouterLink } from '@angular/router';
 import { ShellComponent, NavItem } from '../../../shared/shell/shell.component';
 import { AiTutorService, ChatMessage } from '../../../services/ai-tutor.service';
 import { AuthService } from '../../../services/auth.service';
+import { formatearMensaje } from '../../../shared/formato-chat';
 
 @Component({ selector: 'app-ai-assistant-parent', standalone: true,
   imports: [CommonModule, FormsModule, RouterLink, ShellComponent],
@@ -58,6 +59,6 @@ export class AiAssistantComponent implements AfterViewChecked {
     this.isLoading=false; this.shouldScroll=true;
   }
   onKeydown(e: KeyboardEvent) { if(e.key==='Enter'&&!e.shiftKey){e.preventDefault();this.send();} }
-  formatMessage(c: string) { return c.replace(/```[\s\S]*?```/g,'<pre class="code-block"><code>...</code></pre>').replace(/`([^`]+)`/g,'<code class="inline-code">$1</code>').replace(/\*\*(.*?)\*\*/g,'<strong>$1</strong>').replace(/\n/g,'<br>'); }
+  formatMessage(c: string) { return formatearMensaje(c); }
   clearChat() { this.messages = [this.messages[0]]; }
 }

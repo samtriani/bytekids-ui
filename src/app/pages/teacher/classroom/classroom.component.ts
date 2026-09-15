@@ -11,6 +11,7 @@ import { AuthService } from '../../../services/auth.service';
 import { LlamadaService } from '../../../services/llamada.service';
 import { CuerpoActividad, CUERPO_VACIO } from '../../../shared/mission-body';
 import { catchError, of, forkJoin } from 'rxjs';
+import { formatearSaltos } from '../../../shared/formato-chat';
 
 @Component({
   selector: 'app-teacher-classroom',
@@ -20,6 +21,9 @@ import { catchError, of, forkJoin } from 'rxjs';
   styleUrls: ['./classroom.component.scss'],
 })
 export class TeacherClassroomComponent implements OnInit, OnDestroy, AfterViewChecked {
+  /** La plantilla lo usa para pintar las burbujas del chat. */
+  readonly formatearSaltos = formatearSaltos;
+
   @ViewChild('chatEnd') chatEnd!: ElementRef;
   /** El hueco donde se acopla la videollamada mientras estas en el aula. */
   @ViewChild('huecoVideo') huecoVideo?: ElementRef<HTMLElement>;

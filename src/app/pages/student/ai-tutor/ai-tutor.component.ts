@@ -7,6 +7,7 @@ import { AiTutorService, ChatMessage } from '../../../services/ai-tutor.service'
 import { MissionStateService } from '../../../services/mission-state.service';
 import { AuthService } from '../../../services/auth.service';
 import { STUDENT_NAV } from '../shared/student-nav';
+import { formatearMensaje } from '../../../shared/formato-chat';
 
 @Component({
   selector: 'app-ai-tutor',
@@ -231,11 +232,5 @@ export class AiTutorComponent implements AfterViewChecked, OnInit {
     this.exchangeCount = 0;
   }
 
-  formatMessage(content: string): string {
-    return content
-      .replace(/```(\w*)\n?([\s\S]*?)```/g, '<pre class="code-block"><code>$2</code></pre>')
-      .replace(/`([^`]+)`/g, '<code class="inline-code">$1</code>')
-      .replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>')
-      .replace(/\n/g, '<br>');
-  }
+  formatMessage(content: string): string { return formatearMensaje(content); }
 }

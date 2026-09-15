@@ -7,6 +7,7 @@ import { AiTutorService, ChatMessage } from '../../../services/ai-tutor.service'
 import { UserApiService } from '../../../services/api/user-api.service';
 import { ClassroomApiService } from '../../../services/api/classroom-api.service';
 import { forkJoin } from 'rxjs';
+import { formatearMensaje } from '../../../shared/formato-chat';
 
 @Component({ selector: 'app-ai-reports', standalone: true,
   imports: [CommonModule, FormsModule, RouterLink, ShellComponent],
@@ -85,6 +86,6 @@ export class AiReportsComponent implements OnInit, AfterViewChecked {
     this.isLoading=false; this.shouldScroll=true;
   }
   onKeydown(e: KeyboardEvent) { if(e.key==='Enter'&&!e.shiftKey){e.preventDefault();this.send();} }
-  formatMessage(c: string) { return c.replace(/\*\*(.*?)\*\*/g,'<strong>$1</strong>').replace(/\n/g,'<br>'); }
+  formatMessage(c: string) { return formatearMensaje(c); }
   clearChat() { this.messages = [this.messages[0]]; }
 }
