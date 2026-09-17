@@ -14,7 +14,10 @@
 
 /* La conversación necesita alto fijo: si crece con el contenido, el recuadro
    de escribir se va bajando y el niño lo pierde de vista. */
-.msg-layout {
+/* No se llama .msg-layout a proposito: ese nombre es la RAIZ de las
+   paginas del maestro y del papa, y styles.scss le pone el margen del
+   menu lateral. Aqui la raiz es .msg-page, que ya lo trae. */
+.msg-cols {
   display: grid; grid-template-columns: 320px 1fr; gap: 16px;
   height: calc(100vh - 210px); min-height: 460px;
 }
@@ -172,7 +175,7 @@
 }
 
 @media (max-width: 900px) {
-  .msg-layout { grid-template-columns: 1fr; height: auto; }
+  .msg-cols { grid-template-columns: 1fr; height: auto; }
   .msg-lista  { max-height: 260px; }
   .msg-hilo-panel { height: 60vh; }
 }
