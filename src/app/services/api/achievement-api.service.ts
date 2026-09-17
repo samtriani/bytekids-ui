@@ -17,6 +17,15 @@ export class AchievementApiService {
     return this.http.get<any>(`${BASE}/me`).pipe(map(r => r.data ?? []));
   }
 
+  /**
+   * Lo ultimo que desbloquearon los companeros DE SU SALON. El backend lo
+   * acota; el cliente no manda a quien preguntar.
+   */
+  getLogrosDeMiSalon(limit = 8): Observable<any[]> {
+    return this.http.get<any>(`${BASE}/mi-salon/recientes?limit=${limit}`)
+      .pipe(map(r => r.data ?? []));
+  }
+
   getStudentAchievements(studentId: string): Observable<any[]> {
     return this.http.get<any>(`${BASE}/students/${studentId}`).pipe(map(r => r.data ?? []));
   }
