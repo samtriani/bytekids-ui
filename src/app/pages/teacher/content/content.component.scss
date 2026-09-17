@@ -41,14 +41,14 @@
   display: flex; flex-wrap: wrap; gap: 10px; align-items: center;
   margin-bottom: 20px;
 }
-.mc-buscar, .mc-select {
+.mc-buscar {
   font-family: inherit; font-size: 13px; color: var(--tx1);
   padding: 9px 12px; border: 1.5px solid var(--border);
   border-radius: var(--r2); background: var(--surface);
   transition: border-color .15s, box-shadow .15s;
 }
 .mc-buscar { flex: 1 1 260px; min-width: 0; }
-.mc-buscar:focus, .mc-select:focus {
+.mc-buscar:focus {
   outline: none; border-color: var(--guinda);
   box-shadow: 0 0 0 3px var(--guinda-a10);
 }
@@ -249,4 +249,98 @@
 .mc-guia-pie {
   margin: 10px 0 0; padding-top: 8px; border-top: 1px solid var(--guinda-a10);
   font-size: 11px; color: var(--tx4);
+}
+
+/* ── Selector de materias ─────────────────────────────────────────────
+   Va antes que el buscador y los tipos: es el primer corte que hace un
+   maestro, y ahora manda sobre si se lista algo o no.                  */
+.mc-materias {
+  display: flex; align-items: flex-start; gap: 12px;
+  margin-bottom: 14px;
+}
+.mc-materias-lbl {
+  font-size: .72rem; font-weight: 900; letter-spacing: .06em;
+  text-transform: uppercase; color: var(--tx3);
+  padding-top: 13px; flex-shrink: 0;
+}
+
+.mc-mat-campo {
+  position: relative; flex: 1; min-width: 0;
+  display: flex; flex-wrap: wrap; align-items: center; gap: 6px;
+  padding: 7px 10px; border-radius: 12px;
+  border: 1.5px solid var(--border); background: var(--surface);
+  &:focus-within { border-color: var(--guinda); }
+}
+.mc-mat-input {
+  flex: 1; min-width: 160px; border: none; outline: none;
+  background: transparent; font-family: inherit;
+  font-size: .85rem; color: var(--tx1); padding: 5px 2px;
+}
+
+.mc-mat-chip {
+  display: inline-flex; align-items: center; gap: 6px;
+  padding: 4px 6px 4px 10px; border-radius: 999px;
+  border: 1.5px solid; font-size: .78rem; font-weight: 800;
+  white-space: nowrap;
+}
+.mc-mat-quitar {
+  border: none; background: transparent; cursor: pointer;
+  color: inherit; opacity: .6; font-size: .8rem; line-height: 1;
+  padding: 2px 4px; border-radius: 50%;
+  &:hover { opacity: 1; background: rgba(0,0,0,.08); }
+}
+
+.mc-mat-sugerencias {
+  position: absolute; top: calc(100% + 5px); left: 0; right: 0; z-index: 40;
+  margin: 0; padding: 5px; list-style: none;
+  max-height: 260px; overflow-y: auto;
+  background: var(--surface); border: 1px solid var(--border);
+  border-radius: 12px; box-shadow: 0 10px 30px rgba(26,16,32,.14);
+}
+.mc-mat-sug {
+  display: flex; align-items: center; gap: 9px;
+  padding: 9px 10px; border-radius: 9px; cursor: pointer;
+  &:hover { background: var(--surface2); }
+}
+.mc-mat-punto { width: 9px; height: 9px; border-radius: 50%; flex-shrink: 0; }
+.mc-mat-sug-nom {
+  flex: 1; min-width: 0; font-size: .84rem; font-weight: 700; color: var(--tx1);
+  white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+}
+.mc-mat-sug-n { font-size: .72rem; color: var(--tx3); flex-shrink: 0; }
+
+/* ── El vacío que en realidad es el selector ──────────────────────────
+   Entrar y no ver nada se siente roto, asi que en vez de una pantalla en
+   blanco se muestran las materias con su tamano: se elige de aqui igual
+   que escribiendo arriba.                                              */
+.mc-elige { padding: 18px 0 8px; }
+.mc-elige-titulo {
+  font-size: 1.05rem; font-weight: 900; color: var(--tx1); margin: 0 0 4px;
+}
+.mc-elige-sub {
+  font-size: .85rem; color: var(--tx3); margin: 0 0 18px; max-width: 62ch;
+}
+.mc-elige-rejilla {
+  display: grid; grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
+  gap: 12px;
+}
+.mc-elige-card {
+  position: relative; overflow: hidden;
+  display: flex; flex-direction: column; align-items: flex-start; gap: 3px;
+  padding: 16px 16px 14px 20px; border-radius: 14px;
+  border: 1.5px solid var(--border); background: var(--surface);
+  cursor: pointer; text-align: left; transition: transform .15s, box-shadow .15s;
+  &:hover { transform: translateY(-2px); box-shadow: 0 8px 24px rgba(26,16,32,.10); }
+}
+.mc-elige-barra { position: absolute; left: 0; top: 0; bottom: 0; width: 5px; }
+.mc-elige-icono { font-size: 1.5rem; }
+.mc-elige-nom   { font-size: .92rem; font-weight: 900; line-height: 1.3; }
+.mc-elige-meta  { font-size: .76rem; color: var(--tx3); }
+
+/* La materia se reconoce por su color, igual que en el resto de la app. */
+.mc-grupo-titulo { border-left: 4px solid transparent; padding-left: 10px; }
+
+@media (max-width: 700px) {
+  .mc-materias { flex-direction: column; gap: 6px; }
+  .mc-materias-lbl { padding-top: 0; }
 }
