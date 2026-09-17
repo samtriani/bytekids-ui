@@ -63,7 +63,44 @@
       }
     </div>
 
+    <!-- Materias: el primer corte que hace un maestro, asi que va primero -->
+    <div class="mc-materias">
+      <label class="mc-materias-lbl" for="mc-mat">Materias</label>
+
+      <div class="mc-mat-campo">
+        @for (m of materiasSel; track m) {
+          <span class="mc-mat-chip"
+                [style.background]="colorDe(m) + '18'"
+                [style.border-color]="colorDe(m) + '55'"
+                [style.color]="colorDe(m)">
+            {{ iconoDe(m) }} {{ m }}
+            <button class="mc-mat-quitar" (click)="quitarMateria(m)"
+                    [attr.aria-label]="'Quitar ' + m">✕</button>
+          </span>
+        }
+        <input id="mc-mat" class="mc-mat-input" type="text"
+               [(ngModel)]="materiaBusqueda"
+               (focus)="sugerenciasAbiertas = true"
+               (blur)="cerrarSugerencias()"
+               [placeholder]="materiasSel.length ? 'Añadir otra…' : 'Escribe o elige una materia…'"
+               autocomplete="off">
+
+        @if (sugerenciasAbiertas && materiasSugeridas.length) {
+          <ul class="mc-mat-sugerencias">
+            @for (m of materiasSugeridas; track m.nombre) {
+              <li class="mc-mat-sug" (mousedown)="elegirMateria(m)">
+                <span class="mc-mat-punto" [style.background]="m.color"></span>
+                <span class="mc-mat-sug-nom">{{ m.icono }} {{ m.nombre }}</span>
+                <span class="mc-mat-sug-n">{{ m.piezas }} piezas</span>
+              </li>
+            }
+          </ul>
+        }
+      </div>
+    </div>
+
     <!-- Filtros -->
+    @if (materiasSel.length) {
     <div class="mc-filtros">
       <input class="mc-buscar" type="search" [(ngModel)]="busqueda"
              placeholder="Buscar por título o descripción…" aria-label="Buscar contenido">
@@ -82,21 +119,36 @@
         }
       </div>
 
-      @if (materias.length > 1) {
-        <select class="mc-select" [(ngModel)]="matFiltro" aria-label="Filtrar por materia">
-          <option value="">Todas las materias</option>
-          @for (m of materias; track m) {
-            <option [value]="m">{{ m }}</option>
-          }
-        </select>
-      }
 
       @if (hayFiltros) {
         <button class="mc-btn-ghost" (click)="limpiarFiltros()">Limpiar filtros</button>
       }
     </div>
+    }
 
-    @if (!filtrado.length) {
+    @if (!materiasSel.length) {
+      <!-- No es una pantalla vacia: es el selector. Elegir de aqui es lo
+           mismo que escribir arriba, y ademas deja ver el tamano de cada
+           materia antes de abrirla. -->
+      <div class="mc-elige">
+        <h2 class="mc-elige-titulo">¿Qué materia quieres ver?</h2>
+        <p class="mc-elige-sub">
+          Tienes {{ piezasEnCatalogo }} piezas en total. Elige una o varias
+          materias para verlas; las de arriba también se pueden escribir.
+        </p>
+        <div class="mc-elige-rejilla">
+          @for (m of materias; track m.nombre) {
+            <button class="mc-elige-card" (click)="elegirMateria(m)"
+                    [style.border-color]="m.color + '40'">
+              <span class="mc-elige-barra" [style.background]="m.color"></span>
+              <span class="mc-elige-icono">{{ m.icono }}</span>
+              <span class="mc-elige-nom" [style.color]="m.color">{{ m.nombre }}</span>
+              <span class="mc-elige-meta">{{ m.piezas }} piezas · {{ m.xp }} XP</span>
+            </button>
+          }
+        </div>
+      </div>
+    } @else if (!filtrado.length) {
       <div class="mc-state">
         <div class="mc-state-icon">🔍</div>
         <h2>Nada coincide con ese filtro</h2>
@@ -107,9 +159,9 @@
     <!-- Listado agrupado por materia -->
     @for (g of grupos; track g.materia) {
       <section class="mc-grupo">
-        <h2 class="mc-grupo-titulo">
+        <h2 class="mc-grupo-titulo" [style.border-left-color]="g.color">
           <span class="mc-grupo-icono">{{ g.icono }}</span>
-          {{ g.materia }}
+          <span [style.color]="g.color">{{ g.materia }}</span>
           <span class="mc-grupo-meta">{{ g.piezas.length }} piezas · {{ g.xp }} XP</span>
         </h2>
 

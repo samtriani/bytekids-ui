@@ -22,7 +22,16 @@ const DIF_LABEL: Record<string, string> = {
   facil: 'Fácil', medio: 'Medio', dificil: 'Difícil',
 };
 
-interface Grupo { materia: string; icono: string; piezas: any[]; xp: number; }
+interface Grupo { materia: string; icono: string; color: string; piezas: any[]; xp: number; }
+
+/** Una materia del catalogo, con lo que hace falta para elegirla. */
+interface Materia {
+  nombre: string;
+  icono: string;
+  color: string;
+  piezas: number;
+  xp: number;
+}
 
 /**
  * Guia para dar la clase. Vive dentro de content_body bajo la llave
@@ -56,7 +65,12 @@ export class TeacherContentComponent implements OnInit {
   // Filtros
   busqueda   = '';
   tipoFiltro: Tipo | '' = '';
-  matFiltro  = '';
+
+  /** Las materias elegidas. Vacio = todavia no se lista nada. */
+  materiasSel: string[] = [];
+  /** Lo que se escribe en el autocompletado de materias. */
+  materiaBusqueda = '';
+  sugerenciasAbiertas = false;
 
   // Feedback y confirmación
   okMsg    = '';
@@ -85,15 +99,80 @@ export class TeacherContentComponent implements OnInit {
   get userName():   string { return this.auth.getUser()?.displayName || 'Maestro'; }
   get userAvatar(): string { return this.auth.getUser()?.initials    || 'MA'; }
 
-  get materias(): string[] {
-    return [...new Set(this.todo.map(c => c.subjectName).filter(Boolean))].sort();
+  /**
+   * Las materias del catalogo, con su color. El color viene del backend en
+   * subjectColor y es como se reconoce una materia en toda la plataforma;
+   * esta pantalla era la unica que lo ignoraba.
+   */
+  get materias(): Materia[] {
+    const mapa = new Map<string, Materia>();
+    for (const c of this.todo) {
+      const nombre = c.subjectName || 'Sin materia';
+      if (!mapa.has(nombre)) {
+        mapa.set(nombre, {
+          nombre,
+          icono: c.subjectIcon  || '📘',
+          color: c.subjectColor || '#7A1535',
+          piezas: 0, xp: 0,
+        });
+      }
+      const m = mapa.get(nombre)!;
+      m.piezas++;
+      m.xp += c.xpReward ?? 0;
+    }
+    return [...mapa.values()].sort((a, b) => a.nombre.localeCompare(b.nombre));
+  }
+
+  /** Las que faltan por elegir, filtradas por lo que se va escribiendo. */
+  get materiasSugeridas(): Materia[] {
+    const q = this.materiaBusqueda.trim().toLowerCase();
+    return this.materias.filter(m =>
+      !this.materiasSel.includes(m.nombre) &&
+      (!q || m.nombre.toLowerCase().includes(q)));
+  }
+
+  colorDe(nombre: string): string {
+    return this.materias.find(m => m.nombre === nombre)?.color ?? '#7A1535';
+  }
+
+  iconoDe(nombre: string): string {
+    return this.materias.find(m => m.nombre === nombre)?.icono ?? '📘';
+  }
+
+  elegirMateria(m: Materia): void {
+    if (!this.materiasSel.includes(m.nombre)) this.materiasSel = [...this.materiasSel, m.nombre];
+    this.materiaBusqueda = '';
+    this.sugerenciasAbiertas = false;
+  }
+
+  quitarMateria(nombre: string): void {
+    this.materiasSel = this.materiasSel.filter(n => n !== nombre);
+  }
+
+  /**
+   * El clic en una sugerencia se atiende en mousedown y no en click: el
+   * blur del campo cierra la lista antes de que llegue el click, y la
+   * eleccion se perderia.
+   */
+  cerrarSugerencias(): void {
+    setTimeout(() => this.sugerenciasAbiertas = false, 120);
+  }
+
+  /**
+   * Lo que cae dentro de las materias elegidas. Con ninguna elegida es
+   * vacio a proposito: al entrar se volcaban las 29 piezas de todas las
+   * materias y no habia forma de leer eso.
+   */
+  get deLasMaterias(): any[] {
+    if (!this.materiasSel.length) return [];
+    return this.todo.filter(c =>
+      this.materiasSel.includes(c.subjectName || 'Sin materia'));
   }
 
   get filtrado(): any[] {
     const q = this.busqueda.trim().toLowerCase();
-    return this.todo.filter(c =>
+    return this.deLasMaterias.filter(c =>
       (!this.tipoFiltro || c.type === this.tipoFiltro) &&
-      (!this.matFiltro  || c.subjectName === this.matFiltro) &&
       (!q || (c.title ?? '').toLowerCase().includes(q)
           || (c.description ?? '').toLowerCase().includes(q))
     );
@@ -105,7 +184,12 @@ export class TeacherContentComponent implements OnInit {
     for (const c of this.filtrado) {
       const materia = c.subjectName || 'Sin materia';
       if (!mapa.has(materia)) {
-        mapa.set(materia, { materia, icono: c.subjectIcon || '📘', piezas: [], xp: 0 });
+        mapa.set(materia, {
+          materia,
+          icono: c.subjectIcon  || '📘',
+          color: c.subjectColor || '#7A1535',
+          piezas: [], xp: 0,
+        });
       }
       const g = mapa.get(materia)!;
       g.piezas.push(c);
@@ -117,13 +201,25 @@ export class TeacherContentComponent implements OnInit {
     return [...mapa.values()].sort((a, b) => a.materia.localeCompare(b.materia));
   }
 
-  // KPIs sobre el total, no sobre lo filtrado
-  get totalPiezas():  number { return this.todo.length; }
-  get totalXp():      number { return this.todo.reduce((s, c) => s + (c.xpReward ?? 0), 0); }
-  get totalMinutos(): number { return this.todo.reduce((s, c) => s + (c.estimatedMinutes ?? 0), 0); }
-  get sinPublicar():  number { return this.todo.filter(c => !c.isPublished).length; }
+  /**
+   * Los numeros de arriba siguen a las materias elegidas, y son del catalogo
+   * completo mientras no se elija ninguna. Antes eran siempre del total: con
+   * una materia filtrada decian 29 piezas mientras abajo se veian 12.
+   */
+  private get base(): any[] {
+    return this.materiasSel.length ? this.deLasMaterias : this.todo;
+  }
 
-  conteo(t: Tipo): number { return this.todo.filter(c => c.type === t).length; }
+  get totalPiezas():  number { return this.base.length; }
+  get totalXp():      number { return this.base.reduce((s, c) => s + (c.xpReward ?? 0), 0); }
+  get totalMinutos(): number { return this.base.reduce((s, c) => s + (c.estimatedMinutes ?? 0), 0); }
+  get sinPublicar():  number { return this.base.filter(c => !c.isPublished).length; }
+
+  /** El conteo del chip cuadra con lo que se va a listar al pulsarlo. */
+  conteo(t: Tipo): number { return this.base.filter(c => c.type === t).length; }
+
+  /** Cuantas piezas hay en el catalogo entero, para el texto del selector. */
+  get piezasEnCatalogo(): number { return this.todo.length; }
 
   // ── Guia del maestro ────────────────────────────────────────────────────
   private guiasAbiertas = new Set<string>();
@@ -160,11 +256,12 @@ export class TeacherContentComponent implements OnInit {
   }
 
   limpiarFiltros() {
-    this.busqueda = ''; this.tipoFiltro = ''; this.matFiltro = '';
+    this.busqueda = ''; this.tipoFiltro = ''; this.materiasSel = [];
+    this.materiaBusqueda = '';
   }
 
   get hayFiltros(): boolean {
-    return !!(this.busqueda || this.tipoFiltro || this.matFiltro);
+    return !!(this.busqueda || this.tipoFiltro || this.materiasSel.length);
   }
 
   nuevo() {
