@@ -46,6 +46,16 @@ export class ProgressApiService {
     return this.http.get<any>(`${BASE}/students/${studentId}/activity`).pipe(map(r => r.data ?? []));
   }
 
+  /**
+   * El ranking DE SU SALON. Distinto de getLeaderboard, que es global:
+   * ese le ensena a un nino nombres completos de menores de otros grupos.
+   * El backend decide el alcance, aqui no se manda a quien incluir.
+   */
+  getLeaderboardDeMiSalon(limit = 5): Observable<any[]> {
+    return this.http.get<any>(`${BASE}/leaderboard/mi-salon?limit=${limit}`)
+      .pipe(map(r => r.data ?? []));
+  }
+
   getLeaderboard(limit = 10): Observable<any[]> {
     return this.http.get<any>(`${BASE}/leaderboard?limit=${limit}`).pipe(map(r => r.data ?? []));
   }
