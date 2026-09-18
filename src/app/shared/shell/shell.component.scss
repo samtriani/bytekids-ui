@@ -225,6 +225,54 @@
 .sh-btn-ghost { background: none; color: var(--bk-text); border: 1px solid var(--bk-border); }
 .sh-btn-ghost:hover { background: var(--bk-bg-hover); }
 
+/* ── CAMBIAR MI CONTRASEÑA ───────────────────────────────────
+   El modal de arriba centra su texto, que para una confirmación está bien.
+   Un formulario no: las etiquetas y los avisos de error van a la izquierda,
+   pegados a su campo, o el ojo no sabe cuál de los tres está mal.           */
+.sh-modal--clave { max-width: 420px; }
+
+.sh-clave-campos {
+  display: flex; flex-direction: column; gap: 14px;
+  text-align: left; margin-bottom: 18px;
+}
+
+.sh-campo { display: flex; flex-direction: column; gap: 6px; }
+.sh-campo > span {
+  font-size: .78rem; font-weight: 700; color: var(--bk-text);
+}
+.sh-campo input {
+  font-family: inherit; font-size: .88rem; color: var(--bk-text);
+  background: var(--surface2, #F8F8FA);
+  border: 1px solid var(--bk-border); border-radius: 9px;
+  padding: 10px 12px; width: 100%;
+  transition: border-color .15s, box-shadow .15s;
+}
+.sh-campo input::placeholder { color: var(--bk-text-dim); }
+.sh-campo input:focus {
+  outline: none; border-color: var(--bk-purple);
+  box-shadow: 0 0 0 3px rgba(122,21,53,.14);
+}
+.sh-campo-mal { font-size: .74rem; font-weight: 600; color: var(--danger, #9B1414); }
+
+/* Ver lo que se escribe: sin esto, un niño que teclea a ciegas se equivoca
+   en los dos campos nuevos y se queda fuera de su propia cuenta. */
+.sh-ver {
+  display: flex; align-items: center; gap: 8px; cursor: pointer;
+  font-size: .78rem; color: var(--bk-text-muted); user-select: none;
+}
+.sh-ver input { width: 15px; height: 15px; accent-color: var(--bk-purple); cursor: pointer; }
+
+.sh-modal p.sh-clave-error {
+  background: var(--danger-lt, #FCEAEA); color: var(--danger, #9B1414);
+  border: 1px solid rgba(155,20,20,.22); border-radius: 9px;
+  padding: 9px 12px; margin: 0 0 16px;
+  font-size: .8rem; font-weight: 600; text-align: left; line-height: 1.45;
+}
+
+.sh-modal-actions button:disabled {
+  opacity: .5; cursor: not-allowed; transform: none; filter: none;
+}
+
 @keyframes sh-fade { from { opacity: 0; } }
 @keyframes sh-pop  { from { opacity: 0; transform: scale(.95); } }
 @media (prefers-reduced-motion: reduce) { .sh-modal-bg, .sh-modal { animation: none; } }
