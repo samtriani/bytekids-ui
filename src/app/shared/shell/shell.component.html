@@ -53,7 +53,8 @@
 
     <!-- User -->
     <div class="sb-user">
-      <div class="sb-avatar" [style.background]="cfg.color+'20'" [style.color]="cfg.color">{{ userAvatar }}</div>
+      <app-avatar class="sb-avatar" [bot]="miBot" [iniciales]="userAvatar"
+                  [px]="34" [color]="cfg.color"></app-avatar>
       <div class="sb-uinfo">
         <span class="sb-uname">{{ userName }}</span>
         <span class="sb-urole">{{ cfg.label }}</span>
@@ -113,7 +114,8 @@
         <div class="tb-user" (click)="toggleUserMenu($event)" role="button" tabindex="0"
              [attr.aria-expanded]="showUserMenu" aria-haspopup="menu"
              (keydown.enter)="toggleUserMenu($event)">
-          <div class="tb-avatar" [style.background]="cfg.color+'20'" [style.color]="cfg.color" [style.border]="'1px solid '+cfg.color+'40'">{{ userAvatar }}</div>
+          <app-avatar class="tb-avatar" [bot]="miBot" [iniciales]="userAvatar"
+                      [px]="32" [color]="cfg.color"></app-avatar>
           <span class="tb-uname">{{ userName }}</span>
           <span class="tb-caret" [class.open]="showUserMenu">▾</span>
 
@@ -125,6 +127,9 @@
               </div>
               <button class="tb-menu-item" role="menuitem" (click)="goHome()">
                 🔄 Cambiar perfil
+              </button>
+              <button class="tb-menu-item" role="menuitem" (click)="abrirSelectorBot($event)">
+                🤖 Mi robot
               </button>
               <button class="tb-menu-item" role="menuitem" (click)="abrirCambioClave($event)">
                 🔑 Cambiar mi contraseña
@@ -227,6 +232,58 @@
           </button>
         </div>
       }
+    </div>
+  </div>
+}
+
+@if (escogiendoBot) {
+  <div class="sh-modal-bg" (click)="cerrarSelectorBot()">
+    <div class="sh-modal sh-modal--bots" role="dialog" aria-modal="true"
+         aria-labelledby="sh-bot-title" (click)="$event.stopPropagation()">
+
+      <h2 id="sh-bot-title">Escoge tu robot</h2>
+
+      <div class="sh-bot-elegido">
+        <app-avatar [bot]="botElegido" [iniciales]="userAvatar"
+                    [px]="88" [color]="cfg.color"></app-avatar>
+        <div class="sh-bot-quien">
+          <span class="sh-bot-nombre">{{ nombreDelElegido }}</span>
+          <span class="sh-bot-desc">{{ descDelElegido }}</span>
+        </div>
+      </div>
+
+      <div class="sh-bot-rejilla" role="radiogroup" aria-label="Los robots">
+        @for (r of roboticitos; track r.id) {
+          <button type="button" class="sh-bot" role="radio"
+                  [class.sh-bot--on]="botElegido === r.id"
+                  [attr.aria-checked]="botElegido === r.id"
+                  [attr.aria-label]="r.nombre"
+                  [title]="r.nombre"
+                  (click)="elegirBot(r.id)">
+            <app-avatar [bot]="r.id" [px]="52"></app-avatar>
+            <span class="sh-bot-tag">{{ r.nombre }}</span>
+          </button>
+        }
+      </div>
+
+      <button type="button" class="sh-bot-ninguno"
+              [class.sh-bot-ninguno--on]="!botElegido"
+              (click)="elegirBot(null)">
+        Mejor mis iniciales ({{ userAvatar }})
+      </button>
+
+      @if (botError) {
+        <p class="sh-clave-error" role="alert">⚠️ {{ botError }}</p>
+      }
+
+      <div class="sh-modal-actions">
+        <button class="sh-btn-ghost" (click)="cerrarSelectorBot()" [disabled]="guardandoBot">
+          Cancelar
+        </button>
+        <button class="sh-btn" (click)="guardarBot()" [disabled]="guardandoBot">
+          {{ guardandoBot ? 'Guardando…' : 'Guardar' }}
+        </button>
+      </div>
     </div>
   </div>
 }

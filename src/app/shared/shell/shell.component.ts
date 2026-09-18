@@ -5,6 +5,8 @@ import { IsActiveMatchOptions, Router, RouterLink, RouterLinkActive } from '@ang
 import { AuthService } from '../../services/auth.service';
 import { NotificationApiService } from '../../services/api/notification-api.service';
 import { UserApiService } from '../../services/api/user-api.service';
+import { AvatarComponent } from '../avatar/avatar.component';
+import { ROBOTICITOS } from '../roboticitos';
 import { BackendStatusService } from '../../services/backend-status.service';
 
 export interface NavItem {
@@ -29,7 +31,7 @@ const ROLE_CFG: Record<string, { label: string; emoji: string; color: string }> 
 @Component({
   selector: 'app-shell',
   standalone: true,
-  imports: [CommonModule, FormsModule, RouterLink, RouterLinkActive],
+  imports: [CommonModule, FormsModule, RouterLink, RouterLinkActive, AvatarComponent],
   templateUrl: './shell.component.html',
   styleUrls: ['./shell.component.scss']
 })
@@ -95,6 +97,29 @@ export class ShellComponent implements OnInit, OnDestroy {
    * veces. Aqui queda disponible para los cinco de una sola vez, y en telefono
    * tambien, porque el topbar no se recoge.
    */
+  /**
+   * El roboticito. Se lee una vez al construir y se actualiza al escoger:
+   * NO se puede leer en un getter, porque el shell esta en todas las
+   * pantallas y eso seria tocar localStorage en cada ciclo de deteccion.
+   */
+  miBot: string | null = null;
+
+  /** Selector de roboticito. */
+  readonly roboticitos = ROBOTICITOS;
+  escogiendoBot = false;
+  guardandoBot = false;
+  botError = '';
+  botElegido: string | null = null;
+
+  get nombreDelElegido(): string {
+    return this.roboticitos.find(r => r.id === this.botElegido)?.nombre ?? 'Sin robot';
+  }
+
+  get descDelElegido(): string {
+    return this.roboticitos.find(r => r.id === this.botElegido)?.desc
+        ?? 'Vas a aparecer con tus iniciales.';
+  }
+
   cambiandoClave = false;
   guardandoClave = false;
   claveLista = false;
@@ -128,6 +153,10 @@ export class ShellComponent implements OnInit, OnDestroy {
   }
 
   ngOnInit(): void {
+    // Aqui y no en el campo: un inicializador que usa this.auth depende del
+    // orden de emision de TypeScript, y ese orden cambia con la
+    // configuracion del compilador. En ngOnInit la inyeccion ya ocurrio.
+    this.miBot = this.auth.getUser()?.avatarUrl ?? null;
     this.loadNotifications();
     this.pollInterval = setInterval(() => this.loadUnreadCount(), 30_000);
   }
@@ -146,6 +175,7 @@ export class ShellComponent implements OnInit, OnDestroy {
   @HostListener('document:keydown.escape')
   onEscape(): void {
     this.menuAbierto = false;
+    if (this.escogiendoBot) this.cerrarSelectorBot();
     // La pantalla de "listo" NO se va con Escape: ahi el unico camino es el
     // boton, que cierra la sesion. Si se pudiera esquivar, la persona se
     // quedaria dentro creyendo que sigue con la contrasena vieja.
@@ -177,6 +207,46 @@ export class ShellComponent implements OnInit, OnDestroy {
   }
 
   cancelarSalida(): void { this.confirmarSalida = false; }
+
+  abrirSelectorBot(e?: Event): void {
+    e?.stopPropagation();
+    this.showUserMenu = false;
+    this.botElegido = this.miBot;
+    this.botError = '';
+    this.escogiendoBot = true;
+  }
+
+  cerrarSelectorBot(): void {
+    if (this.guardandoBot) return;
+    this.escogiendoBot = false;
+  }
+
+  elegirBot(id: string | null): void { this.botElegido = id; }
+
+  /**
+   * Se pinta el robot nuevo en cuanto el servidor confirma, no antes: si
+   * falla, el nino veria el robot puesto y al recargar volveria el viejo,
+   * sin saber por que.
+   */
+  guardarBot(): void {
+    if (this.guardandoBot) return;
+    this.guardandoBot = true;
+    this.botError = '';
+
+    this.userApi.cambiarMiRobot(this.botElegido).subscribe({
+      next: () => {
+        this.guardandoBot = false;
+        this.miBot = this.botElegido;
+        this.auth.setAvatar(this.botElegido);
+        this.escogiendoBot = false;
+      },
+      error: (err) => {
+        this.guardandoBot = false;
+        this.botError = err?.error?.message
+          || 'No se pudo guardar. Intentalo otra vez en un momento.';
+      },
+    });
+  }
 
   abrirCambioClave(e?: Event): void {
     e?.stopPropagation();

@@ -273,6 +273,57 @@
   opacity: .5; cursor: not-allowed; transform: none; filter: none;
 }
 
+/* ── ESCOGER ROBOT ──────────────────────────────────────── */
+.sh-modal--bots { max-width: 440px; }
+
+/* El que va ganando, en grande: a esta edad el nombre solo no dice nada. */
+.sh-bot-elegido {
+  display: flex; align-items: center; gap: 15px; text-align: left;
+  background: var(--bk-bg-hover); border: 1px solid var(--bk-border);
+  border-radius: 14px; padding: 14px 16px; margin-bottom: 16px;
+}
+.sh-bot-quien { display: flex; flex-direction: column; gap: 2px; min-width: 0; }
+.sh-bot-nombre { font-size: 1.05rem; font-weight: 800; color: var(--bk-text); }
+.sh-bot-desc { font-size: .78rem; color: var(--bk-text-muted); line-height: 1.45; }
+
+.sh-bot-rejilla {
+  display: grid; grid-template-columns: repeat(4, 1fr); gap: 9px;
+  margin-bottom: 14px;
+}
+@media (max-width: 420px) { .sh-bot-rejilla { grid-template-columns: repeat(3, 1fr); } }
+
+.sh-bot {
+  display: flex; flex-direction: column; align-items: center; gap: 5px;
+  background: none; border: 2px solid transparent; border-radius: 12px;
+  padding: 8px 4px 6px; cursor: pointer; font-family: inherit;
+  transition: background .14s, border-color .14s, transform .1s;
+}
+.sh-bot:hover { background: var(--bk-bg-hover); }
+.sh-bot:active { transform: scale(.95); }
+.sh-bot--on { border-color: var(--bk-purple); background: var(--bk-bg-hover); }
+.sh-bot-tag {
+  font-size: .66rem; font-weight: 700; color: var(--bk-text-muted);
+  white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 100%;
+}
+.sh-bot--on .sh-bot-tag { color: var(--bk-text); }
+
+/* Poder volver a las iniciales: escoger robot no deberia ser de una sola via. */
+.sh-bot-ninguno {
+  width: 100%; font-family: inherit; font-size: .8rem; font-weight: 700;
+  color: var(--bk-text-muted); background: none; cursor: pointer;
+  border: 1px dashed var(--bk-border); border-radius: 10px; padding: 9px 12px;
+  margin-bottom: 16px; transition: border-color .14s, color .14s;
+}
+.sh-bot-ninguno:hover { color: var(--bk-text); }
+.sh-bot-ninguno--on { border-style: solid; border-color: var(--bk-purple); color: var(--bk-text); }
+
+/* El shell le daba fondo y borde al <div> del avatar. Ahora es un
+   <app-avatar>, que trae su propio dibujo: el recuadro sobra y le comeria
+   las esquinas al robot. Las iniciales siguen pintando su fondo desde el
+   propio componente. */
+app-avatar.sb-avatar,
+app-avatar.tb-avatar { background: none; border: none; }
+
 @keyframes sh-fade { from { opacity: 0; } }
 @keyframes sh-pop  { from { opacity: 0; transform: scale(.95); } }
 @media (prefers-reduced-motion: reduce) { .sh-modal-bg, .sh-modal { animation: none; } }
