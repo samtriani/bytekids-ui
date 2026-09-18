@@ -64,6 +64,15 @@ export class UserApiService {
     return this.http.put<any>(`${BASE}/me/password`, { actual, nueva }).pipe(map(() => void 0));
   }
 
+  /**
+   * Escoger el roboticito propio. null lo quita y vuelven las iniciales.
+   * La lista de validos la tiene el servidor.
+   */
+  cambiarMiRobot(avatar: string | null): Observable<any> {
+    return this.http.put<any>(`${BASE}/me/avatar`, { avatar })
+      .pipe(map((response) => response.data));
+  }
+
   deactivate(id: string): Observable<void> {
     return this.http.delete<any>(`${BASE}/${id}`).pipe(map(() => void 0));
   }

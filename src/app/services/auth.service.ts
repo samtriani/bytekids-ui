@@ -16,6 +16,8 @@ export interface AppUser {
   initials: string;
   /** Puede crear/modificar cuentas de coordinador y director. */
   owner: boolean;
+  /** El roboticito que escogio, o null si usa sus iniciales. */
+  avatarUrl?: string | null;
 }
 
 const TOKEN_KEY = 'bk_token';
@@ -57,6 +59,7 @@ export class AuthService {
         role: data.role,
         panels: roleToPanels(data.role),
         owner: data.owner === true,
+        avatarUrl: data.avatarUrl ?? null,
         initials: data.displayName
           .split(' ')
           .map((word: string) => word[0])
@@ -70,6 +73,24 @@ export class AuthService {
     } catch (error: any) {
       const message = error?.error?.message || 'Usuario o contrasena incorrectos';
       return { ok: false, error: message };
+    }
+  }
+
+  /**
+   * Guarda el robot recien escogido en el usuario local.
+   *
+   * Sin esto habria que volver a entrar para verlo: el avatar se lee de
+   * localStorage, que solo se escribe en el login.
+   */
+  setAvatar(avatarUrl: string | null): void {
+    const raw = localStorage.getItem(USER_KEY);
+    if (!raw) return;
+    try {
+      const user = JSON.parse(raw);
+      user.avatarUrl = avatarUrl;
+      localStorage.setItem(USER_KEY, JSON.stringify(user));
+    } catch {
+      /* Si no se puede leer, el avatar aparece al volver a entrar. */
     }
   }
 

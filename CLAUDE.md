@@ -90,6 +90,13 @@ Lo que sí se puede hacer sin navegador, y conviene:
   `styles.scss` justo para que alcancen a todas las pantallas.
 - **Interceptor de resiliencia:** reintenta lo transitorio porque la máquina de
   Fly se duerme; solo el 401 cierra sesión.
+- **Avatares:** `<app-avatar [bot] [iniciales] [px] [color]>`
+  (`shared/avatar/`). Pinta el roboticito que escogio la persona y, si no
+  escogio o el archivo no carga, sus iniciales. Los doce robots viven en
+  `shared/roboticitos.ts` + `assets/robots/*.webp`, y la base guarda solo
+  el id (`bot-luna`) en `avatar_url`. **La lista tambien esta en el
+  backend** (`AVATARES` en `UserService`): si agregas uno, va en los dos
+  lados o el servidor lo rechaza.
 - **`CuerpoActividad`** (`shared/mission-body.ts`) interpreta el `content_body`
   una sola vez, no en un getter de plantilla.
 
