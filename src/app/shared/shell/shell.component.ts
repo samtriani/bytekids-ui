@@ -1,8 +1,10 @@
 import { Component, Input, OnInit, OnDestroy, HostListener, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
+import { FormsModule } from '@angular/forms';
 import { IsActiveMatchOptions, Router, RouterLink, RouterLinkActive } from '@angular/router';
 import { AuthService } from '../../services/auth.service';
 import { NotificationApiService } from '../../services/api/notification-api.service';
+import { UserApiService } from '../../services/api/user-api.service';
 import { BackendStatusService } from '../../services/backend-status.service';
 
 export interface NavItem {
@@ -27,7 +29,7 @@ const ROLE_CFG: Record<string, { label: string; emoji: string; color: string }> 
 @Component({
   selector: 'app-shell',
   standalone: true,
-  imports: [CommonModule, RouterLink, RouterLinkActive],
+  imports: [CommonModule, FormsModule, RouterLink, RouterLinkActive],
   templateUrl: './shell.component.html',
   styleUrls: ['./shell.component.scss']
 })
@@ -85,6 +87,28 @@ export class ShellComponent implements OnInit, OnDestroy {
   showUserMenu = false;
   confirmarSalida = false;
 
+  /**
+   * Cambiar la contrasena propia.
+   *
+   * Vive en el shell y no en una pantalla con ruta porque cada rol tiene su
+   * propio panel y su propio menu: una pantalla habria que darla de alta cinco
+   * veces. Aqui queda disponible para los cinco de una sola vez, y en telefono
+   * tambien, porque el topbar no se recoge.
+   */
+  cambiandoClave = false;
+  guardandoClave = false;
+  claveLista = false;
+  claveError = '';
+  verClaves = false;
+  clave = { actual: '', nueva: '', repetir: '' };
+
+  /** El boton no se habilita hasta que los tres campos cuadran. */
+  get claveValida(): boolean {
+    return this.clave.actual.length > 0
+        && this.clave.nueva.length >= 6
+        && this.clave.nueva === this.clave.repetir;
+  }
+
   /** En pantalla angosta el menu lateral se recoge. */
   menuAbierto = false;
 
@@ -95,7 +119,8 @@ export class ShellComponent implements OnInit, OnDestroy {
   constructor(
     private auth: AuthService,
     private router: Router,
-    private notifApi: NotificationApiService
+    private notifApi: NotificationApiService,
+    private userApi: UserApiService
   ) {}
 
   get cfg() {
@@ -119,7 +144,13 @@ export class ShellComponent implements OnInit, OnDestroy {
 
   /** Escape cierra el menu, como cualquier panel que tapa la pantalla. */
   @HostListener('document:keydown.escape')
-  onEscape(): void { this.menuAbierto = false; }
+  onEscape(): void {
+    this.menuAbierto = false;
+    // La pantalla de "listo" NO se va con Escape: ahi el unico camino es el
+    // boton, que cierra la sesion. Si se pudiera esquivar, la persona se
+    // quedaria dentro creyendo que sigue con la contrasena vieja.
+    if (this.cambiandoClave && !this.claveLista) this.cerrarCambioClave();
+  }
 
   /** Recarga la vista actual para volver a pedir los datos al backend. */
   reintentar(): void {
@@ -147,9 +178,56 @@ export class ShellComponent implements OnInit, OnDestroy {
 
   cancelarSalida(): void { this.confirmarSalida = false; }
 
+  abrirCambioClave(e?: Event): void {
+    e?.stopPropagation();
+    this.showUserMenu = false;
+    this.clave = { actual: '', nueva: '', repetir: '' };
+    this.claveError = '';
+    this.claveLista = false;
+    this.verClaves = false;
+    this.cambiandoClave = true;
+  }
+
+  cerrarCambioClave(): void {
+    if (this.guardandoClave) return;
+    // Ya cambiada, cerrar de cualquier forma --el boton, Escape o el fondo--
+    // significa salir: la contrasena con la que se entro ya no sirve, y
+    // dejarla dentro seria decirle que nada paso.
+    if (this.claveLista) { this.salir(); return; }
+    this.cambiandoClave = false;
+    // Que no se quede en memoria despues de cerrar.
+    this.clave = { actual: '', nueva: '', repetir: '' };
+  }
+
+  /**
+   * El mensaje de error sale del backend --"tu contrasena actual no es
+   * correcta"-- y se muestra tal cual: es lo unico que le dice a la persona
+   * cual de los dos campos esta mal.
+   */
+  guardarClave(): void {
+    if (!this.claveValida || this.guardandoClave) return;
+    this.guardandoClave = true;
+    this.claveError = '';
+
+    this.userApi.cambiarMiContrasena(this.clave.actual, this.clave.nueva).subscribe({
+      next: () => {
+        this.guardandoClave = false;
+        this.claveLista = true;
+        this.clave = { actual: '', nueva: '', repetir: '' };
+      },
+      error: (err) => {
+        this.guardandoClave = false;
+        this.claveError = err?.error?.message
+          || 'No se pudo cambiar. Intentalo otra vez en un momento.';
+      },
+    });
+  }
+
   /** Borra token y usuario de localStorage y manda al login. */
   salir(): void {
     this.confirmarSalida = false;
+    this.cambiandoClave = false;
+    this.claveLista = false;
     this.auth.logout();
   }
 

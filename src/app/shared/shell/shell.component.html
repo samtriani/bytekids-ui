@@ -126,6 +126,9 @@
               <button class="tb-menu-item" role="menuitem" (click)="goHome()">
                 🔄 Cambiar perfil
               </button>
+              <button class="tb-menu-item" role="menuitem" (click)="abrirCambioClave($event)">
+                🔑 Cambiar mi contraseña
+              </button>
               <button class="tb-menu-item tb-menu-item--exit" role="menuitem" (click)="pedirSalida($event)">
                 ⏻ Cerrar sesión
               </button>
@@ -148,6 +151,82 @@
         <button class="sh-btn-ghost" (click)="cancelarSalida()">Quedarme</button>
         <button class="sh-btn" (click)="salir()">Cerrar sesión</button>
       </div>
+    </div>
+  </div>
+}
+
+@if (cambiandoClave) {
+  <div class="sh-modal-bg" (click)="cerrarCambioClave()">
+    <div class="sh-modal sh-modal--clave" role="dialog" aria-modal="true"
+         aria-labelledby="sh-clave-title" (click)="$event.stopPropagation()">
+
+      @if (claveLista) {
+        <!-- Confirmado: la sesion se cierra al salir de aqui, porque la
+             contrasena con la que se entro ya no es la buena. -->
+        <div class="sh-modal-icon">✅</div>
+        <h2 id="sh-clave-title">¡Listo!</h2>
+        <p>
+          Tu contraseña ya cambió. Vamos a cerrar tu sesión para que entres
+          otra vez con la nueva y compruebes que la recuerdas.
+        </p>
+        <div class="sh-modal-actions">
+          <button class="sh-btn" (click)="salir()">Entrar de nuevo</button>
+        </div>
+
+      } @else {
+        <div class="sh-modal-icon">🔑</div>
+        <h2 id="sh-clave-title">Cambiar mi contraseña</h2>
+        <p>
+          Escoge una que recuerdes y no le digas a nadie, ni a tus amigos.
+        </p>
+
+        <div class="sh-clave-campos">
+          <label class="sh-campo">
+            <span>Tu contraseña de ahora</span>
+            <input [type]="verClaves ? 'text' : 'password'" [(ngModel)]="clave.actual"
+                   autocomplete="current-password" maxlength="72"
+                   placeholder="La que usas hoy" (keydown.enter)="guardarClave()">
+          </label>
+
+          <label class="sh-campo">
+            <span>Tu contraseña nueva</span>
+            <input [type]="verClaves ? 'text' : 'password'" [(ngModel)]="clave.nueva"
+                   autocomplete="new-password" maxlength="72"
+                   placeholder="Mínimo 6 letras o números" (keydown.enter)="guardarClave()">
+            @if (clave.nueva && clave.nueva.length < 6) {
+              <small class="sh-campo-mal">Le faltan {{ 6 - clave.nueva.length }} caracteres.</small>
+            }
+          </label>
+
+          <label class="sh-campo">
+            <span>Repítela</span>
+            <input [type]="verClaves ? 'text' : 'password'" [(ngModel)]="clave.repetir"
+                   autocomplete="new-password" maxlength="72"
+                   placeholder="Otra vez, para no equivocarnos" (keydown.enter)="guardarClave()">
+            @if (clave.repetir && clave.nueva !== clave.repetir) {
+              <small class="sh-campo-mal">Las dos no son iguales.</small>
+            }
+          </label>
+
+          <label class="sh-ver">
+            <input type="checkbox" [(ngModel)]="verClaves">
+            <span>Ver lo que escribo</span>
+          </label>
+        </div>
+
+        @if (claveError) {
+          <p class="sh-clave-error" role="alert">⚠️ {{ claveError }}</p>
+        }
+
+        <div class="sh-modal-actions">
+          <button class="sh-btn-ghost" (click)="cerrarCambioClave()" [disabled]="guardandoClave">
+            Cancelar
+          </button>
+          <button class="sh-btn" (click)="guardarClave()" [disabled]="!claveValida || guardandoClave">
+            {{ guardandoClave ? 'Guardando…' : 'Guardar' }}
+          </button>
+        </div>
+      }
     </div>
   </div>
 }

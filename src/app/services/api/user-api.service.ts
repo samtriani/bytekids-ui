@@ -56,6 +56,14 @@ export class UserApiService {
     return this.http.put<any>(`${BASE}/${id}`, payload).pipe(map((response) => response.data));
   }
 
+  /**
+   * Cambiar la contrasena propia. La usan los cinco roles; no pasa por
+   * /users/{id}, que solo puede tocar coordinacion.
+   */
+  cambiarMiContrasena(actual: string, nueva: string): Observable<void> {
+    return this.http.put<any>(`${BASE}/me/password`, { actual, nueva }).pipe(map(() => void 0));
+  }
+
   deactivate(id: string): Observable<void> {
     return this.http.delete<any>(`${BASE}/${id}`).pipe(map(() => void 0));
   }
