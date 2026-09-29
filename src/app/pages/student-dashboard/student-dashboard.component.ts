@@ -182,9 +182,12 @@ export class StudentDashboardComponent implements OnInit, AfterViewInit {
     const cuenta = new Map<string, number>();
     for (const c of items) cuenta.set(c.type, (cuenta.get(c.type) ?? 0) + 1);
 
+    // Mismo orden que los filtros de Mis Actividades: como el nino vive el
+    // aprendizaje, no de mayor a menor cantidad.
+    const ORDEN_TIPOS = ['material', 'mision', 'tarea', 'quiz', 'proyecto'];
     const partes = [...cuenta.entries()]
       .filter(([tipo]) => NOMBRE[tipo])
-      .sort((a, b) => b[1] - a[1])
+      .sort((a, b) => ORDEN_TIPOS.indexOf(a[0]) - ORDEN_TIPOS.indexOf(b[0]))
       .map(([tipo, n]) => `${n} ${NOMBRE[tipo][n === 1 ? 0 : 1]}`);
 
     return partes.length ? partes.join(' · ') : 'sin actividades aún';
