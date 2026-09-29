@@ -33,8 +33,15 @@
       <div style="height:185px"><canvas #xpChart></canvas></div>
     </div>
     <div class="bk-card">
-      <div class="card-header"><span class="card-title">💡 Mapa de Habilidades</span></div>
-      <div style="height:185px"><canvas #skillsChart></canvas></div>
+      <div class="card-header"><span class="card-title">💡 XP por materia</span></div>
+      <!-- El canvas se queda siempre montado: la grafica se crea en
+           ngAfterViewInit y un @if lo destruiria. Solo se tapa. -->
+      <div style="height:185px;position:relative">
+        <canvas #skillsChart></canvas>
+        @if (!misMaterias.length) {
+          <p class="sin-materias">Cuando tengas actividades de una materia, aquí vas a ver cuánto XP llevas en cada una.</p>
+        }
+      </div>
     </div>
   </div>
 
