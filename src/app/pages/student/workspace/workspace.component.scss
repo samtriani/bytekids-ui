@@ -82,9 +82,8 @@
    muchos renglones cortos. Se mantiene el tope para que la linea de lectura
    no se vuelva larguisima en un monitor ancho. Mismo ancho que el hero, que
    estaba en 860 y desalineaba el titulo. */
-.ws-body { display:grid; grid-template-columns:1fr 1.4fr; gap:20px; padding:20px 28px 40px; max-width:1180px; margin:0 auto; width:100%; box-sizing:border-box; }
-@media(max-width:1000px) { .ws-body{grid-template-columns:1fr 1.2fr; gap:16px;} }
-@media(max-width:700px)  { .ws-body{grid-template-columns:1fr; padding:16px 18px 32px;} }
+.ws-body { display:grid; grid-template-columns:minmax(0,1.15fr) minmax(340px,1fr); gap:24px; padding:24px 28px 60px; max-width:1240px; margin:0 auto; width:100%; box-sizing:border-box; align-items:start; }
+@media(max-width:900px)  { .ws-body{grid-template-columns:1fr; padding:16px 16px 90px;} }
 
 /* ── Panel ── */
 .ws-panel { background:#161824; border:1px solid #2A2D3E; border-radius:16px; padding:24px; display:flex; flex-direction:column; gap:12px; }
@@ -136,9 +135,9 @@
 
 /* ── Editor ── */
 .ws-editor {
-  width:100%; min-height:260px; background:#0F1117; border:1.5px solid #2A2D3E;
-  border-radius:12px; color:#E2E8F0; font-family:'Nunito',sans-serif;
-  font-size:.88rem; padding:14px; resize:vertical; outline:none;
+  width:100%; min-height:300px; height:clamp(300px, 46vh, 560px); background:#0F1117; border:1.5px solid #2A2D3E;
+  border-radius:14px; color:#F1F5F9; font-family:'Nunito',sans-serif;
+  font-size:.98rem; padding:16px; resize:vertical; outline:none;
   transition:border-color .2s; box-sizing:border-box; line-height:1.6;
   &--code { font-family:'Fira Code','Courier New',monospace; font-size:.82rem; line-height:1.7; }
   &:focus { border-color:var(--accent,#7C3AED); box-shadow:0 0 0 3px rgba(124,58,237,.1); }
@@ -213,3 +212,118 @@
   background: #151A2E; border: 1px solid #2A2D3E; border-radius: 8px;
   font-size: .86rem; line-height: 1.6; color: #A9B4D0;
 }
+
+
+/* ══════════════════════════════════════════════════════════════════════════
+   REDISENO PARA NINOS (29-sep)
+   Lo de abajo va al final a proposito: a igual especificidad gana lo
+   ultimo, y asi no hay que andar persiguiendo reglas viejas por el archivo.
+   ══════════════════════════════════════════════════════════════════════════ */
+
+/* ── Encabezado con identidad ByteKids ── */
+.ws-hero { padding: 22px 28px 26px; background: #121521; }
+.ws-hero-fondo {
+  position: absolute; inset: 0; pointer-events: none;
+  background:
+    radial-gradient(circle at 12% 0%, color-mix(in srgb, var(--accent, #7C3AED) 38%, transparent), transparent 55%),
+    radial-gradient(circle at 90% 110%, rgba(124,58,237,.35), transparent 50%),
+    radial-gradient(rgba(255,255,255,.07) 1px, transparent 1.4px) 0 0 / 18px 18px;
+}
+.ws-hero-inner { max-width: 1240px; }
+.ws-hero-top { display: flex; align-items: center; justify-content: space-between; gap: 12px; }
+.ws-logo { width: 46px; height: 46px; border-radius: 14px; object-fit: cover; border: 2px solid rgba(255,255,255,.18); box-shadow: 0 6px 18px rgba(0,0,0,.35); }
+.ws-hero-fila { display: flex; align-items: flex-end; justify-content: space-between; gap: 20px; }
+.ws-hero-body { flex: 1; min-width: 0; }
+.ws-title { font-size: clamp(1.6rem, 3.4vw, 2.3rem); letter-spacing: -.01em; text-wrap: balance; }
+.ws-type-badge {
+  background: color-mix(in srgb, var(--accent, #7C3AED) 22%, transparent);
+  color: color-mix(in srgb, var(--accent, #7C3AED) 55%, #fff);
+  border-color: color-mix(in srgb, var(--accent, #7C3AED) 50%, transparent);
+}
+.ws-subject { color: color-mix(in srgb, var(--accent, #7C3AED) 60%, #fff); }
+.ws-xp { font-size: .86rem; }
+
+/* El robot del nino, con su globo */
+.ws-animo { flex: none; display: flex; flex-direction: column; align-items: center; gap: 6px; animation: ws-flota 3.2s ease-in-out infinite; }
+.ws-animo-globo {
+  position: relative; font-size: .8rem; font-weight: 900; color: #0F1117; background: #FCD34D;
+  padding: 6px 12px; border-radius: 12px; white-space: nowrap; box-shadow: 0 6px 16px rgba(0,0,0,.3);
+}
+.ws-animo-globo::after {
+  content: ''; position: absolute; left: 50%; bottom: -6px; margin-left: -6px;
+  border: 6px solid transparent; border-bottom: 0; border-top-color: #FCD34D;
+}
+@keyframes ws-flota { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-6px); } }
+@media (max-width: 560px) { .ws-animo { display: none; } }
+
+/* ── Columnas ── */
+.ws-col-inst { display: flex; flex-direction: column; gap: 14px; min-width: 0; }
+.ws-lead { margin: 0; font-size: 1.05rem; line-height: 1.6; color: #E2E8F0; font-weight: 600; }
+
+/* La respuesta se queda a la vista mientras el nino baja por las instrucciones. */
+.ws-col-resp { position: sticky; top: 16px; align-self: start; max-height: calc(100vh - 32px); overflow-y: auto; border-radius: 18px; }
+@media (max-width: 900px) { .ws-col-resp { position: static; max-height: none; overflow: visible; } }
+.ws-editor-panel { border: 1px solid color-mix(in srgb, var(--accent, #7C3AED) 35%, #2A2D3E); box-shadow: 0 14px 40px rgba(0,0,0,.35); }
+.ws-panel-title { font-size: 1rem; color: #F1F5F9; }
+
+/* El enlace de la actividad: un boton grande, no un renglon */
+.ws-recurso {
+  margin: 0; padding: 14px 16px; gap: 12px; border-radius: 14px;
+  background: linear-gradient(135deg, color-mix(in srgb, var(--accent, #7C3AED) 30%, #151A2E), #151A2E);
+  border: 1.5px solid color-mix(in srgb, var(--accent, #7C3AED) 55%, transparent);
+}
+.ws-recurso-ico { font-size: 1.5rem; }
+.ws-recurso-txt { display: flex; flex-direction: column; font-size: .98rem; }
+.ws-recurso-tipo { font-size: .72rem; }
+
+/* ── Que tienes que escribir ── */
+.ws-guia { background: rgba(245,158,11,.08); border: 1px solid rgba(252,211,77,.35); border-radius: 12px; padding: 10px 14px; }
+.ws-guia summary { cursor: pointer; font-weight: 900; font-size: .88rem; color: #FCD34D; list-style: none; }
+.ws-guia summary::-webkit-details-marker { display: none; }
+.ws-guia summary::after { content: ' ▾'; }
+.ws-guia:not([open]) summary::after { content: ' ▸'; }
+.ws-guia-lista { margin: 8px 0 4px; padding-left: 20px; display: grid; gap: 5px; font-size: .86rem; line-height: 1.5; color: #E2E8F0; }
+.ws-guia-btn {
+  margin-top: 8px; cursor: pointer; font-family: inherit; font-size: .8rem; font-weight: 800;
+  color: #0F1117; background: #FCD34D; border: none; border-radius: 10px; padding: 8px 12px;
+  &:hover { filter: brightness(1.06); }
+  &:focus-visible { outline: 2px solid #fff; outline-offset: 2px; }
+}
+
+/* ── Estado del borrador ── */
+.ws-estado { display: flex; justify-content: space-between; gap: 10px; font-size: .74rem; color: #6B7FBB; font-weight: 700; }
+.ws-guardado--ok { color: #34D399; }
+
+/* ── Antes de entregar ── */
+.ws-revisa { display: flex; flex-direction: column; gap: 6px; background: #0F1117; border: 1px solid #2A2D3E; border-radius: 12px; padding: 12px 14px; }
+.ws-revisa-titulo { font-size: .8rem; font-weight: 900; color: #CBD5E1; margin-bottom: 2px; }
+.ws-revisa-item { display: flex; gap: 9px; align-items: flex-start; cursor: pointer; font-size: .84rem; line-height: 1.45; color: #A9B4D0; }
+.ws-revisa-item input { width: 17px; height: 17px; margin-top: 1px; accent-color: #059669; flex: none; cursor: pointer; }
+.ws-revisa-item.ok span { color: #6EE7B7; text-decoration: line-through; text-decoration-color: rgba(110,231,183,.5); }
+
+/* ── Botones: el color de la materia, oscurecido para que el blanco se lea ── */
+.ws-btn { padding: 11px 20px; font-size: .9rem; border-radius: 12px; }
+.ws-btn.primary { background: color-mix(in srgb, var(--accent, #7C3AED) 78%, #000); }
+
+/* Boton flotante: solo cuando las columnas estan apiladas */
+.ws-ir-resp { display: none; }
+@media (max-width: 900px) {
+  .ws-ir-resp {
+    display: block; position: fixed; right: 16px; bottom: calc(16px + env(safe-area-inset-bottom, 0px)); z-index: 50;
+    cursor: pointer; font-family: inherit; font-size: .9rem; font-weight: 900; color: #0F1117;
+    background: #FCD34D; border: none; border-radius: 999px; padding: 12px 18px; box-shadow: 0 10px 26px rgba(0,0,0,.45);
+  }
+}
+
+/* ── Con ByteBot abierto, la actividad se recorre para no quedar debajo ── */
+@media (min-width: 821px) {
+  .ws-root--bot { padding-right: 440px; }
+  .ws-root--bot .ws-ir-resp { display: none; }
+}
+@media (min-width: 821px) and (max-width: 1500px) {
+  .ws-root--bot .ws-body { grid-template-columns: 1fr; }
+  .ws-root--bot .ws-col-resp { position: static; max-height: none; overflow: visible; }
+  .ws-root--bot .ws-animo { display: none; }
+}
+
+@media (prefers-reduced-motion: reduce) { .ws-animo { animation: none; } }

@@ -1,0 +1,126 @@
+<div class="ins" [style.--acento]="color">
+
+  <!-- Avance e indice: solo si hay pasos que marcar -->
+  @if (total) {
+    <nav class="ins-avance" aria-label="Pasos de la actividad">
+      <div class="ins-avance-top">
+        <span class="ins-avance-txt">
+          @if (hechas === total) { 🎉 ¡Hiciste todos los pasos! }
+          @else { Llevas <b>{{ hechas }}</b> de <b>{{ total }}</b> pasos }
+        </span>
+        <span class="ins-avance-pct">{{ pct }}%</span>
+      </div>
+      <div class="ins-barra"><div class="ins-barra-fill" [style.width.%]="pct"></div></div>
+      <div class="ins-indice">
+        @for (s of secciones; track s.id) {
+          @if (esMarcable(s)) {
+            <button type="button" class="ins-chip" [class.ins-chip--ok]="estaLista(s)" (click)="irA(s)">
+              <span class="ins-chip-n">{{ estaLista(s) ? '✓' : (s.numero || '•') }}</span>{{ corto(s) }}
+            </button>
+          }
+        }
+      </div>
+    </nav>
+  }
+
+  @for (s of secciones; track s.id) {
+    <section class="ins-sec ins-sec--{{ s.tipo }}" [id]="'ins-' + s.id"
+             [class.ins-sec--lista]="esMarcable(s) && estaLista(s)"
+             [class.ins-sec--sola]="!s.bloques.length">
+
+      @if (s.titulo) {
+        <header class="ins-head">
+          @if (s.numero && (s.tipo === 'paso' || s.tipo === 'entrega')) {
+            <span class="ins-num">{{ esMarcable(s) && estaLista(s) ? '✓' : s.numero }}</span>
+          } @else if (ICONO[s.tipo]) {
+            <span class="ins-ico" aria-hidden="true">{{ ICONO[s.tipo] }}</span>
+          }
+          <h3 class="ins-titulo">{{ s.titulo }}</h3>
+          @if (esMarcable(s)) {
+            <button type="button" class="ins-listo" [class.ins-listo--ok]="estaLista(s)"
+                    [attr.aria-pressed]="estaLista(s)" (click)="alternar(s)">
+              {{ estaLista(s) ? 'Abrir' : '¡Listo!' }}
+            </button>
+          }
+        </header>
+      }
+
+      @if (!(esMarcable(s) && estaLista(s))) {
+        <div class="ins-cuerpo">
+          @if (s.tipo === 'entrega') {
+            <p class="ins-entrega-nota">✍️ Esto es lo que escribes en tu respuesta. También lo tienes junto al cuadro para escribir.</p>
+          }
+
+          @for (b of s.bloques; track $index) {
+            @switch (b.tipo) {
+
+              @case ('parrafo') {
+                <p class="ins-p" [class.ins-p--campo]="b.lead && !b.texto">
+                  @if (b.lead) { <b>{{ b.lead }}</b> } {{ b.texto }}
+                </p>
+              }
+
+              @case ('numerada') {
+                <ol class="ins-ol">
+                  @for (it of b.items; track $index) {
+                    <li>
+                      @if (it.marca) { <span class="ins-emo">{{ it.marca }}</span> }
+                      @if (it.lead) { <b>{{ it.lead }}</b> } {{ it.texto }}
+                    </li>
+                  }
+                </ol>
+              }
+
+              @case ('vinetas') {
+                <ul class="ins-ul ins-ul--{{ b.marca }}">
+                  @for (it of b.items; track $index) {
+                    <li>
+                      @if (b.marca === 'emoji' || b.marca === 'letra') {
+                        <span class="ins-marca">{{ it.marca }}</span>
+                      }
+                      <span>@if (it.lead) { <b>{{ it.lead }}</b> } {{ it.texto }}</span>
+                    </li>
+                  }
+                </ul>
+              }
+
+              @case ('bytebot') {
+                <div class="ins-bot">
+                  <img src="assets/logo-bytekids.jpeg" alt="" class="ins-bot-av">
+                  <div class="ins-bot-globo">
+                    <span class="ins-bot-nombre">ByteBot dice</span>
+                    <p>{{ b.texto }}</p>
+                    <button type="button" class="ins-bot-btn" (click)="pedirByteBot.emit()">🤖 Hablar con ByteBot</button>
+                  </div>
+                </div>
+              }
+
+              @case ('aviso') {
+                <p class="ins-aviso">⚠️ {{ b.texto }}</p>
+              }
+
+              @case ('tabla') {
+                <div class="ins-tabla-wrap">
+                  <table class="ins-tabla">
+                    <thead><tr>@for (c of b.encabezado; track $index) { <th>{{ c }}</th> }</tr></thead>
+                    @if (b.filas.length) {
+                      <tbody>
+                        @for (f of b.filas; track $index) {
+                          <tr>@for (c of f; track $index) { <td>{{ c }}</td> }</tr>
+                        }
+                      </tbody>
+                    }
+                  </table>
+                </div>
+              }
+            }
+          }
+
+          @if (esMarcable(s) && !estaLista(s)) {
+            <button type="button" class="ins-listo-grande" (click)="alternar(s)">✓ ¡Listo, ya hice este paso!</button>
+          }
+        </div>
+      }
+    </section>
+  }
+</div>

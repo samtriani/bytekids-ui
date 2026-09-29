@@ -7,6 +7,10 @@ import { SubmissionApiService } from '../../../services/api/submission-api.servi
 import { QuizApiService } from '../../../services/api/quiz-api.service';
 import { AuthService } from '../../../services/auth.service';
 import { sobreDiez } from '../../../shared/calificacion';
+import { InstruccionesComponent } from '../../../shared/instrucciones/instrucciones.component';
+import { interpretarInstrucciones, preguntasDeEntrega } from '../../../shared/instrucciones/instrucciones';
+import { ByteBotPanelComponent } from '../../../shared/bytebot-panel/bytebot-panel.component';
+import { AvatarComponent } from '../../../shared/avatar/avatar.component';
 import { catchError, forkJoin, of } from 'rxjs';
 
 type Screen = 'loading' | 'work' | 'quiz' | 'done' | 'error';
@@ -14,7 +18,7 @@ type Screen = 'loading' | 'work' | 'quiz' | 'done' | 'error';
 @Component({
   selector: 'app-workspace',
   standalone: true,
-  imports: [CommonModule, FormsModule, RouterLink],
+  imports: [CommonModule, FormsModule, RouterLink, InstruccionesComponent, ByteBotPanelComponent, AvatarComponent],
   templateUrl: './workspace.component.html',
   styleUrls: ['./workspace.component.scss']
 })
@@ -25,6 +29,31 @@ export class WorkspaceComponent implements OnInit {
   existingSub: any = null;
   rejectedSub: any = null;
   student: any = null;
+
+  // ── ByteBot, borrador y guia de entrega ───────────────────────────────
+  /** ByteBot se abre en un panel: el nino nunca sale de la actividad. */
+  botAbierto = false;
+  /**
+   * Lo que la actividad pide entregar, sacado de sus instrucciones. Se
+   * muestra junto al cuadro de respuesta: antes habia que ir a buscarlo al
+   * final de un texto largo, en la otra columna.
+   */
+  preguntas: string[] = [];
+  /** Lista de "antes de entregar" que el nino va palomeando. */
+  revisados = new Set<number>();
+  estadoBorrador: '' | 'guardando' | 'guardado' = '';
+  private temporizador: any = null;
+
+  /** alumno + actividad: separa borradores y pasos entre hermanos que comparten tablet. */
+  get clave(): string {
+    return `${this.student?.userId ?? 'anon'}_${this.content?.id ?? ''}`;
+  }
+  get primerNombre(): string { return (this.student?.displayName ?? '').split(' ')[0]; }
+  get miBot(): string | null { return this.student?.avatarUrl ?? null; }
+  get palabras(): number {
+    const t = this.codeAnswer.trim();
+    return t ? t.split(/\s+/).length : 0;
+  }
 
   // Misión / Tarea / Proyecto
   codeAnswer = '';
@@ -208,8 +237,13 @@ export class WorkspaceComponent implements OnInit {
           this.screen = (this.alreadyDone || this.intentos.length) ? 'done' : 'quiz';
         });
       } else {
-        // Pre-fill: approved/pending > rejected code > empty
-        this.codeAnswer = this.existingSub?.codeSubmitted ?? this.rejectedSub?.codeSubmitted ?? '';
+        // El borrador gana: es lo ultimo que el nino escribio, aunque se haya
+        // salido sin entregar. Despues, lo entregado o lo que le regresaron.
+        const borrador = this.alreadyDone ? '' : this.leerBorrador();
+        this.codeAnswer = borrador || this.existingSub?.codeSubmitted || this.rejectedSub?.codeSubmitted || '';
+        if (borrador) this.estadoBorrador = 'guardado';
+        this.preguntas = preguntasDeEntrega(interpretarInstrucciones(this.instrucciones));
+        this.revisados = new Set(this.leer('bk_revisado_'));
         this.screen = this.alreadyDone ? 'done' : 'work';
       }
     });
@@ -233,6 +267,7 @@ export class WorkspaceComponent implements OnInit {
     }).subscribe({
       next: result => {
         this.submitResult = result;
+        this.borrarBorrador();
         this.screen = 'done';
         this.submitting = false;
       },
@@ -274,9 +309,66 @@ export class WorkspaceComponent implements OnInit {
 
   // ── Helpers ───────────────────────────────────────────────────────────
 
-  openAiTutor(): void {
-    const q = `Ayúdame con "${this.content?.title}" de ${this.content?.subjectName ?? ''}. ${this.content?.description ?? ''}`;
-    this.router.navigate(['/student/ai-tutor'], { queryParams: { q } });
+  /**
+   * Antes navegaba a /student/ai-tutor y el nino perdia la actividad de
+   * vista y lo que llevaba escrito. Ahora abre el panel aqui mismo.
+   */
+  openAiTutor(): void { this.botAbierto = true; }
+
+  /** Lleva al cuadro de respuesta y lo deja listo para escribir. */
+  irARespuesta(): void {
+    const el = document.getElementById('ws-respuesta') as HTMLTextAreaElement | null;
+    el?.scrollIntoView({ behavior: 'smooth', block: 'center' });
+    setTimeout(() => el?.focus({ preventScroll: true }), 400);
+  }
+
+  // ── Borrador ──────────────────────────────────────────────────────────
+
+  /** Se guarda solo, un momento despues de que el nino deja de teclear. */
+  alEscribir(): void {
+    this.estadoBorrador = 'guardando';
+    clearTimeout(this.temporizador);
+    this.temporizador = setTimeout(() => {
+      try {
+        if (this.codeAnswer.trim()) localStorage.setItem('bk_borrador_' + this.clave, this.codeAnswer);
+        else localStorage.removeItem('bk_borrador_' + this.clave);
+        this.estadoBorrador = 'guardado';
+      } catch { this.estadoBorrador = ''; }
+    }, 700);
+  }
+
+  private leerBorrador(): string {
+    try { return localStorage.getItem('bk_borrador_' + this.clave) ?? ''; } catch { return ''; }
+  }
+
+  private borrarBorrador(): void {
+    clearTimeout(this.temporizador);
+    try {
+      localStorage.removeItem('bk_borrador_' + this.clave);
+      localStorage.removeItem('bk_revisado_' + this.clave);
+    } catch { /* nada que borrar */ }
+  }
+
+  /**
+   * Pone en el cuadro las preguntas de la entrega, para que el nino solo
+   * tenga que contestar debajo de cada una. Solo con el cuadro vacio: nunca
+   * se le encima a lo que ya escribio.
+   */
+  usarPlantilla(): void {
+    if (this.codeAnswer.trim() || !this.preguntas.length) return;
+    this.codeAnswer = this.preguntas.map((p, i) =>
+      /^[A-ZÁÉÍÓÚÑÜ ]+:/.test(p) ? p.split(':')[0] + ':\n\n' : `${i + 1}. ${p}\n\n`
+    ).join('');
+    this.alEscribir();
+  }
+
+  alternarRevisado(i: number): void {
+    if (this.revisados.has(i)) this.revisados.delete(i); else this.revisados.add(i);
+    try { localStorage.setItem('bk_revisado_' + this.clave, JSON.stringify([...this.revisados])); } catch { /* */ }
+  }
+
+  private leer(prefijo: string): number[] {
+    try { return JSON.parse(localStorage.getItem(prefijo + this.clave) || '[]'); } catch { return []; }
   }
 
   goBack(): void {

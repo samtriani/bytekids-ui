@@ -99,6 +99,18 @@ Lo que sí se puede hacer sin navegador, y conviene:
   lados o el servidor lo rechaza.
 - **`CuerpoActividad`** (`shared/mission-body.ts`) interpreta el `content_body`
   una sola vez, no en un getter de plantilla.
+- **Instrucciones con forma:** `<app-instrucciones>` (`shared/instrucciones/`)
+  convierte el texto plano de una actividad en tarjetas: títulos en
+  MAYÚSCULAS, `PARTE n` / `PASO n` con botón "¡Listo!", listas, tablas con
+  `|` y el globo `💬 ByteBot dice:`. No produce HTML: devuelve datos y la
+  plantilla los interpola. `preguntasDeEntrega()` saca lo que el niño tiene
+  que escribir para mostrarlo junto al cuadro de respuesta. Si escribes
+  contenido nuevo, sigue esas convenciones (ver `bytekids-api/sql/mi_primera_ia/curso.py`).
+- **ByteBot dentro de la actividad:** `<app-bytebot-panel>` es un panel
+  lateral. **No navegues a `/student/ai-tutor` desde una actividad**: así era
+  antes y el niño perdía la misión y lo que llevaba escrito.
+- **Borradores:** la respuesta del workspace se guarda sola en
+  `localStorage` (`bk_borrador_<alumno>_<actividad>`) y se borra al entregar.
 
 ### Nunca armes HTML de chat a mano
 
