@@ -602,14 +602,19 @@ input,select,textarea { font-family:inherit; }
 }
 
 /* ── bk-grid-* → matching grids ─────────────────────────────────── */
-.bk-grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
-.bk-grid-3 { display: grid; grid-template-columns: repeat(3,1fr); gap: 14px; }
-.bk-grid-4 { display: grid; grid-template-columns: repeat(4,1fr); gap: 14px; }
+/* minmax(0,1fr) y no 1fr: "1fr" deja que una columna crezca hasta su
+   contenido minimo, y una grafica de Chart.js se ajusta al ancho de su
+   columna. Juntos se empujan sin fin: la grafica crece, la columna le hace
+   lugar, la grafica vuelve a crecer... y la tarjeta se salia de la pantalla
+   (paso con "XP por materia" en el dashboard del alumno, 29-sep). */
+.bk-grid-2 { display: grid; grid-template-columns: repeat(2, minmax(0,1fr)); gap: 14px; }
+.bk-grid-3 { display: grid; grid-template-columns: repeat(3, minmax(0,1fr)); gap: 14px; }
+.bk-grid-4 { display: grid; grid-template-columns: repeat(4, minmax(0,1fr)); gap: 14px; }
 @media(max-width:1100px) {
-  .bk-grid-4 { grid-template-columns: repeat(2,1fr); }
+  .bk-grid-4 { grid-template-columns: repeat(2, minmax(0,1fr)); }
 }
 @media(max-width:768px) {
-  .bk-grid-2,.bk-grid-3,.bk-grid-4 { grid-template-columns: 1fr; }
+  .bk-grid-2,.bk-grid-3,.bk-grid-4 { grid-template-columns: minmax(0,1fr); }
 }
 
 /* ── bk-btn ─────────────────────────────────────────────────────── */
