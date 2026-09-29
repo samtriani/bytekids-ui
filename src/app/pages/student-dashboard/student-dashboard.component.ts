@@ -33,6 +33,8 @@ export class StudentDashboardComponent implements OnInit, AfterViewInit {
   ];
 
   missions:     any[] = [];
+  /** Las materias de sus actividades, con su XP. Vacio = sin materias todavia. */
+  misMaterias: { nombre: string; xp: number }[] = [];
   logrosGanados       = 0;
   achievements: any[] = [];
   totalXpNum  = 0;
@@ -141,15 +143,18 @@ export class StudentDashboardComponent implements OnInit, AfterViewInit {
           }));
         this.logrosGanados = earned.length;
 
-        // Gráfica de habilidades por materia
-        if (this.skillsChartInst && subjects.length) {
-          const vals = subjects.map((s:any) => s.xpInSubject ?? 0);
-          const maxVal = Math.max(...vals, 100);
-          const suggestedMax = Math.ceil(maxVal / 100) * 100;
-          this.skillsChartInst.data.labels = subjects.map((s:any) =>
-            s.subject?.name ?? s.subjectName ?? '');
-          this.skillsChartInst.data.datasets[0].data = vals;
-          this.skillsChartInst.options.scales.r.suggestedMax = suggestedMax;
+        // XP por materia. La LISTA de materias sale de sus actividades, igual
+        // que en Mis Actividades: el avance guardado puede traer materias de
+        // salones de los que ya salió, y la pantalla terminaba diciendo cosas
+        // distintas que la otra. El XP de cada una sí sale del avance.
+        const xpPorMateria = new Map<string, number>(
+          subjects.map((s:any) => [s.subject?.name ?? s.subjectName ?? '', s.xpInSubject ?? 0]));
+        this.misMaterias = [...misMaterias].map(nombre => ({
+          nombre, xp: xpPorMateria.get(nombre) ?? 0,
+        }));
+        if (this.skillsChartInst) {
+          this.skillsChartInst.data.labels = this.misMaterias.map(m => m.nombre);
+          this.skillsChartInst.data.datasets[0].data = this.misMaterias.map(m => m.xp);
           this.skillsChartInst.update();
         }
 
@@ -192,14 +197,21 @@ export class StudentDashboardComponent implements OnInit, AfterViewInit {
         datasets: [{ label:'XP', data:[0,0,0,0,0,0], borderColor:'#7C3AED', backgroundColor:'rgba(124,58,237,0.1)', fill:true, tension:.4, pointBackgroundColor:'#7C3AED', pointRadius:5 }] },
       options: { responsive:true, maintainAspectRatio:false, plugins:{legend:{display:false}},
         scales:{ x:{grid:{color:'rgba(255,255,255,0.04)'}, ticks:{color:'#6B7FBB',font:{family:'Nunito',weight:'bold'}}},
-                 y:{grid:{color:'rgba(255,255,255,0.04)'}, ticks:{color:'#6B7FBB',font:{family:'Nunito',weight:'bold'}}} } }
+                 // El XP no baja de cero: sin esto, con todo en cero la
+                 // grafica pintaba un eje de -1 a 1.
+                 y:{beginAtZero:true, suggestedMax:100, grid:{color:'rgba(255,255,255,0.04)'}, ticks:{color:'#6B7FBB',precision:0,font:{family:'Nunito',weight:'bold'}}} } }
     });
+    // Barras y no radar: un radar necesita tres ejes o mas, y un alumno del
+    // curso gratuito tiene UNA materia. Antes, sin datos, el radar mostraba
+    // seis materias inventadas (Python, Roblox...) que ByteKids no imparte.
     this.skillsChartInst = new Chart(this.skillsChart.nativeElement, {
-      type: 'radar',
-      data: { labels: ['Python','HTML/CSS','Scratch','Robótica','Roblox','Lógica'],
-        datasets: [{ data:[0,0,0,0,0,0], borderColor:'#2563EB', backgroundColor:'rgba(37,99,235,0.15)', pointBackgroundColor:'#2563EB' }] },
-      options: { responsive:true, maintainAspectRatio:false, plugins:{legend:{display:false}},
-        scales:{ r:{ grid:{color:'rgba(255,255,255,0.06)'}, pointLabels:{color:'#6B7FBB',font:{family:'Nunito',size:11,weight:'bold'}}, ticks:{display:false}, suggestedMin:0, suggestedMax:100 } } }
+      type: 'bar',
+      data: { labels: this.misMaterias.map(m => m.nombre),
+        datasets: [{ label:'XP', data: this.misMaterias.map(m => m.xp),
+          backgroundColor:'#C4992A', borderRadius:8, maxBarThickness:30 }] },
+      options: { indexAxis:'y', responsive:true, maintainAspectRatio:false, plugins:{legend:{display:false}},
+        scales:{ x:{ beginAtZero:true, suggestedMax:100, grid:{color:'rgba(0,0,0,0.05)'}, ticks:{color:'#6B7FBB',precision:0,font:{family:'Nunito',weight:'bold'}} },
+                 y:{ grid:{display:false}, ticks:{color:'#3D2D3A',font:{family:'Nunito',size:12,weight:'bold'}} } } }
     });
   }
 }
