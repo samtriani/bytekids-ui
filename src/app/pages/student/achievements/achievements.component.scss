@@ -33,3 +33,10 @@
 }
 
 .ach-vacio { margin: 18px 2px; font-size: .9rem; color: var(--bk-text-muted); }
+
+/* Como se gana: la medalla dice que hizo; esto dice que tiene que hacer. */
+.ac-pista {
+  margin-top: 8px; padding: 6px 10px; border-radius: 10px;
+  font-size: .74rem; font-weight: 700; line-height: 1.4;
+  color: var(--guinda, #7A1535); background: var(--guinda-lt, #F7EEF1);
+}

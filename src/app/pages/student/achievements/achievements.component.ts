@@ -1,4 +1,4 @@
-﻿import { Component, OnInit } from '@angular/core';
+import { Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { RouterLink } from '@angular/router';
 import { ShellComponent, NavItem } from '../../../shared/shell/shell.component';
@@ -21,8 +21,6 @@ export class AchievementsComponent implements OnInit {
 
   navItems: NavItem[] = STUDENT_NAV;
 
-  categories: string[] = ['Todos'];
-  activeCategory = 'Todos';
   achievements: any[] = [];
 
   /**
@@ -34,11 +32,40 @@ export class AchievementsComponent implements OnInit {
   materiaActiva = 'Todas';
 
   /** La materia de un logro vive en condition_value.subject. */
-  private materiaDe(d: any): string {
+  private materiaDe(d: any): string { return this.condicion(d)?.subject || ''; }
+
+  private condicion(d: any): any {
     try {
-      const cond = JSON.parse(d?.conditionValue ?? '{}');
-      return cond?.subject || '';
-    } catch { return ''; }
+      return typeof d?.conditionValue === 'string' ? JSON.parse(d.conditionValue) : (d?.conditionValue ?? {});
+    } catch { return {}; }
+  }
+
+  /**
+   * Las claves de rareza se guardan sin acento (epico, comun). Antes se les
+   * ponia mayuscula y ya: salia "Epico", el mapa de colores buscaba "Épico",
+   * no lo encontraba y la etiqueta se quedaba gris.
+   */
+  private readonly RAREZA: Record<string, string> = {
+    comun: 'Común', poco_comun: 'Poco común', raro: 'Raro', epico: 'Épico', legendario: 'Legendario',
+  };
+
+  /**
+   * Cuando se gana un logro, en palabras del nino. Sin esto la medalla dice
+   * que hizo --"Entrevistaste a una IA"-- pero no que tiene que hacer.
+   */
+  private comoSeGana(d: any, total: number): string {
+    const c = this.condicion(d);
+    switch (d?.conditionType) {
+      case 'subject_content':  return `🎯 Al aprobar «${c.title}»`;
+      case 'subject_missions':
+        if (c.count === 1)      return '🎯 Con tu primera actividad';
+        if (total && c.count >= total) return `🎯 Al terminar las ${c.count} actividades`;
+        return `🎯 Al aprobar ${c.count} actividades`;
+      case 'streak_days':      return `🔥 Entrando ${c.days} días seguidos`;
+      case 'xp_total':         return `⭐ Al juntar ${c.amount} XP`;
+      case 'project_count':    return `🏗️ Al aprobar ${c.count} proyecto${c.count === 1 ? '' : 's'}`;
+      default:                 return '';
+    }
   }
 
   ngOnInit() {
@@ -81,6 +108,15 @@ export class AchievementsComponent implements OnInit {
             })
           : defs;
 
+        // Para ordenar el camino: en que paso del temario cae cada pieza, y
+        // cuantas piezas tiene cada materia.
+        const pasoDe = new Map<string, number>();
+        const piezasPorMateria = new Map<string, number>();
+        for (const c of (feed ?? []) as any[]) {
+          if (c?.title) pasoDe.set(`${c.subjectName}|${c.title}`, c.orderIndex ?? 0);
+          if (c?.subjectName) piezasPorMateria.set(c.subjectName, (piezasPorMateria.get(c.subjectName) ?? 0) + 1);
+        }
+
         this.achievements = mios.map((d: any) => ({
           title:    d.title,
           icon:     d.icon ?? '🏆',
@@ -89,40 +125,54 @@ export class AchievementsComponent implements OnInit {
           earned:   earnedIds.has(d.id),
           category: d.category ?? 'General',
           date:     earned.find((e: any) => (e.achievement?.id ?? e.achievementId) === d.id)?.earnedAt?.substring(0,10) ?? null,
-          rarity:   d.rarity === 'poco_comun' ? 'Poco común' : (d.rarity ? d.rarity.charAt(0).toUpperCase() + d.rarity.slice(1) : 'Común'),
+          rarity:   this.RAREZA[d.rarity] ?? 'Común',
           materia:  this.materiaDe(d),
-        }));
+          pista:    this.comoSeGana(d, piezasPorMateria.get(this.materiaDe(d)) ?? 0),
+          orden:    this.posicion(d, pasoDe),
+        }))
+        // El orden del camino: primero los de sus materias, en el orden en
+        // que se ganan; al final los generales. Antes salian en el orden del
+        // servidor (categoria y rareza) y "¡Hola, IA!", el primero que se
+        // gana, quedaba casi al ultimo.
+        .sort((a: any, b: any) =>
+          Number(!a.materia) - Number(!b.materia)
+          || a.materia.localeCompare(b.materia)
+          || a.orden - b.orden
+          || a.xp - b.xp);
 
-        // Categorías derivadas de las definiciones reales
-        const catSet = new Set(this.achievements.map(a => a.category).filter(Boolean));
-        this.categories = ['Todos', ...Array.from(catSet)];
-
-        // Las pestañas solo salen si de verdad hay mas de una materia.
+        // Las pestanas salen en cuanto hay mas de un grupo: una materia y los
+        // generales ya son dos. Antes solo aparecian con dos materias, y el
+        // alumno de un solo curso veia sus logros revueltos con los de racha.
         const matSet = new Set<string>(
           this.achievements.map(a => a.materia).filter(Boolean));
-        this.materias = matSet.size > 1
-          ? ['Todas', ...Array.from(matSet).sort(), 'Generales']
-          : [];
+        const hayGenerales = this.achievements.some(a => !a.materia);
+        const grupos = [...Array.from(matSet).sort(), ...(hayGenerales ? ['Generales'] : [])];
+        this.materias = grupos.length > 1 ? ['Todas', ...grupos] : [];
       }
     });
   }
 
   rarityColor: Record<string,string> = { 'Común':'#6B7FBB', 'Poco común':'#10B981', 'Raro':'#2563EB', 'Épico':'#7C3AED', 'Legendario':'#F59E0B' };
 
+  /**
+   * Donde cae el logro en el camino de su materia. Una pieza concreta va en
+   * su paso del temario; "la primera" va antes de todo y los conteos van por
+   * numero, que para "todas" es el ultimo.
+   */
+  private posicion(d: any, pasoDe: Map<string, number>): number {
+    const c = this.condicion(d);
+    if (d?.conditionType === 'subject_content') return pasoDe.get(`${c.subject}|${c.title}`) ?? 50;
+    if (d?.conditionType === 'subject_missions') return c.count === 1 ? 0 : (c.count ?? 50) + 0.5;
+    return 100;
+  }
+
   get filtered() {
     return this.achievements.filter(a =>
-      (this.activeCategory === 'Todos' || a.category === this.activeCategory) &&
       // "Generales" son los que no dependen de ninguna materia: racha, XP.
       (this.materiaActiva === 'Todas'
         || (this.materiaActiva === 'Generales' ? !a.materia
                                                : a.materia === this.materiaActiva)));
   }
-
-  /** Un icono por categoria: distingue esta fila de la de materias. */
-  readonly ICONO_CATEGORIA: Record<string, string> = {
-    programacion: '💻', racha: '🔥', especial: '⭐',
-    proyectos: '🏗️', social: '👥',
-  };
 
   /** El color de la materia sale del catalogo, igual que en Mis Actividades. */
   private coloresMateria: Record<string, string> = {};
@@ -132,10 +182,6 @@ export class AchievementsComponent implements OnInit {
     return this.coloresMateria[m] ?? '#7C3AED';
   }
 
-  iconoCategoria(c: string): string {
-    return c === 'Todos' ? '🏆' : (this.ICONO_CATEGORIA[c] ?? '🎖️');
-  }
-
   /** Los conteos son informacion real y ademas separan las dos filas. */
   contarMateria(m: string): number {
     if (m === 'Todas')     return this.achievements.length;
@@ -143,14 +189,6 @@ export class AchievementsComponent implements OnInit {
     return this.achievements.filter(a => a.materia === m).length;
   }
 
-  contarCategoria(c: string): number {
-    const porMateria = this.achievements.filter(a =>
-      this.materiaActiva === 'Todas'
-        || (this.materiaActiva === 'Generales' ? !a.materia
-                                              : a.materia === this.materiaActiva));
-    return c === 'Todos' ? porMateria.length
-                         : porMateria.filter(a => a.category === c).length;
-  }
   get earnedCount() { return this.achievements.filter(a => a.earned).length; }
   get totalXp() { return this.achievements.filter(a => a.earned).reduce((s,a) => s+a.xp, 0); }
 }
