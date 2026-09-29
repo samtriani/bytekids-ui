@@ -74,12 +74,9 @@
   font-size: 1rem; font-weight: 900; color: var(--tx3);
   font-variant-numeric: tabular-nums;
 }
-.cm-av {
-  width: 32px; height: 32px; border-radius: 10px; flex-shrink: 0;
-  display: flex; align-items: center; justify-content: center;
-  background: var(--guinda-lt); color: var(--guinda);
-  font-size: .72rem; font-weight: 900;
-}
+/* El fondo y las iniciales los pinta <app-avatar>: aqui solo se reserva el
+   lugar en la fila. Con recuadro propio le comeria las esquinas al robot. */
+.cm-av { flex-shrink: 0; }
 .cm-nombre {
   flex: 1; min-width: 0; font-size: .84rem; font-weight: 700; color: var(--tx1);
   white-space: nowrap; overflow: hidden; text-overflow: ellipsis;

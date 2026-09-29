@@ -65,7 +65,8 @@
             @for (r of ranking; track r.id) {
               <li class="cm-puesto" [class.cm-puesto--mio]="r.esMio">
                 <span class="cm-medalla">{{ medalla(r.puesto) || r.puesto }}</span>
-                <span class="cm-av">{{ r.iniciales }}</span>
+                <app-avatar class="cm-av" [bot]="r.bot" [iniciales]="r.iniciales"
+                            [px]="32" color="#7A1535"></app-avatar>
                 <span class="cm-nombre">{{ r.esMio ? 'Tú' : r.nombre }}</span>
                 <span class="cm-xp">{{ r.xp }} XP</span>
               </li>

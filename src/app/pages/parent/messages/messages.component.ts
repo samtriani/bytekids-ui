@@ -3,6 +3,7 @@ import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { RouterLink } from '@angular/router';
 import { ShellComponent, NavItem } from '../../../shared/shell/shell.component';
+import { AvatarComponent } from '../../../shared/avatar/avatar.component';
 import { MessageApiService } from '../../../services/api/message-api.service';
 import { AuthService } from '../../../services/auth.service';
 import { forkJoin, of } from 'rxjs';
@@ -21,7 +22,7 @@ const NAV: NavItem[] = [
 @Component({
   selector: 'app-parent-messages',
   standalone: true,
-  imports: [CommonModule, FormsModule, RouterLink, ShellComponent],
+  imports: [CommonModule, FormsModule, RouterLink, ShellComponent, AvatarComponent],
   templateUrl: './messages.component.html',
   styleUrls: ['./messages.component.scss']
 })
@@ -70,6 +71,7 @@ export class MessagesComponent implements OnInit {
             id:       otherId,
             name:     other.displayName || 'Contacto',
             av,
+            bot:      other.avatarUrl ?? null,
             role:     other.role === 'teacher' ? 'Maestro/a' : other.role || '',
             lastMsg:  '',
             lastTime: '',

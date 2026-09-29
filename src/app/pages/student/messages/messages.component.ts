@@ -2,6 +2,7 @@ import { Component, OnInit, ViewChild, ElementRef, AfterViewChecked } from '@ang
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { ShellComponent } from '../../../shared/shell/shell.component';
+import { AvatarComponent } from '../../../shared/avatar/avatar.component';
 import { STUDENT_NAV } from '../shared/student-nav';
 import { MessageApiService } from '../../../services/api/message-api.service';
 import { AuthService } from '../../../services/auth.service';
@@ -12,6 +13,7 @@ interface Contacto {
   id: string;
   displayName: string;
   initials: string;
+  avatarUrl?: string | null;
   role: string;
   motivo: string;
 }
@@ -21,6 +23,8 @@ interface Conversacion {
   nombre: string;
   motivo: string;
   iniciales: string;
+  /** Su roboticito, o null si usa iniciales. */
+  bot: string | null;
   ultimo: string;
   hora: string;
   sinLeer: number;
@@ -40,7 +44,7 @@ interface Conversacion {
 @Component({
   selector: 'app-student-messages',
   standalone: true,
-  imports: [CommonModule, FormsModule, ShellComponent],
+  imports: [CommonModule, FormsModule, ShellComponent, AvatarComponent],
   templateUrl: './messages.component.html',
   styleUrls: ['./messages.component.scss'],
 })
@@ -67,6 +71,7 @@ export class StudentMessagesComponent implements OnInit, AfterViewChecked {
 
   get miNombre(): string { return this.yo?.displayName || 'Alumno'; }
   get misIniciales(): string { return this.yo?.initials || 'A'; }
+  get miBot(): string | null { return this.yo?.avatarUrl ?? null; }
   get sinLeerTotal(): number {
     return this.conversaciones.reduce((s, c) => s + c.sinLeer, 0);
   }
@@ -142,6 +147,8 @@ export class StudentMessagesComponent implements OnInit, AfterViewChecked {
         // etiqueta: el historial no se le esconde al niño.
         motivo: contacto?.motivo ?? '',
         iniciales: this.aIniciales(nombre, contacto?.initials),
+        bot: contacto?.avatarUrl
+          ?? (enviado ? m.recipient?.avatarUrl : m.sender?.avatarUrl) ?? null,
         ultimo: (m.body ?? '').substring(0, 60),
         hora: this.hora(m.createdAt),
         sinLeer: this.recibidos.filter(x => this.idRemitente(x) === id && !x.isRead).length,
@@ -157,6 +164,7 @@ export class StudentMessagesComponent implements OnInit, AfterViewChecked {
         nombre: c.displayName,
         motivo: c.motivo,
         iniciales: this.aIniciales(c.displayName, c.initials),
+        bot: c.avatarUrl ?? null,
         ultimo: '',
         hora: '',
         sinLeer: 0,

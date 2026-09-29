@@ -59,8 +59,8 @@
         <div class="ws-repaso-head">
           <span class="ws-repaso-titulo">📄 Tu entrega</span>
           @if (existingSub.score !== null && existingSub.score !== undefined) {
-            <span class="ws-repaso-cal" [style.color]="scoreColor(existingSub.score * 10)">
-              ⭐ {{ existingSub.score }}/10
+            <span class="ws-repaso-cal" [style.color]="scoreColor(existingSub.score)">
+              ⭐ {{ sobreDiez(existingSub.score) }}/10
             </span>
           }
         </div>
@@ -152,7 +152,7 @@
         } @else if (alreadyDone) {
           <div class="ws-submitted-badge ws-submitted-badge--ok">
             ✅ Aprobada
-            @if (existingSub?.score != null) { <span style="margin-left:8px;font-weight:900">{{ (existingSub.score / 10).toFixed(1) }}/10</span> }
+            @if (existingSub?.score != null) { <span style="margin-left:8px;font-weight:900">{{ sobreDiez(existingSub.score) }}/10</span> }
           </div>
         }
         <!-- Fecha límite -->

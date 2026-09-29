@@ -5,6 +5,7 @@ import { ActivatedRoute, RouterLink } from '@angular/router';
 import { ShellComponent } from '../../../shared/shell/shell.component';
 import { TEACHER_NAV } from '../shared/teacher-nav';
 import { RolePipe } from '../../../shared/pipes/role.pipe';
+import { AvatarComponent } from '../../../shared/avatar/avatar.component';
 import { MessageApiService } from '../../../services/api/message-api.service';
 import { AuthService } from '../../../services/auth.service';
 import { forkJoin, of } from 'rxjs';
@@ -13,7 +14,7 @@ import { catchError } from 'rxjs/operators';
 @Component({
   selector: 'app-teacher-messages',
   standalone: true,
-  imports: [CommonModule, FormsModule, RouterLink, ShellComponent, RolePipe],
+  imports: [CommonModule, FormsModule, RouterLink, ShellComponent, RolePipe, AvatarComponent],
   templateUrl: './messages.component.html',
   styleUrls: ['./messages.component.scss']
 })
@@ -92,6 +93,7 @@ export class MessagesComponent implements OnInit, AfterViewChecked {
           name: nombre || 'Nueva conversación',
           role: 'Alumno',
           av: this.toInitials(nombre || '?', ''),
+          bot: this.contactos.find(c => c.id === destino)?.avatarUrl ?? null,
           lastMsg: 'Sin mensajes todavía',
           time: '',
           unread: 0,
@@ -127,8 +129,10 @@ export class MessagesComponent implements OnInit, AfterViewChecked {
       const role    = isSent ? this.recipientRole(msg)    : this.senderRole(msg);
       const initials = this.toInitials(name, isSent ? this.recipientInitials(msg) : this.senderInitials(msg));
       const unread  = this.inboxRaw.filter(m => this.senderId(m) === userId && !m.isRead).length;
+      // El robot sale del mensaje mismo: el de la otra persona, no el mio.
+      const bot = (isSent ? msg.recipient?.avatarUrl : msg.sender?.avatarUrl) ?? null;
       return {
-        id: userId, name, role, av: initials,
+        id: userId, name, role, av: initials, bot,
         lastMsg: (msg.body ?? msg.content ?? '').substring(0, 60),
         time: this.fmtTime(msg.createdAt),
         unread,
@@ -145,6 +149,7 @@ export class MessagesComponent implements OnInit, AfterViewChecked {
         name: c.displayName,
         role: c.role,
         av: this.toInitials(c.displayName, c.initials),
+        bot: c.avatarUrl ?? null,
         lastMsg: c.motivo || 'Sin mensajes todavía',
         time: '',
         unread: 0,

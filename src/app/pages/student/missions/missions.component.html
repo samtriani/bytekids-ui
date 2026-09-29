@@ -77,7 +77,7 @@
           </div>
         }
         @if (m.score !== null && m.status === 'Completado') {
-          <div class="mc-score">⭐ {{ (m.score / 10).toFixed(1) }}/10</div>
+          <div class="mc-score">⭐ {{ sobreDiez(m.score) }}/10</div>
         }
         @if (m.status === 'Por ajustar' && m.feedback) {
           <div class="mc-rejected-hint">💬 {{ m.feedback | slice:0:60 }}{{ m.feedback.length > 60 ? '…' : '' }}</div>

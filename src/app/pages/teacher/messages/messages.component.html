@@ -19,9 +19,12 @@
         <div class="conv-contactos-titulo">¿A quién le escribes?</div>
         @for (c of contactosNuevos; track c.id) {
           <div class="conv-contacto" (click)="escribirle(c)">
-            <div class="avatar" style="width:32px;height:32px;font-size:.7rem">
-              {{ c.initials || c.displayName.charAt(0) }}
-            </div>
+            @if (c.avatarUrl) { <app-avatar [bot]="c.avatarUrl" [px]="32"></app-avatar> }
+            @else {
+              <div class="avatar" style="width:32px;height:32px;font-size:.7rem">
+                {{ c.initials || c.displayName.charAt(0) }}
+              </div>
+            }
             <div style="flex:1;min-width:0">
               <div class="conv-contacto-nombre">{{ c.displayName }}</div>
               <div class="conv-contacto-motivo">{{ c.motivo }}</div>
@@ -39,7 +42,8 @@
       <div class="conv-list">
         @for (c of conversations; track c.id) {
           <div class="conv-item" [class.active]="c.id===selectedId" (click)="select(c.id)">
-            <div class="avatar" style="width:38px;height:38px;position:relative">{{ c.av }}</div>
+            @if (c.bot) { <app-avatar [bot]="c.bot" [px]="38"></app-avatar> }
+            @else { <div class="avatar" style="width:38px;height:38px;position:relative">{{ c.av }}</div> }
             <div class="conv-body">
               <div style="display:flex;justify-content:space-between;align-items:center">
                 <span style="font-weight:700;font-size:.84rem;color:var(--tx1)">{{ c.name }}</span>
@@ -65,7 +69,8 @@
       </div>
     } @else {
       <div class="chat-header">
-        <div class="avatar" style="width:36px;height:36px">{{ selected.av }}</div>
+        @if (selected.bot) { <app-avatar [bot]="selected.bot" [px]="36"></app-avatar> }
+        @else { <div class="avatar" style="width:36px;height:36px">{{ selected.av }}</div> }
         <div>
           <div style="font-weight:800;font-size:.9rem;color:var(--tx1)">{{ selected.name }}</div>
           <div style="font-size:.72rem;color:var(--tx3)">{{ selected.role | role }}</div>

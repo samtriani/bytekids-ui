@@ -8,6 +8,7 @@ import { SubmissionApiService } from '../../../services/api/submission-api.servi
 import { AuthService } from '../../../services/auth.service';
 import { forkJoin } from 'rxjs';
 import { STUDENT_NAV } from '../shared/student-nav';
+import { sobreDiez } from '../../../shared/calificacion';
 
 const TIPO_LABEL: Record<string, string> = {
   mision: 'Misión', tarea: 'Tarea', quiz: 'Quiz', proyecto: 'Proyecto', material: 'Material',
@@ -28,6 +29,9 @@ const SUBJECT_META: Record<string, { icon: string; color: string }> = {
 @Component({ selector: 'app-missions', standalone: true, imports: [CommonModule, RouterLink, ShellComponent],
   templateUrl: './missions.component.html', styleUrls: ['./missions.component.scss'] })
 export class MissionsComponent implements OnInit {
+  /** Para la plantilla. Ver shared/calificacion.ts. */
+  readonly sobreDiez = sobreDiez;
+
   get studentName(): string    { return this.auth.getUser()?.displayName || 'Alumno'; }
   get studentInitials(): string { return this.auth.getUser()?.initials || 'A'; }
 
