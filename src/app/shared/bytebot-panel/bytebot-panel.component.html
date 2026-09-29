@@ -1,0 +1,50 @@
+@if (abierto) {
+  <!-- En telefono tapa todo; en escritorio deja ver las instrucciones -->
+  <div class="bb-fondo" (click)="cerrar.emit()"></div>
+
+  <aside class="bb" role="dialog" aria-modal="false" aria-labelledby="bb-titulo">
+    <header class="bb-head">
+      <img src="assets/logo-bytekids.jpeg" alt="" class="bb-av">
+      <div class="bb-head-txt">
+        <h2 id="bb-titulo">ByteBot</h2>
+        <span class="bb-sobre">Te ayuda con: <b>{{ titulo }}</b></span>
+      </div>
+      <button type="button" class="bb-x" (click)="reiniciar()" title="Empezar de nuevo" aria-label="Empezar la conversación de nuevo">↺</button>
+      <button type="button" class="bb-cerrar" (click)="cerrar.emit()" aria-label="Cerrar y volver a mi actividad">
+        Volver a mi actividad ✕
+      </button>
+    </header>
+
+    <div class="bb-chat" aria-live="polite">
+      @for (m of mensajes; track $index) {
+        <div class="bb-msg bb-msg--{{ m.rol }}">
+          @if (m.rol === 'assistant') { <img src="assets/logo-bytekids.jpeg" alt="" class="bb-msg-av"> }
+          <div class="bb-burbuja" [innerHTML]="m.html"></div>
+        </div>
+      }
+      @if (pensando) {
+        <div class="bb-msg bb-msg--assistant">
+          <img src="assets/logo-bytekids.jpeg" alt="" class="bb-msg-av">
+          <div class="bb-burbuja bb-pensando" aria-label="ByteBot está pensando"><span></span><span></span><span></span></div>
+        </div>
+      }
+      <div #fin></div>
+    </div>
+
+    @if (mensajes.length <= 1 && !pensando) {
+      <div class="bb-sug">
+        @for (s of sugerencias; track s) {
+          <button type="button" class="bb-sug-btn" (click)="enviar(s)">{{ s }}</button>
+        }
+      </div>
+    }
+
+    <form class="bb-form" (submit)="$event.preventDefault(); enviar()">
+      <textarea #entrada id="bb-entrada" class="bb-entrada" rows="2" [(ngModel)]="texto" name="texto"
+                placeholder="Escríbele a ByteBot…" maxlength="1500"
+                (keydown)="alTeclear($event)" [disabled]="pensando"></textarea>
+      <button type="submit" class="bb-enviar" [disabled]="!texto.trim() || pensando" aria-label="Enviar">➤</button>
+    </form>
+    <p class="bb-nota">🔒 No le escribas tu dirección, tu escuela ni tus contraseñas.</p>
+  </aside>
+}
