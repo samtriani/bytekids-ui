@@ -2,6 +2,7 @@ import { Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { RouterLink } from '@angular/router';
 import { ShellComponent } from '../../../shared/shell/shell.component';
+import { AvatarComponent } from '../../../shared/avatar/avatar.component';
 import { STUDENT_NAV } from '../shared/student-nav';
 import { ProgressApiService } from '../../../services/api/progress-api.service';
 import { AchievementApiService } from '../../../services/api/achievement-api.service';
@@ -13,6 +14,8 @@ interface EnElRanking {
   id: string;
   nombre: string;
   iniciales: string;
+  /** Su roboticito, o null si usa iniciales. */
+  bot: string | null;
   xp: number;
   puesto: number;
   esMio: boolean;
@@ -49,7 +52,7 @@ interface LogroDelSalon {
 @Component({
   selector: 'app-community',
   standalone: true,
-  imports: [CommonModule, RouterLink, ShellComponent],
+  imports: [CommonModule, RouterLink, ShellComponent, AvatarComponent],
   templateUrl: './community.component.html',
   styleUrls: ['./community.component.scss'],
 })
@@ -91,6 +94,7 @@ export class CommunityComponent implements OnInit {
         id:        e.studentId,
         nombre:    e.displayName || 'Compañero',
         iniciales: this.aIniciales(e.displayName, e.initials),
+        bot:       e.avatarUrl ?? null,
         xp:        e.totalXp ?? 0,
         puesto:    e.rank ?? i + 1,
         esMio:     e.studentId === miId,

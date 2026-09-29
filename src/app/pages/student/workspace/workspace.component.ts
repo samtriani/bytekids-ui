@@ -6,6 +6,7 @@ import { ContentApiService } from '../../../services/api/content-api.service';
 import { SubmissionApiService } from '../../../services/api/submission-api.service';
 import { QuizApiService } from '../../../services/api/quiz-api.service';
 import { AuthService } from '../../../services/auth.service';
+import { sobreDiez } from '../../../shared/calificacion';
 import { catchError, forkJoin, of } from 'rxjs';
 
 type Screen = 'loading' | 'work' | 'quiz' | 'done' | 'error';
@@ -291,6 +292,10 @@ export class WorkspaceComponent implements OnInit {
     return ({ mision:'Misión', tarea:'Tarea', quiz:'Quiz', proyecto:'Proyecto', material:'Material' } as any)[t] ?? t;
   }
 
+  /** Para la plantilla. Ver shared/calificacion.ts. */
+  readonly sobreDiez = sobreDiez;
+
+  /** Recibe el score tal como se guarda: de 0 a 100. */
   scoreColor(score: number): string {
     return score >= 80 ? '#10B981' : score >= 50 ? '#F59E0B' : '#EF4444';
   }

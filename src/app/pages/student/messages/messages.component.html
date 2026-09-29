@@ -23,7 +23,8 @@
           </div>
           @for (c of conversaciones; track c.id) {
             <button class="msg-conv" [class.activa]="c.id === seleccionado" (click)="abrir(c.id)">
-              <span class="msg-av">{{ c.iniciales }}</span>
+              @if (c.bot) { <app-avatar [bot]="c.bot" [px]="38"></app-avatar> }
+              @else { <span class="msg-av">{{ c.iniciales }}</span> }
               <span class="msg-conv-texto">
                 <span class="msg-conv-linea">
                   <span class="msg-conv-nombre">{{ c.nombre }}</span>
@@ -43,7 +44,8 @@
           </div>
           @for (c of contactosNuevos; track c.id) {
             <button class="msg-conv msg-conv--nuevo" (click)="escribirle(c)">
-              <span class="msg-av msg-av--nuevo">{{ c.initials || c.displayName.charAt(0) }}</span>
+              @if (c.avatarUrl) { <app-avatar [bot]="c.avatarUrl" [px]="38"></app-avatar> }
+              @else { <span class="msg-av msg-av--nuevo">{{ c.initials || c.displayName.charAt(0) }}</span> }
               <span class="msg-conv-texto">
                 <span class="msg-conv-nombre">{{ c.displayName }}</span>
                 <span class="msg-conv-motivo">{{ c.motivo }}</span>
@@ -72,7 +74,8 @@
           </div>
         } @else {
           <header class="msg-hilo-head">
-            <span class="msg-av">{{ actual.iniciales }}</span>
+            @if (actual.bot) { <app-avatar [bot]="actual.bot" [px]="38"></app-avatar> }
+            @else { <span class="msg-av">{{ actual.iniciales }}</span> }
             <div>
               <div class="msg-hilo-nombre">{{ actual.nombre }}</div>
               @if (actual.motivo) { <div class="msg-hilo-motivo">{{ actual.motivo }}</div> }
@@ -84,17 +87,23 @@
               <div class="msg-primera">
                 <span>👋</span>
                 <p>Esta es tu primera vez escribiéndole a {{ actual.nombre }}.</p>
-                <small>Cuéntale tu duda con tus palabras. No hay preguntas tontas.</small>
+                <small>Cuéntale tu duda con tus palabras. Pregunta todo: así se aprende.</small>
               </div>
             }
             @for (m of hilo; track $index) {
               <div class="msg-burbuja-fila" [class.mia]="m.mio">
-                @if (!m.mio) { <span class="msg-av msg-av--chico">{{ actual.iniciales }}</span> }
+                @if (!m.mio) {
+                  @if (actual.bot) { <app-avatar [bot]="actual.bot" [px]="28"></app-avatar> }
+                  @else { <span class="msg-av msg-av--chico">{{ actual.iniciales }}</span> }
+                }
                 <div class="msg-burbuja" [class.mia]="m.mio">
                   <div class="msg-texto">{{ m.texto }}</div>
                   <div class="msg-hora">{{ m.hora }}</div>
                 </div>
-                @if (m.mio) { <span class="msg-av msg-av--chico msg-av--yo">{{ misIniciales }}</span> }
+                @if (m.mio) {
+                  @if (miBot) { <app-avatar [bot]="miBot" [px]="28"></app-avatar> }
+                  @else { <span class="msg-av msg-av--chico msg-av--yo">{{ misIniciales }}</span> }
+                }
               </div>
             }
             <div #finHilo></div>

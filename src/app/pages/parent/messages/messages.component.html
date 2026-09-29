@@ -17,7 +17,8 @@
         }
         @for (c of conversations; track c.id) {
           <div class="conv-item" [class.active]="c.id===selectedConvId" (click)="selectConv(c.id)">
-            <div class="avatar" style="width:38px;height:38px;position:relative">{{ c.av }}</div>
+            @if (c.bot) { <app-avatar [bot]="c.bot" [px]="38"></app-avatar> }
+            @else { <div class="avatar" style="width:38px;height:38px;position:relative">{{ c.av }}</div> }
             <div class="conv-body">
               <div style="display:flex;justify-content:space-between;align-items:center">
                 <span style="font-weight:700;font-size:.84rem;color:var(--tx1)">{{ c.name }}</span>
@@ -38,7 +39,8 @@
     <div class="chat-panel">
       @if (sel) {
         <div class="chat-header">
-          <div class="avatar" style="width:36px;height:36px">{{ sel.av }}</div>
+          @if (sel.bot) { <app-avatar [bot]="sel.bot" [px]="36"></app-avatar> }
+          @else { <div class="avatar" style="width:36px;height:36px">{{ sel.av }}</div> }
           <div>
             <div style="font-weight:800;font-size:.9rem;color:var(--tx1)">{{ sel.name }}</div>
             <div style="font-size:.72rem;color:var(--tx3)">{{ sel.role }}</div>
