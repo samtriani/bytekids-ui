@@ -60,12 +60,15 @@ export class MissionsComponent implements OnInit {
   // Filtro por tipo: sin esto materiales, quizzes y proyectos se veian igual
   // que una mision y el alumno no sabia que le estaban pidiendo.
   tipoFiltro = '';
+  // En el orden en que el nino vive el aprendizaje: aprender, practicar,
+  // investigar, comprobar, crear. Antes Materiales --lo primero que hace--
+  // quedaba al final. Mismo orden que ORDEN_TIPOS en el dashboard.
   readonly TIPOS = [
+    { k: 'material', label: '📚 Materiales' },
     { k: 'mision',   label: '🚀 Misiones' },
     { k: 'tarea',    label: '📋 Tareas' },
     { k: 'quiz',     label: '❓ Quizzes' },
     { k: 'proyecto', label: '🏗️ Proyectos' },
-    { k: 'material', label: '📚 Materiales' },
   ];
 
   contarTipo(k: string): number { return this.cuenta(this.activeFilter, k); }
