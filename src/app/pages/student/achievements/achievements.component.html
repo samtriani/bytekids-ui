@@ -17,35 +17,25 @@
     </div>
   </div>
 
-  <div class="filtros-panel">
-    @if (materias.length) {
+  <!-- Un solo grupo de logros: no hay nada que filtrar y el panel no sale -->
+  @if (materias.length) {
+    <div class="filtros-panel">
       <div class="filtro-fila">
-        <span class="filtro-lbl">Materias</span>
+        <span class="filtro-lbl">Ver</span>
         <div class="filtro-chips">
           @for (m of materias; track m) {
             <button class="filter-btn" [class.active]="materiaActiva===m"
                     [style.background]="materiaActiva===m ? colorMateria(m) : null"
                     [style.border-color]="materiaActiva===m ? colorMateria(m) : null"
                     (click)="materiaActiva=m">
-              {{ m }} <span class="filter-n">{{ contarMateria(m) }}</span>
+              {{ m === 'Todas' ? '🏆 Todos' : m === 'Generales' ? '🔥 Generales' : '🎓 ' + m }}
+              <span class="filter-n">{{ contarMateria(m) }}</span>
             </button>
           }
         </div>
       </div>
-    }
-
-    <div class="filtro-fila">
-      <span class="filtro-lbl">Tipos de logro</span>
-      <div class="filtro-chips">
-        @for (c of categories; track c) {
-          <button class="filter-btn filter-btn--tipo" [class.active]="activeCategory===c"
-                  (click)="activeCategory=c">
-            {{ iconoCategoria(c) }} {{ c }} <span class="filter-n">{{ contarCategoria(c) }}</span>
-          </button>
-        }
-      </div>
     </div>
-  </div>
+  }
 
   @if (!filtered.length) {
     <p class="ach-vacio">No hay logros de ese tipo. Prueba con otra pestaña.</p>
@@ -58,6 +48,9 @@
         <div class="ac-icon" [class.earned]="a.earned">{{ a.icon }}</div>
         <div class="ac-title">{{ a.title }}</div>
         <div class="ac-desc">{{ a.desc }}</div>
+        @if (a.pista && !a.earned) {
+          <div class="ac-pista">{{ a.pista }}</div>
+        }
         <div class="ac-footer">
           <span class="ac-xp">+{{ a.xp }} XP</span>
           @if (a.earned) {
