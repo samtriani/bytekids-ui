@@ -62,6 +62,9 @@ export class ProgressComponent implements OnInit, AfterViewInit {
    * Las materias salen de sus actividades, igual que en el dashboard.
    */
   cargado = false;
+  /** Semanas con datos en la grafica de XP, y lo ganado en la actual. */
+  semanasXp = 0;
+  xpEstaSemana = 0;
   materias: string[] = [];
   get unaMateria(): boolean { return this.materias.length === 1; }
   camino: Paso[] = [];
@@ -222,6 +225,9 @@ export class ProgressComponent implements OnInit, AfterViewInit {
     }
     // Por semana de verdad: antes cada EVENTO de XP salia como una "Sem".
     const semanas = xpPorSemana(xpHistory, 8);
+    this.semanasXp = semanas.length;
+    const n = semanas.length;
+    this.xpEstaSemana = n ? semanas[n - 1].acumulado - (n > 1 ? semanas[n - 2].acumulado : 0) : 0;
     if (this.lineChart && semanas.length) {
       this.lineChart.data.labels = semanas.map(s => s.etiqueta);
       this.lineChart.data.datasets[0].data = semanas.map(s => s.acumulado);
