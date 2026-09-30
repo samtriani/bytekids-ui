@@ -4,6 +4,7 @@ export const TEACHER_NAV: NavItem[] = [
   { label:'Mi Panel',        icon:'🏠', route:'/teacher' },
   { label:'Mis Salones',     icon:'🏫', route:'/teacher/classrooms' },
   { label:'Alumnos',         icon:'👨‍🎓', route:'/teacher/students' },
+  { label:'Comunidad',       icon:'👥', route:'/teacher/community' },
   { label:'Libreta',         icon:'📋', route:'/teacher/gradebook' },
   { label:'Crear Contenido', icon:'📝', route:'/teacher/create' },
   { label:'Mis Contenidos',  icon:'📚', route:'/teacher/content' },
