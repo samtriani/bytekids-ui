@@ -1,3 +1,52 @@
+<!-- El encabezado de la actividad: el mismo en "trabajando" y en "listo".
+     Antes la pantalla de listo no lo tenia y parecia otra pagina. -->
+<ng-template #heroTpl>
+<!-- ══ Encabezado ══ -->
+<div class="ws-hero">
+  <div class="ws-hero-fondo" aria-hidden="true"></div>
+  <div class="ws-hero-inner">
+    <div class="ws-hero-top">
+      <button class="ws-back" (click)="goBack()">← {{ fromClassroom ? 'Volver al aula' : 'Mis misiones' }}</button>
+      <img src="assets/logo-bytekids.jpeg" alt="ByteKids Academy" class="ws-logo">
+    </div>
+
+    <div class="ws-hero-fila">
+      <div class="ws-hero-body">
+        <div class="ws-type-badge">{{ typeLabel(content.type) }}</div>
+        <h1 class="ws-title">{{ content.title }}</h1>
+        <div class="ws-meta">
+          @if (content.subjectIcon) { <span>{{ content.subjectIcon }}</span> }
+          <span class="ws-subject">{{ content.subjectName }}</span>
+          <span class="ws-dot">·</span>
+          <span>{{ diffLabel(content.difficulty) }}</span>
+          <span class="ws-dot">·</span>
+          <span>⏱️ {{ content.estimatedMinutes }} min</span>
+          <div class="ws-xp">⭐ +{{ content.xpReward }} XP</div>
+        </div>
+
+        @if (submitted && !alreadyDone) {
+          <div class="ws-submitted-badge">⏳ Entregada — esperando revisión</div>
+        } @else if (alreadyDone) {
+          <div class="ws-submitted-badge ws-submitted-badge--ok">
+            ✅ Aprobada
+            @if (existingSub?.score != null) { <span style="margin-left:8px;font-weight:900">{{ sobreDiez(existingSub.score) }}/10</span> }
+          </div>
+        }
+        @if (dueLabel) {
+          <div class="ws-due-badge" [class.ws-due-badge--urgent]="dueUrgent">{{ dueLabel }}</div>
+        }
+      </div>
+
+      <!-- Su robot, dandole animo. Si no escogio, sus iniciales. -->
+      <div class="ws-animo" aria-hidden="true">
+        <div class="ws-animo-globo">{{ mensajeAnimo }}</div>
+        <app-avatar [bot]="miBot" [iniciales]="student?.initials || 'A'" [px]="76" color="#A78BFA"></app-avatar>
+      </div>
+    </div>
+  </div>
+</div>
+</ng-template>
+
 <!-- LOADING -->
 @if (screen === 'loading') {
   <div class="ws-center">
@@ -35,109 +84,121 @@
 }
 
 <!-- DONE -->
-@if (screen === 'done') {
-  <div class="ws-done">
-    <div class="ws-done-confetti">🎉</div>
-    @if (ultimoIntento) {
-      <!-- correctAnswers y totalQuestions no existen en la respuesta del
-           backend: siempre salia "— de 5". Se usa la calificacion, que si. -->
-      <div class="ws-done-score" [style.color]="scoreColor(califica)">{{ califica }}%</div>
-      <h2 class="ws-done-title">
-        {{ califica >= 80 ? '¡Excelente resultado!'
-           : aprobo ? '¡Quiz aprobado!'
-           : 'Ya casi' }}
-      </h2>
-      <p class="ws-done-sub">
-        @if (aprobo) {
-          Contestaste bien lo suficiente para aprobarlo.
-        } @else {
-          Necesitas 70% para aprobarlo. Puedes volver a intentarlo las veces
-          que quieras: para eso está.
-        }
-        @if (intentos.length > 1) {
-          <br><small>Llevas {{ intentos.length }} intentos.</small>
-        }
-      </p>
-      <button class="ws-btn ghost" style="margin-top:14px" (click)="reintentarQuiz()">
-        {{ aprobo ? '🔁 Volver a contestarlo' : '✏️ Intentar de nuevo' }}
-      </button>
-    } @else if (existingSub?.status === 'aprobado') {
-      <h2 class="ws-done-title">¡Ya completaste esta actividad!</h2>
-      <p class="ws-done-sub">Aquí abajo puedes repasar lo que entregaste, {{ student?.displayName?.split(' ')[0] }} 👇</p>
-    } @else {
-      <h2 class="ws-done-title">¡Entregado!</h2>
-      <p class="ws-done-sub">Tu maestro revisará tu trabajo pronto. ¡Buen trabajo, {{ student?.displayName?.split(' ')[0] }}! 💪</p>
-    }
-    <div class="ws-done-xp-wrap">
-      <div class="ws-done-xp">⭐ +{{ content?.xpReward ?? 0 }} XP</div>
-    </div>
+@if (screen === 'done' && content) {
+  <div class="ws-root" [class.ws-root--bot]="botAbierto" [style.--accent]="subjectColor">
+    <ng-container [ngTemplateOutlet]="heroTpl"></ng-container>
 
-    <!-- Repaso: que hice, que me pusieron y que me dijo el maestro -->
-    @if (existingSub && !quizResult) {
-      <div class="ws-repaso">
-        <div class="ws-repaso-head">
-          <span class="ws-repaso-titulo">📄 Tu entrega</span>
-          @if (existingSub.score !== null && existingSub.score !== undefined) {
-            <span class="ws-repaso-cal" [style.color]="scoreColor(existingSub.score)">
-              ⭐ {{ sobreDiez(existingSub.score) }}/10
-            </span>
+    <div class="ws-listo">
+
+      <!-- Primero la celebracion y lo que sigue: sin tener que bajar -->
+      <section class="ws-listo-card">
+        @if (ultimoIntento) {
+          <!-- correctAnswers y totalQuestions no existen en la respuesta del
+               backend: se usa la calificacion, que si. -->
+          <div class="ws-done-confetti">{{ aprobo ? '🏆' : '💪' }}</div>
+          <div class="ws-done-score" [style.color]="scoreColor(califica)">{{ califica }}%</div>
+          <h2 class="ws-done-title">
+            {{ califica >= 80 ? '¡Excelente resultado!' : aprobo ? '¡Quiz aprobado!' : 'Ya casi' }}
+          </h2>
+          <p class="ws-done-sub">
+            @if (aprobo) { Contestaste bien lo suficiente para aprobarlo. }
+            @else { Necesitas 70% para aprobarlo. Puedes intentarlo las veces que quieras: para eso está. }
+            @if (intentos.length > 1) { <br><small>Llevas {{ intentos.length }} intentos.</small> }
+          </p>
+        } @else if (alreadyDone) {
+          <div class="ws-done-confetti">🎉</div>
+          <h2 class="ws-done-title">¡Actividad completada!</h2>
+          <p class="ws-done-sub">
+            @if (isMaterial) { Ya lo viste, {{ primerNombre }}. ¡Vas muy bien! }
+            @else { Tu maestro la aprobó. ¡Buen trabajo, {{ primerNombre }}! }
+          </p>
+        } @else {
+          <div class="ws-done-confetti">🚀</div>
+          <h2 class="ws-done-title">¡Entregado!</h2>
+          <p class="ws-done-sub">Tu maestro va a revisar tu trabajo pronto. Mientras, puedes seguir con la siguiente. 💪</p>
+        }
+
+        <!-- El XP solo se presume cuando ya es suyo -->
+        @if (alreadyDone || aprobo) {
+          <div class="ws-done-xp">⭐ +{{ content.xpReward ?? 0 }} XP</div>
+        } @else if (!ultimoIntento) {
+          <div class="ws-done-xp ws-done-xp--pend">⭐ {{ content.xpReward ?? 0 }} XP cuando se apruebe</div>
+        }
+
+        <div class="ws-listo-acciones">
+          @if (siguiente && !fromClassroom) {
+            @if (siguiente.bloqueada) {
+              <p class="ws-siguiente-nota">🔒 La siguiente, «{{ siguiente.title }}», se abre cuando apruebes este quiz.</p>
+            } @else {
+              <button class="ws-btn primary ws-siguiente" (click)="irA(siguiente.id)">
+                Siguiente: {{ siguiente.title }} →
+              </button>
+            }
           }
-        </div>
-
-        @if (existingSub.submittedAt) {
-          <p class="ws-repaso-fecha">Entregado el {{ existingSub.submittedAt | date:'d MMM, HH:mm' }}</p>
-        }
-
-        @if (existingSub.codeSubmitted) {
-          <pre class="ws-repaso-texto">{{ existingSub.codeSubmitted }}</pre>
-        } @else {
-          <p class="ws-repaso-vacio">No quedó registrado el texto de esta entrega.</p>
-        }
-
-        @if (existingSub.teacherFeedback) {
-          <div class="ws-repaso-fb">
-            <span class="ws-repaso-fb-titulo">💬 Lo que te dijo tu maestro</span>
-            <p>{{ existingSub.teacherFeedback }}</p>
+          @if (ultimoIntento) {
+            <button class="ws-btn ghost" (click)="reintentarQuiz()">
+              {{ aprobo ? '🔁 Volver a contestarlo' : '✏️ Intentar de nuevo' }}
+            </button>
+          }
+          <div class="ws-listo-sec">
+            <button class="ws-btn ghost" (click)="goBack()">{{ fromClassroom ? '← Volver al aula' : '← Mis misiones' }}</button>
+            <button class="ws-btn ghost" (click)="openAiTutor()">🤖 Hablar con ByteBot</button>
           </div>
-        }
+        </div>
+      </section>
 
-        @if (instrucciones || materialUrl || checklist.length) {
-          <details class="ws-repaso-inst">
-            <summary>Ver de nuevo las instrucciones</summary>
-            @if (materialUrl) {
-              <a class="ws-recurso" [href]="materialUrl" target="_blank" rel="noopener noreferrer">
-                <span class="ws-recurso-tipo">{{ materialTipo }}</span>
-                <span class="ws-recurso-txt">Abrir el recurso</span>
-                <span class="ws-recurso-flecha">↗</span>
-              </a>
+      <!-- Despues, el repaso -->
+      <!-- Un quiz no tiene "lo que entregaste": su resultado ya esta arriba -->
+      @if (existingSub && !isQuiz) {
+        <section class="ws-repaso">
+          @if (isMaterial) {
+            <p class="ws-repaso-visto">
+              👀 Lo consultaste
+              @if (fechaEntrega) { el {{ fechaEntrega }} }
+            </p>
+          } @else {
+            <div class="ws-repaso-head">
+              <span class="ws-repaso-titulo">📄 Lo que entregaste</span>
+              @if (existingSub.score !== null && existingSub.score !== undefined) {
+                <span class="ws-repaso-cal" [style.color]="scoreColor(existingSub.score)">⭐ {{ sobreDiez(existingSub.score) }}/10</span>
+              }
+            </div>
+            @if (existingSub.submittedAt) {
+              <p class="ws-repaso-fecha">Entregado el {{ existingSub.submittedAt | date:'d MMM, HH:mm' }}</p>
             }
-            @if (instrucciones) {
-              <app-instrucciones [texto]="instrucciones" [color]="subjectColor"
-                                 (pedirByteBot)="openAiTutor()"></app-instrucciones>
+            @if (existingSub.codeSubmitted) {
+              <pre class="ws-repaso-texto">{{ existingSub.codeSubmitted }}</pre>
+            } @else {
+              <p class="ws-repaso-vacio">No quedó registrado el texto de esta entrega.</p>
             }
-          </details>
-        }
-      </div>
-    }
+            @if (existingSub.teacherFeedback) {
+              <div class="ws-repaso-fb">
+                <span class="ws-repaso-fb-titulo">💬 Lo que te dijo tu maestro</span>
+                <p>{{ existingSub.teacherFeedback }}</p>
+              </div>
+            }
+          }
 
-    <!-- Lo que sigue. Un nino solo en casa no deberia tener que regresar a
-         la lista a adivinar cual toca. -->
-    @if (siguiente && !fromClassroom) {
-      @if (siguiente.bloqueada) {
-        <p class="ws-siguiente-nota">🔒 La siguiente, «{{ siguiente.title }}», se abre cuando apruebes este quiz.</p>
-      } @else {
-        <button class="ws-btn primary ws-siguiente" (click)="irA(siguiente.id)">
-          Siguiente: {{ siguiente.title }} →
-        </button>
+          @if (instrucciones || materialUrl) {
+            <details class="ws-repaso-inst">
+              <summary>📖 Volver a ver las instrucciones</summary>
+              <div class="ws-repaso-inst-cuerpo">
+                @if (materialUrl) {
+                  <a class="ws-recurso" [href]="materialUrl" target="_blank" rel="noopener noreferrer">
+                    <span class="ws-recurso-ico">🚀</span>
+                    <span class="ws-recurso-txt"><span class="ws-recurso-tipo">{{ materialTipo }}</span>Abrir la página de la actividad</span>
+                    <span class="ws-recurso-flecha">↗</span>
+                  </a>
+                }
+                @if (instrucciones) {
+                  <app-instrucciones modo="repaso" [texto]="instrucciones" [color]="subjectColor"
+                                     (pedirByteBot)="openAiTutor()"></app-instrucciones>
+                }
+              </div>
+            </details>
+          }
+        </section>
       }
-    }
-
-    <div class="ws-done-actions">
-      <button class="ws-btn" [class.primary]="!siguiente || siguiente.bloqueada || fromClassroom"
-              [class.ghost]="siguiente && !siguiente.bloqueada && !fromClassroom" (click)="goBack()">
-        {{ fromClassroom ? '← Volver al aula' : '← Mis misiones' }}
-      </button>
-      <button class="ws-btn ghost" (click)="openAiTutor()">🤖 Hablar con ByteBot</button>
     </div>
   </div>
 }
@@ -152,50 +213,7 @@
       </div>
     }
 
-    <!-- ══ Encabezado ══ -->
-    <div class="ws-hero">
-      <div class="ws-hero-fondo" aria-hidden="true"></div>
-      <div class="ws-hero-inner">
-        <div class="ws-hero-top">
-          <button class="ws-back" (click)="goBack()">← {{ fromClassroom ? 'Volver al aula' : 'Mis misiones' }}</button>
-          <img src="assets/logo-bytekids.jpeg" alt="ByteKids Academy" class="ws-logo">
-        </div>
-
-        <div class="ws-hero-fila">
-          <div class="ws-hero-body">
-            <div class="ws-type-badge">{{ typeLabel(content.type) }}</div>
-            <h1 class="ws-title">{{ content.title }}</h1>
-            <div class="ws-meta">
-              @if (content.subjectIcon) { <span>{{ content.subjectIcon }}</span> }
-              <span class="ws-subject">{{ content.subjectName }}</span>
-              <span class="ws-dot">·</span>
-              <span>{{ diffLabel(content.difficulty) }}</span>
-              <span class="ws-dot">·</span>
-              <span>⏱️ {{ content.estimatedMinutes }} min</span>
-              <div class="ws-xp">⭐ +{{ content.xpReward }} XP</div>
-            </div>
-
-            @if (submitted && !alreadyDone) {
-              <div class="ws-submitted-badge">⏳ Entregada — esperando revisión</div>
-            } @else if (alreadyDone) {
-              <div class="ws-submitted-badge ws-submitted-badge--ok">
-                ✅ Aprobada
-                @if (existingSub?.score != null) { <span style="margin-left:8px;font-weight:900">{{ sobreDiez(existingSub.score) }}/10</span> }
-              </div>
-            }
-            @if (dueLabel) {
-              <div class="ws-due-badge" [class.ws-due-badge--urgent]="dueUrgent">{{ dueLabel }}</div>
-            }
-          </div>
-
-          <!-- Su robot, dandole animo. Si no escogio, sus iniciales. -->
-          <div class="ws-animo" aria-hidden="true">
-            <div class="ws-animo-globo">¡Tú puedes{{ primerNombre ? ', ' + primerNombre : '' }}! 💪</div>
-            <app-avatar [bot]="miBot" [iniciales]="student?.initials || 'A'" [px]="76" color="#A78BFA"></app-avatar>
-          </div>
-        </div>
-      </div>
-    </div>
+    <ng-container [ngTemplateOutlet]="heroTpl"></ng-container>
 
     <!-- En tablet vertical y telefono las columnas se apilan y el cuadro de
          respuesta queda hasta abajo: este boton lleva directo. -->
