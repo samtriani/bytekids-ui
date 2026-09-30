@@ -149,3 +149,18 @@
 @media (prefers-reduced-motion: reduce) {
   .ins-barra-fill, .ins-sec { transition: none; }
 }
+
+/* ── Modo repaso: acordeon compacto ── */
+.ins--repaso { gap: 8px; }
+.ins-acordeon { padding: 0; }
+.ins-acordeon > .ins-head {
+  cursor: pointer; list-style: none; padding: 12px 16px; border-radius: 16px;
+  &::-webkit-details-marker { display: none; }
+  &:hover .ins-titulo { color: #fff; }
+  &:focus-visible { outline: 2px solid #FCD34D; outline-offset: 2px; }
+}
+.ins-acordeon .ins-titulo { font-size: .9rem; }
+.ins-acordeon .ins-cuerpo { margin-top: 0; padding: 0 16px 14px; }
+.ins-flecha { flex: none; color: #6B7FBB; font-size: .9rem; transition: transform .2s; }
+.ins-acordeon:not([open]) .ins-flecha { transform: rotate(-90deg); }
+@media (prefers-reduced-motion: reduce) { .ins-flecha { transition: none; } }

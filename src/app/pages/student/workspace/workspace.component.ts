@@ -49,6 +49,23 @@ export class WorkspaceComponent implements OnInit {
     return `${this.student?.userId ?? 'anon'}_${this.content?.id ?? ''}`;
   }
   get primerNombre(): string { return (this.student?.displayName ?? '').split(' ')[0]; }
+
+  /**
+   * "29 de septiembre", en espanol. El pipe date de Angular sale en ingles
+   * porque la app no registra el locale es-MX ("29 Sep").
+   */
+  get fechaEntrega(): string {
+    const f = this.existingSub?.submittedAt;
+    return f ? new Date(f).toLocaleDateString('es-MX', { day: 'numeric', month: 'long' }) : '';
+  }
+
+  /** Lo que le dice su robot en el encabezado: animo trabajando, festejo al terminar. */
+  get mensajeAnimo(): string {
+    const nombre = this.primerNombre ? ', ' + this.primerNombre : '';
+    if (this.screen !== 'done') return `¡Tú puedes${nombre}! 💪`;
+    if (this.ultimoIntento && !this.aprobo) return `¡Casi${nombre}! Otra vez 💪`;
+    return this.alreadyDone || this.aprobo ? `¡Lo lograste${nombre}! 🎉` : `¡Bien hecho${nombre}! 🚀`;
+  }
   get miBot(): string | null { return this.student?.avatarUrl ?? null; }
   get palabras(): number {
     const t = this.codeAnswer.trim();

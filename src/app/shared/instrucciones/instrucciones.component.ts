@@ -25,6 +25,13 @@ export class InstruccionesComponent implements OnChanges {
   /** Para recordar los pasos marcados: alumno + actividad. */
   @Input() clave = '';
   @Input() color = '#7C3AED';
+  /**
+   * trabajo: el camino con "¡Listo!" y barra de avance.
+   * repaso:  para una actividad ya hecha. Sin pasos que marcar, cada seccion
+   *          cerrada; solo las metas y lo aprendido abiertas. Abrir el curso
+   *          entero para repasar era un chorizo.
+   */
+  @Input() modo: 'trabajo' | 'repaso' = 'trabajo';
   /** Pide abrir a ByteBot desde un globo de ByteBot. */
   @Output() pedirByteBot = new EventEmitter<void>();
 
