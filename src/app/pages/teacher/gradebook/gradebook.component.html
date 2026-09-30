@@ -128,45 +128,45 @@
           </span>
         </div>
 
-        <div class="gb-scroll">
-          <table class="gb-table">
-            <thead>
-              <tr>
-                <th class="gb-th gb-th-student">Alumno</th>
-                @for (m of materials; track m.id) {
-                  <th class="gb-th">
-                    <div class="gb-th-title">{{ m.orderIndex }}. {{ m.title }}</div>
-                    <div class="gb-th-meta">
-                      +{{ m.xpReward }} XP · {{ leidosDe(m.id) }}/{{ totalMostrado }}
-                    </div>
-                  </th>
-                }
-              </tr>
-            </thead>
-            <tbody>
-              @for (s of alumnosFiltrados; track s.id) {
-                <tr class="gb-row">
-                  <td class="gb-td-student">
-                    <div class="gb-student-cell">
-                      <div class="gb-av">{{ s.initials || '?' }}</div>
-                      <span class="gb-student-name">{{ s.name }}</span>
-                    </div>
-                  </td>
-                  @for (m of materials; track m.id) {
-                    <td class="gb-td" [class.gb-td--approved]="leyo(s.id, m.id)"
-                        [attr.title]="fechaLectura(s.id, m.id)
-                          ? 'Consultado el ' + (fechaLectura(s.id, m.id) | date:'d MMM, HH:mm')
-                          : 'Todavía no lo consulta'">
-                      <span class="gb-mat-mark" [class.si]="leyo(s.id, m.id)">
-                        {{ leyo(s.id, m.id) ? '✓' : '—' }}
+        <!-- Lista y no tabla: una matriz de alumnos x materiales llenaba el
+             telefono de palomitas y cortaba los titulos. Lo que el maestro
+             necesita de un vistazo es cuantos lo vieron y QUIEN FALTA. -->
+        <ul class="gb-mat-lista">
+          @for (m of materials; track m.id) {
+            <li class="gb-mat-item" [class.gb-mat-item--completo]="totalMostrado && leidosDe(m.id) === totalMostrado">
+              <div class="gb-mat-fila">
+                <span class="gb-mat-n">{{ m.orderIndex }}</span>
+                <span class="gb-mat-titulo">{{ m.title }}</span>
+                <span class="gb-mat-xp">+{{ m.xpReward }} XP</span>
+              </div>
+
+              <div class="gb-mat-avance">
+                <div class="gb-mat-barra">
+                  <div class="gb-mat-barra-fill"
+                       [style.width.%]="totalMostrado ? leidosDe(m.id) / totalMostrado * 100 : 0"></div>
+                </div>
+                <span class="gb-mat-cuenta">{{ leidosDe(m.id) }} de {{ totalMostrado }} lo vieron</span>
+              </div>
+
+              @if (totalMostrado && leidosDe(m.id) === totalMostrado) {
+                <p class="gb-mat-ok">✓ Todo el salón ya lo vio</p>
+              } @else if (leidosDe(m.id) === 0) {
+                <p class="gb-mat-nadie">Nadie lo ha visto todavía</p>
+              } @else {
+                <div class="gb-mat-faltan">
+                  <span class="gb-mat-faltan-lbl">Faltan:</span>
+                  @for (s of alumnosFiltrados; track s.id) {
+                    @if (!leyo(s.id, m.id)) {
+                      <span class="gb-mat-chip">
+                        <span class="gb-mat-chip-av">{{ s.initials || '?' }}</span>{{ s.name }}
                       </span>
-                    </td>
+                    }
                   }
-                </tr>
+                </div>
               }
-            </tbody>
-          </table>
-        </div>
+            </li>
+          }
+        </ul>
       </div>
     }
   }
