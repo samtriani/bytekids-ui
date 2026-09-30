@@ -65,3 +65,17 @@
 .pg-tipo-n { font-size: .8rem; font-weight: 800; color: var(--tx3, #7A6878); font-variant-numeric: tabular-nums; }
 .pg-tipo--ok .pg-tipo-n { color: var(--ok, #1A6B3C); }
 .pg-tipo--ok .bar { background: var(--ok, #1A6B3C) !important; }
+
+/* ── Dos columnas independientes ── */
+.pg-cols { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 22px; align-items: start; margin-bottom: 22px; }
+.pg-col { display: flex; flex-direction: column; gap: 22px; min-width: 0; }
+@media (max-width: 768px) { .pg-cols { grid-template-columns: minmax(0, 1fr); } }
+
+/* Pocas semanas: un mensaje sobre la grafica en vez de un punto suelto */
+.pg-xp-pronto {
+  position: absolute; inset: 0; display: flex; flex-direction: column; align-items: center; justify-content: center;
+  text-align: center; gap: 4px; background: var(--surface, #fff); border-radius: 10px;
+  p { margin: 0; font-size: .98rem; color: var(--bk-text, #1A1020); b { color: var(--bk-purple, #7A1535); } }
+  small { font-size: .8rem; color: var(--tx3, #7A6878); max-width: 280px; }
+}
+.pg-xp-pronto-ico { font-size: 2.2rem; }
