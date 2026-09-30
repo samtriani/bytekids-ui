@@ -1,4 +1,4 @@
-﻿import { Component, OnInit } from '@angular/core';
+import { Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { RouterLink, Router } from '@angular/router';
 import { ShellComponent, NavItem } from '../../../shared/shell/shell.component';
@@ -8,6 +8,7 @@ import { SubmissionApiService } from '../../../services/api/submission-api.servi
 import { AuthService } from '../../../services/auth.service';
 import { forkJoin } from 'rxjs';
 import { STUDENT_NAV } from '../shared/student-nav';
+import { CertificadoAvanceComponent } from '../../../shared/certificado-avance/certificado-avance.component';
 import { sobreDiez } from '../../../shared/calificacion';
 
 const TIPO_LABEL: Record<string, string> = {
@@ -26,7 +27,7 @@ const SUBJECT_META: Record<string, { icon: string; color: string }> = {
   'Matemáticas':   { icon: '📐', color: '#EC4899' },
 };
 
-@Component({ selector: 'app-missions', standalone: true, imports: [CommonModule, RouterLink, ShellComponent],
+@Component({ selector: 'app-missions', standalone: true, imports: [CommonModule, RouterLink, ShellComponent, CertificadoAvanceComponent],
   templateUrl: './missions.component.html', styleUrls: ['./missions.component.scss'] })
 export class MissionsComponent implements OnInit {
   /** Para la plantilla. Ver shared/calificacion.ts. */
@@ -107,11 +108,14 @@ export class MissionsComponent implements OnInit {
     const meta = SUBJECT_META[c.subjectName] ?? { icon: '📚', color: '#6B7FBB' };
     const color = c.subjectColor || meta.color;
     const sub  = this.submissionMap[c.id];
+    // La API dice si esta bloqueada y que le falta (DesbloqueoService). Lo
+    // que ya se entrego nunca se muestra como bloqueado: se puede repasar.
+    const bloqueada = !sub && c.bloqueada === true;
     const status = sub
       // "Por ajustar" y no "Rechazado": el maestro pidio un cambio, no
       // descarto el trabajo. El estado interno sigue siendo rechazado.
       ? (sub.status === 'aprobado' ? 'Completado' : sub.status === 'rechazado' ? 'Por ajustar' : 'En progreso')
-      : 'Disponible';
+      : bloqueada ? 'Bloqueada' : 'Disponible';
     const progress = sub
       ? (sub.status === 'aprobado' ? 100 : 50)
       : 0;
@@ -131,7 +135,8 @@ export class MissionsComponent implements OnInit {
       color,
       difficulty: c.difficulty === 'facil' ? 'Fácil' : c.difficulty === 'dificil' ? 'Difícil' : 'Medio',
       time:       c.estimatedMinutes ? `${c.estimatedMinutes} min` : '—',
-      locked:     false,
+      locked:     bloqueada,
+      requiere:   c.requiere ?? '',
       dueDate:    c.dueDate ?? null,
       dueLabel:   this.buildDueLabel(c.dueDate),
       dueUrgency: this.calcDueUrgency(c.dueDate),

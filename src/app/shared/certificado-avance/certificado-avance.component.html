@@ -1,0 +1,52 @@
+@for (a of avances; track a.subjectId) {
+  <section class="ca ca--{{ a.estado }}" [style.--mat]="a.color || '#7A1535'">
+
+    @switch (a.estado) {
+
+      @case ('en_curso') {
+        <div class="ca-ico" aria-hidden="true">🎓</div>
+        <div class="ca-txt">
+          <span class="ca-titulo">Tu certificado de {{ a.materia }}</span>
+          <span class="ca-sub">
+            @if (faltan(a) === 1) { ¡Te falta <b>1 actividad</b> aprobada! }
+            @else { Te faltan <b>{{ faltan(a) }} actividades</b> aprobadas }
+          </span>
+          <div class="ca-barra"><div class="ca-barra-fill" [style.width.%]="pct(a)"></div></div>
+        </div>
+        <span class="ca-cuenta">{{ a.aprobadas }}/{{ a.total }}</span>
+      }
+
+      @case ('listo') {
+        <div class="ca-ico ca-ico--grande" aria-hidden="true">🎉</div>
+        <div class="ca-txt">
+          <span class="ca-titulo">¡Terminaste {{ a.materia }}!</span>
+          <span class="ca-sub">Aprobaste las {{ a.total }} actividades. Ya puedes pedir tu certificado de ByteKids Academy.</span>
+        </div>
+        <button type="button" class="ca-btn" [disabled]="pidiendo.has(a.subjectId)" (click)="solicitar(a)">
+          {{ pidiendo.has(a.subjectId) ? 'Enviando…' : '🎓 Solicitar mi certificado' }}
+        </button>
+      }
+
+      @case ('solicitado') {
+        <div class="ca-ico" aria-hidden="true">⏳</div>
+        <div class="ca-txt">
+          <span class="ca-titulo">Tu certificado de {{ a.materia }} está en camino</span>
+          <span class="ca-sub">Tu maestro o maestra ya recibió tu solicitud y lo está preparando. Te avisamos cuando esté listo.</span>
+        </div>
+      }
+
+      @case ('entregado') {
+        <div class="ca-ico ca-ico--grande" aria-hidden="true">🏅</div>
+        <div class="ca-txt">
+          <span class="ca-titulo">¡Tu certificado de {{ a.materia }} está listo!</span>
+          <span class="ca-sub">Folio {{ a.folio }}. Enséñaselo a tu familia. 💪</span>
+        </div>
+        <button type="button" class="ca-btn" (click)="ver(a)">Ver mi certificado →</button>
+      }
+    }
+  </section>
+}
+
+@if (error) {
+  <p class="ca-error" role="alert">⚠️ {{ error }}</p>
+}

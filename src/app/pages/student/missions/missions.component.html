@@ -6,6 +6,9 @@
     <p>Completa misiones para ganar XP y subir de nivel</p>
   </div>
 
+  <!-- La meta: cuanto le falta para su certificado -->
+  <app-certificado-avance style="margin-bottom:18px"></app-certificado-avance>
+
   <!-- Stats row -->
   <div class="missions-stats">
     <div class="ms-card" style="--c:#10B981"><span class="ms-val">{{ total }}</span><span class="ms-lbl">Total</span></div>
@@ -96,7 +99,9 @@
             {{ m.status==='Completado' ? '🔁 Repasar' : m.status==='Por ajustar' ? '✏️ Mejorar mi respuesta' : m.progress > 0 ? '▶ Continuar' : '🚀 Iniciar' }}
           </button>
         } @else {
-          <div class="mc-btn locked-btn">🔒 Bloqueado</div>
+          <div class="mc-btn locked-btn" [attr.title]="m.requiere ? 'Primero termina ' + m.requiere : null">
+            🔒 {{ m.requiere ? 'Se abre al terminar «' + m.requiere + '»' : 'Bloqueada' }}
+          </div>
         }
       </div>
     }

@@ -1,0 +1,74 @@
+<div class="cp">
+
+  <div class="cp-barra no-imprimir">
+    <button type="button" class="cp-btn cp-btn--ghost" (click)="volver()">← Volver</button>
+    @if (cert) {
+      <button type="button" class="cp-btn" (click)="descargar()">⬇️ Descargar PDF</button>
+    }
+  </div>
+
+  @if (cargando) {
+    <p class="cp-estado no-imprimir">Cargando tu certificado…</p>
+  } @else if (error) {
+    <div class="cp-error no-imprimir">
+      <span>🔒</span>
+      <p>{{ error }}</p>
+    </div>
+  } @else if (cert) {
+
+    @if (!cert.valido) {
+      <p class="cp-preview no-imprimir">
+        👀 Vista previa: todavía no se entrega. El alumno y su familia lo verán cuando le des "Entregar" en Comunidad.
+      </p>
+    }
+
+    <p class="cp-ayuda no-imprimir">
+      En la ventana que se abre, escoge <b>"Guardar como PDF"</b>. En iPad: toca <b>Compartir</b> y luego <b>Guardar en Archivos</b>.
+    </p>
+
+    <!-- ══ El certificado ══ -->
+    <article class="cert" [class.cert--preview]="!cert.valido" [style.--mat]="cert.color || '#7A1535'"
+             aria-label="Certificado de ByteKids Academy">
+      <div class="cert-marco">
+        <span class="cert-esquina cert-esquina--1" aria-hidden="true"></span>
+        <span class="cert-esquina cert-esquina--2" aria-hidden="true"></span>
+        <span class="cert-esquina cert-esquina--3" aria-hidden="true"></span>
+        <span class="cert-esquina cert-esquina--4" aria-hidden="true"></span>
+
+        <header class="cert-top">
+          <img src="assets/logo-bytekids.jpeg" alt="" class="cert-logo">
+          <span class="cert-marca">ByteKids Academy</span>
+        </header>
+
+        <p class="cert-eyebrow">Certificado de logro</p>
+        <p class="cert-otorga">Este certificado se otorga con orgullo a</p>
+        <h1 class="cert-nombre">{{ cert.alumno }}</h1>
+        <p class="cert-otorga">por completar con éxito el curso</p>
+        <h2 class="cert-materia">{{ cert.materia }}</h2>
+        <p class="cert-detalle">
+          Aprobó <b>{{ cert.actividades }} actividades</b> · {{ tiempo }} de aprendizaje ·
+          demostró curiosidad, constancia y creatividad
+        </p>
+
+        <footer class="cert-pie">
+          <div class="cert-firma">
+            <span class="cert-firma-nombre">{{ cert.entregadoPor || '—' }}</span>
+            <span class="cert-firma-rol">Maestro(a) · ByteKids Academy</span>
+          </div>
+
+          <div class="cert-sello" aria-hidden="true">
+            <app-avatar [bot]="cert.avatarUrl" [iniciales]="cert.iniciales || '★'" [px]="92" color="#7A1535"></app-avatar>
+            <span class="cert-sello-cinta">¡Creador de IA!</span>
+          </div>
+
+          <div class="cert-firma">
+            <span class="cert-firma-nombre">{{ fecha }}</span>
+            <span class="cert-firma-rol">Fecha de entrega</span>
+          </div>
+        </footer>
+
+        <p class="cert-folio">Folio {{ cert.folio }}</p>
+      </div>
+    </article>
+  }
+</div>

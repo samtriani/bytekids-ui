@@ -15,6 +15,25 @@
   </div>
 }
 
+<!-- BLOQUEADA: entro directo a algo que todavia no le toca -->
+@if (screen === 'bloqueada' && content) {
+  <div class="ws-center ws-candado">
+    <div class="ws-candado-ico">🔒</div>
+    <h2 class="ws-done-title">Todavía no, ¡pero ya casi!</h2>
+    <p class="ws-done-sub">
+      «{{ content.title }}» se abre cuando termines
+      <b>«{{ content.requiere }}»</b>. Las actividades van en orden porque cada
+      una usa lo que aprendiste en la anterior.
+    </p>
+    <div class="ws-done-actions">
+      @if (content.requiereId) {
+        <button class="ws-btn primary" (click)="irA(content.requiereId)">Ir a «{{ content.requiere }}» →</button>
+      }
+      <button class="ws-btn ghost" (click)="goBack()">← Mis misiones</button>
+    </div>
+  </div>
+}
+
 <!-- DONE -->
 @if (screen === 'done') {
   <div class="ws-done">
@@ -101,8 +120,21 @@
       </div>
     }
 
+    <!-- Lo que sigue. Un nino solo en casa no deberia tener que regresar a
+         la lista a adivinar cual toca. -->
+    @if (siguiente && !fromClassroom) {
+      @if (siguiente.bloqueada) {
+        <p class="ws-siguiente-nota">🔒 La siguiente, «{{ siguiente.title }}», se abre cuando apruebes este quiz.</p>
+      } @else {
+        <button class="ws-btn primary ws-siguiente" (click)="irA(siguiente.id)">
+          Siguiente: {{ siguiente.title }} →
+        </button>
+      }
+    }
+
     <div class="ws-done-actions">
-      <button class="ws-btn primary" (click)="goBack()">
+      <button class="ws-btn" [class.primary]="!siguiente || siguiente.bloqueada || fromClassroom"
+              [class.ghost]="siguiente && !siguiente.bloqueada && !fromClassroom" (click)="goBack()">
         {{ fromClassroom ? '← Volver al aula' : '← Mis misiones' }}
       </button>
       <button class="ws-btn ghost" (click)="openAiTutor()">🤖 Hablar con ByteBot</button>

@@ -30,6 +30,7 @@ import { ReportsComponent } from './pages/teacher/reports/reports.component';
 import { CalendarComponent as TCalendar } from './pages/teacher/calendar/calendar.component';
 import { MessagesComponent as TMessages } from './pages/teacher/messages/messages.component';
 import { TeacherCommunityComponent } from './pages/teacher/community/community.component';
+import { CertificadoComponent } from './pages/certificado/certificado.component';
 
 import { ParentDashboardComponent } from './pages/parent-dashboard/parent-dashboard.component';
 import { ChildrenComponent } from './pages/parent/children/children.component';
@@ -70,6 +71,8 @@ export const routes: Routes = [
   { path: '', redirectTo: 'login', pathMatch: 'full' },
 
   { path: 'portal', component: PortalComponent, canActivate: AUTH },
+  // Lo abren alumno, familia y maestro: el permiso lo decide la API.
+  { path: 'certificado/:id', component: CertificadoComponent, canActivate: AUTH },
   { path: 'landing', component: LandingComponent, canActivate: AUTH },
 
   { path: 'student', component: StudentDashboardComponent, canActivate: STUDENT },
