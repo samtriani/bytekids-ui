@@ -355,6 +355,8 @@ export class ShellComponent implements OnInit, OnDestroy {
       case 'actividad':
         return id && this.role === 'student' ? { ruta: ['/student/missions', id] } : null;
       case 'logro':
+      // La felicitacion de un maestro por un logro lleva a la misma pantalla.
+      case 'felicitacion':
         return this.role === 'student' ? { ruta: ['/student/achievements'] } : null;
       case 'salon':
         // La Libreta se abre por salón. Sin este parámetro caía en el salón

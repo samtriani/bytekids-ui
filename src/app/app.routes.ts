@@ -29,6 +29,7 @@ import { AiAssistantComponent as TAiAssist } from './pages/teacher/ai-assistant/
 import { ReportsComponent } from './pages/teacher/reports/reports.component';
 import { CalendarComponent as TCalendar } from './pages/teacher/calendar/calendar.component';
 import { MessagesComponent as TMessages } from './pages/teacher/messages/messages.component';
+import { TeacherCommunityComponent } from './pages/teacher/community/community.component';
 
 import { ParentDashboardComponent } from './pages/parent-dashboard/parent-dashboard.component';
 import { ChildrenComponent } from './pages/parent/children/children.component';
@@ -95,6 +96,7 @@ export const routes: Routes = [
   { path: 'teacher/classroom/:scheduleId', component: TeacherClassroomComponent, canActivate: TEACHER },
   { path: 'teacher/content', component: TeacherContentComponent, canActivate: TEACHER },
   { path: 'teacher/messages', component: TMessages, canActivate: TEACHER },
+  { path: 'teacher/community', component: TeacherCommunityComponent, canActivate: TEACHER },
 
   { path: 'parent', component: ParentDashboardComponent, canActivate: PARENT },
   { path: 'parent/children', component: ChildrenComponent, canActivate: PARENT },

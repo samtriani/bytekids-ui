@@ -1,0 +1,138 @@
+<app-shell role="teacher" [userName]="maestroNombre" [userAvatar]="maestroIniciales"
+  [navItems]="navItems" pageTitle="Comunidad"></app-shell>
+
+<div class="page-wrap tc">
+  <div class="ph">
+    <div class="ph-left">
+      <h1>👥 Comunidad</h1>
+      <p>El muro que ven tus alumnos, salón por salón. Felicítalos y que nadie se quede atrás.</p>
+    </div>
+  </div>
+
+  @if (cargandoSalones) {
+    <div class="tc-estado"><span class="tc-spinner"></span> Cargando tus salones…</div>
+  } @else if (!salones.length) {
+    <div class="tc-vacio card card-p">
+      <span>🏫</span>
+      <h2>Todavía no tienes salones</h2>
+      <p>Cuando coordinación te asigne un salón, aquí vas a ver a tus alumnos y sus logros.</p>
+    </div>
+  } @else {
+
+    <!-- Salones -->
+    @if (salones.length > 1) {
+      <div class="tc-salones" role="tablist" aria-label="Tus salones">
+        @for (s of salones; track s.id) {
+          <button type="button" role="tab" class="tc-salon" [class.tc-salon--on]="s.id === salonId"
+                  [attr.aria-selected]="s.id === salonId" (click)="elegir(s.id)">
+            🏫 {{ s.nombre }} <span class="tc-salon-n">{{ s.alumnos }}</span>
+          </button>
+        }
+      </div>
+    }
+
+    @if (error) {
+      <p class="tc-error" role="alert">⚠️ {{ error }}</p>
+    }
+
+    @if (cargandoMuro && !muro) {
+      <div class="tc-estado"><span class="tc-spinner"></span> Cargando el muro…</div>
+    }
+
+    @if (muro) {
+      <div class="tc-cols" [class.tc-cols--cargando]="cargandoMuro">
+
+        <!-- ══ Logros recientes ══ -->
+        <section class="card tc-card">
+          <header class="tc-card-head">
+            <h2>🏆 Logros recientes</h2>
+            <span class="tc-card-sub">{{ muro.salon }}</span>
+          </header>
+
+          @if (muro.logros.length) {
+            <ul class="tc-logros">
+              @for (l of muro.logros; track l.id) {
+                <li class="tc-logro">
+                  <app-avatar [bot]="l.avatarUrl" [iniciales]="iniciales(l.nombre, l.iniciales)"
+                              [px]="40" color="#7A1535"></app-avatar>
+                  <div class="tc-logro-txt">
+                    <span class="tc-logro-quien">
+                      <b>{{ l.nombre }}</b> desbloqueó
+                      <span class="tc-logro-medalla">{{ l.icono || '🏆' }} {{ l.titulo }}</span>
+                    </span>
+                    <span class="tc-logro-meta">{{ cuando(l.cuando) }} · +{{ l.xp }} XP</span>
+                  </div>
+                  @if (l.felicitado) {
+                    <span class="tc-felicitado">✓ Felicitado</span>
+                  } @else {
+                    <button type="button" class="tc-felicitar" [disabled]="enviando.has(l.id)"
+                            (click)="felicitar(l)" [attr.aria-label]="'Felicitar a ' + l.nombre">
+                      {{ enviando.has(l.id) ? 'Enviando…' : '👏 Felicitar' }}
+                    </button>
+                  }
+                </li>
+              }
+            </ul>
+          } @else {
+            <p class="tc-nada">Todavía nadie en este salón ha desbloqueado un logro.
+              El primero suele caer con la primera actividad.</p>
+          }
+        </section>
+
+        <div class="tc-derecha">
+          <!-- ══ Como va el salon ══ -->
+          <section class="card tc-card">
+            <header class="tc-card-head">
+              <h2>⭐ Cómo va el salón</h2>
+              <span class="tc-card-sub">{{ muro.ranking.length }} de {{ muro.totalAlumnos }} con XP</span>
+            </header>
+
+            @if (muro.ranking.length) {
+              <ol class="tc-ranking">
+                @for (a of muro.ranking; track a.id) {
+                  <li class="tc-puesto">
+                    <span class="tc-medalla">{{ medalla(a.puesto) }}</span>
+                    <app-avatar [bot]="a.avatarUrl" [iniciales]="iniciales(a.nombre, a.iniciales)"
+                                [px]="32" color="#7A1535"></app-avatar>
+                    <span class="tc-nombre">{{ a.nombre }}</span>
+                    <span class="tc-xp">{{ a.xp }} XP</span>
+                  </li>
+                }
+              </ol>
+            } @else {
+              <p class="tc-nada">Aún nadie tiene XP en este salón.</p>
+            }
+          </section>
+
+          <!-- ══ Sin actividad: solo lo ve el maestro ══ -->
+          <section class="card tc-card tc-card--sin">
+            <header class="tc-card-head">
+              <h2>🌱 Todavía sin actividad</h2>
+              <span class="tc-card-sub">{{ muro.sinActividad.length }}</span>
+            </header>
+
+            @if (muro.sinActividad.length) {
+              <p class="tc-privado">🔒 Solo tú ves esta lista. Tus alumnos no la ven en su muro.</p>
+              <ul class="tc-sin">
+                @for (a of muro.sinActividad; track a.id) {
+                  <li class="tc-sin-item">
+                    <app-avatar [bot]="a.avatarUrl" [iniciales]="iniciales(a.nombre, a.iniciales)"
+                                [px]="32" color="#8B5C0A"></app-avatar>
+                    <span class="tc-nombre">{{ a.nombre }}</span>
+                    <button type="button" class="tc-escribir" (click)="escribirle(a)">✉️ Escribirle</button>
+                  </li>
+                }
+              </ul>
+            } @else {
+              <p class="tc-todos">🎉 Todos tus alumnos de este salón ya empezaron.</p>
+            }
+          </section>
+        </div>
+      </div>
+    }
+  }
+
+  @if (aviso) {
+    <div class="tc-toast" role="status">{{ aviso }}</div>
+  }
+</div>
