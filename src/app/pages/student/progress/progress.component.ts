@@ -1,4 +1,4 @@
-﻿import { Component, AfterViewInit, OnInit, ViewChild, ElementRef } from '@angular/core';
+import { Component, AfterViewInit, OnInit, ViewChild, ElementRef } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { RouterLink } from '@angular/router';
 import { ShellComponent, NavItem } from '../../../shared/shell/shell.component';
@@ -9,6 +9,22 @@ import { AuthService } from '../../../services/auth.service';
 import { forkJoin } from 'rxjs';
 import { Chart, registerables } from 'chart.js';
 import { STUDENT_NAV } from '../shared/student-nav';
+import { xpPorSemana } from '../../../shared/xp-semanas';
+
+/** Un paso del camino: una actividad y como va el nino en ella. */
+interface Paso {
+  id: string; orden: number; titulo: string; tipo: string; icono: string;
+  estado: 'aprobada' | 'revision' | 'corregir' | 'siguiente' | 'abierta' | 'bloqueada';
+}
+
+/** Cuanto lleva de cada tipo de actividad. */
+interface PorTipo { tipo: string; nombre: string; icono: string; hechas: number; total: number; pct: number; }
+
+/** Como el nino vive el aprendizaje: el mismo orden que Mis Actividades. */
+const TIPOS: [string, string, string][] = [
+  ['material', 'Lecturas', '📚'], ['mision', 'Misiones', '🚀'], ['tarea', 'Investigaciones', '🔍'],
+  ['quiz', 'Quizzes', '❓'], ['proyecto', 'Proyecto final', '🏗️'],
+];
 Chart.register(...registerables);
 
 
@@ -39,6 +55,19 @@ export class ProgressComponent implements OnInit, AfterViewInit {
   skillProgress: any[] = [];
   weekActivity:  any[] = [];
 
+  /**
+   * Con UNA materia, las graficas por materia no comparan nada: una dona al
+   * 100% y una barra sola. En ese caso se cambian por el camino de la
+   * materia y el avance por tipo de actividad. Con dos o mas, se quedan.
+   * Las materias salen de sus actividades, igual que en el dashboard.
+   */
+  cargado = false;
+  materias: string[] = [];
+  get unaMateria(): boolean { return this.materias.length === 1; }
+  camino: Paso[] = [];
+  porTipo: PorTipo[] = [];
+  get pasoSiguiente(): Paso | undefined { return this.camino.find(p => p.estado === 'siguiente'); }
+
   private barChart:  any;
   private pieChart:  any;
   private lineChart: any;
@@ -68,10 +97,27 @@ export class ProgressComponent implements OnInit, AfterViewInit {
         this.totalXp = xp;
         this.streak  = streak;
 
-        const approved = subs.filter((s: any) => s.status === 'aprobado').length;
+        // El estado de cada actividad: la entrega que mas cuenta gana
+        // (aprobada > en revision > por corregir).
+        const PESO: Record<string, number> = { aprobado: 3, enviado: 2, revisado: 2, rechazado: 1 };
+        const estadoDe = new Map<string, string>();
+        for (const s of subs as any[]) {
+          const id = s.contentId ?? s.content?.id;
+          if (!id) continue;
+          const prev = estadoDe.get(id);
+          if (!prev || (PESO[s.status] ?? 0) > (PESO[prev] ?? 0)) estadoDe.set(id, s.status);
+        }
+
+        // Solo las de su feed: una entrega de una materia que ya no lleva no
+        // debe contar en su 3/9.
+        const approved = (missions as any[]).filter(c => estadoDe.get(c.id) === 'aprobado').length;
         this.completedMissions = approved;
         this.totalMissions     = missions.length;
         this.completionPct     = missions.length ? Math.round(approved / missions.length * 100) : 0;
+
+        this.materias = [...new Set<string>((missions as any[]).map(c => c.subjectName).filter(Boolean))];
+        this.armarCamino(missions as any[], estadoDe);
+        this.cargado = true;
 
         // Días activos en los últimos 7 días
         const now = Date.now();
@@ -125,6 +171,37 @@ export class ProgressComponent implements OnInit, AfterViewInit {
     });
   }
 
+  private armarCamino(feed: any[], estadoDe: Map<string, string>): void {
+    const ordenadas = [...feed].sort((a, b) => (a.orderIndex ?? 0) - (b.orderIndex ?? 0));
+    let yaHaySiguiente = false;
+    this.camino = ordenadas.map(c => {
+      const st = estadoDe.get(c.id);
+      let estado: Paso['estado'];
+      if (st === 'aprobado') estado = 'aprobada';
+      else if (st === 'rechazado') estado = 'corregir';
+      else if (st) estado = 'revision';
+      else if (c.bloqueada) estado = 'bloqueada';
+      else if (!yaHaySiguiente) { estado = 'siguiente'; yaHaySiguiente = true; }
+      else estado = 'abierta';
+      const t = TIPOS.find(x => x[0] === c.type);
+      return { id: c.id, orden: c.orderIndex ?? 0, titulo: c.title, tipo: c.type, icono: t?.[2] ?? '🎯', estado };
+    });
+
+    this.porTipo = TIPOS
+      .map(([tipo, nombre, icono]) => {
+        const de = feed.filter(c => c.type === tipo);
+        const hechas = de.filter(c => estadoDe.get(c.id) === 'aprobado').length;
+        return { tipo, nombre, icono, hechas, total: de.length, pct: de.length ? Math.round(hechas / de.length * 100) : 0 };
+      })
+      .filter(t => t.total > 0);
+  }
+
+  /** Que le dice cada estado al nino, en una palabra. */
+  readonly ETIQUETA: Record<Paso['estado'], string> = {
+    aprobada: '¡Lista!', revision: 'En revisión', corregir: 'Por corregir',
+    siguiente: 'Te toca', abierta: 'Disponible', bloqueada: 'Bloqueada',
+  };
+
   private updateCharts(subjects: any[], xpHistory: any[]) {
     const labels  = subjects.map((s: any) => s.subject?.name ?? '');
     const xpData  = subjects.map((s: any) => s.xpInSubject ?? 0);
@@ -143,11 +220,11 @@ export class ProgressComponent implements OnInit, AfterViewInit {
       this.pieChart.data.datasets[0].backgroundColor = colors;
       this.pieChart.update();
     }
-    if (this.lineChart && xpHistory.length) {
-      const history = xpHistory.slice(0, 8).reverse();
-      this.lineChart.data.labels = history.map((_: any, i: number) => `Sem ${i + 1}`);
-      let acc = 0;
-      this.lineChart.data.datasets[0].data = history.map((e: any) => { acc += e.amount ?? 0; return acc; });
+    // Por semana de verdad: antes cada EVENTO de XP salia como una "Sem".
+    const semanas = xpPorSemana(xpHistory, 8);
+    if (this.lineChart && semanas.length) {
+      this.lineChart.data.labels = semanas.map(s => s.etiqueta);
+      this.lineChart.data.datasets[0].data = semanas.map(s => s.acumulado);
       this.lineChart.update();
     }
   }
@@ -155,11 +232,11 @@ export class ProgressComponent implements OnInit, AfterViewInit {
   ngAfterViewInit() {
     this.lineChart = new Chart(this.xpLine.nativeElement, {
       type: 'line',
-      data: { labels: ['Sem 1','Sem 2','Sem 3','Sem 4','Sem 5','Sem 6','Sem 7','Sem 8'],
-        datasets: [{ label:'XP', data:[0,0,0,0,0,0,0,0], borderColor:'#7C3AED', backgroundColor:'rgba(124,58,237,0.1)', fill:true, tension:.4, pointBackgroundColor:'#7C3AED', pointRadius:5 }] },
+      data: { labels: [],
+        datasets: [{ label:'XP', data:[], borderColor:'#7C3AED', backgroundColor:'rgba(124,58,237,0.1)', fill:true, tension:.4, pointBackgroundColor:'#7C3AED', pointRadius:5 }] },
       options: { responsive:true, maintainAspectRatio:false, plugins:{ legend:{ display:false } },
         scales:{ x:{ grid:{ color:'rgba(255,255,255,0.04)' }, ticks:{ color:'#6B7FBB', font:{ family:'Nunito', weight:'bold' } } },
-                 y:{ grid:{ color:'rgba(255,255,255,0.04)' }, ticks:{ color:'#6B7FBB', font:{ family:'Nunito', weight:'bold' } } } } }
+                 y:{ beginAtZero:true, grid:{ color:'rgba(255,255,255,0.04)' }, ticks:{ color:'#6B7FBB', precision:0, font:{ family:'Nunito', weight:'bold' } } } } }
     });
     this.barChart = new Chart(this.skillBar.nativeElement, {
       type: 'bar',

@@ -11,6 +11,7 @@ import { forkJoin } from 'rxjs';
 import { Chart, registerables } from 'chart.js';
 import { STUDENT_NAV } from '../student/shared/student-nav';
 import { CertificadoAvanceComponent } from '../../shared/certificado-avance/certificado-avance.component';
+import { xpPorSemana } from '../../shared/xp-semanas';
 Chart.register(...registerables);
 
 @Component({
@@ -160,11 +161,11 @@ export class StudentDashboardComponent implements OnInit, AfterViewInit {
         }
 
         // Gráfica XP acumulado (historial real)
-        if (this.xpChartInst && xpHistory.length) {
-          const history = xpHistory.slice(0, 8).reverse();
-          let acc = 0;
-          this.xpChartInst.data.labels = history.map((_:any, i:number) => `Sem ${i + 1}`);
-          this.xpChartInst.data.datasets[0].data = history.map((e:any) => { acc += e.amount ?? 0; return acc; });
+        // Por semana de verdad (shared/xp-semanas.ts), igual que Mi Progreso.
+        const semanas = xpPorSemana(xpHistory, 6);
+        if (this.xpChartInst && semanas.length) {
+          this.xpChartInst.data.labels = semanas.map(s => s.etiqueta);
+          this.xpChartInst.data.datasets[0].data = semanas.map(s => s.acumulado);
           this.xpChartInst.update();
         }
       }

@@ -5,7 +5,7 @@
   <!-- Top stats -->
   <div class="bk-grid-4" style="margin-bottom:22px">
     <div class="stat-card" style="--card-color:#7C3AED"><div class="stat-icon">⭐</div><div class="stat-info"><span class="stat-value">{{ totalXp | number }}</span><span class="stat-label">XP Total</span></div><div class="stat-change up">+{{ xpThisMonth }} este mes</div></div>
-    <div class="stat-card" style="--card-color:#2563EB"><div class="stat-icon">📚</div><div class="stat-info"><span class="stat-value">{{ completedMissions }}/{{ totalMissions }}</span><span class="stat-label">Misiones completas</span></div><div class="stat-change up">{{ completionPct }}% completado</div></div>
+    <div class="stat-card" style="--card-color:#2563EB"><div class="stat-icon">📚</div><div class="stat-info"><span class="stat-value">{{ completedMissions }}/{{ totalMissions }}</span><span class="stat-label">Actividades completas</span></div><div class="stat-change up">{{ completionPct }}% completado</div></div>
     <div class="stat-card" style="--card-color:#F59E0B"><div class="stat-icon">🔥</div><div class="stat-info"><span class="stat-value">{{ streak }}</span><span class="stat-label">Días de racha</span></div><div class="stat-change neutral">¡Sigue así!</div></div>
     <div class="stat-card" style="--card-color:#10B981"><div class="stat-icon">📅</div><div class="stat-info"><span class="stat-value">{{ activeDays }}/7</span><span class="stat-label">Días activos</span></div><div class="stat-change up">Esta semana</div></div>
   </div>
@@ -13,20 +13,67 @@
   <!-- Charts row -->
   <div class="bk-grid-2" style="margin-bottom:22px">
     <div class="bk-card">
-      <div class="card-header"><span class="card-title">📈 XP acumulado — 8 semanas</span></div>
-      <div style="height:200px"><canvas #xpLine></canvas></div>
+      <div class="card-header"><span class="card-title">📈 XP acumulado por semana</span></div>
+      <div style="height:200px;position:relative"><canvas #xpLine></canvas></div>
     </div>
-    <div class="bk-card">
+
+    <!-- Una materia: su camino. Varias: cuanto XP va en cada una. Los
+         lienzos de las graficas se quedan montados (se crean en
+         ngAfterViewInit); solo se esconden. -->
+    @if (cargado && unaMateria) {
+      <div class="bk-card">
+        <div class="card-header">
+          <span class="card-title">🗺️ Mi camino en {{ materias[0] }}</span>
+          <span class="pg-cuenta">{{ completedMissions }}/{{ totalMissions }}</span>
+        </div>
+        <ol class="pg-camino">
+          @for (p of camino; track p.id) {
+            <li class="pg-paso pg-paso--{{ p.estado }}">
+              <span class="pg-paso-n">{{ p.estado === 'aprobada' ? '✓' : p.estado === 'bloqueada' ? '🔒' : p.orden }}</span>
+              <span class="pg-paso-txt">
+                <span class="pg-paso-titulo">{{ p.icono }} {{ p.titulo }}</span>
+                <span class="pg-paso-estado">{{ ETIQUETA[p.estado] }}</span>
+              </span>
+              @if (p.estado === 'siguiente' || p.estado === 'corregir') {
+                <a class="pg-paso-ir" [routerLink]="['/student/missions', p.id]">{{ p.estado === 'siguiente' ? 'Ir →' : 'Corregir →' }}</a>
+              }
+            </li>
+          }
+        </ol>
+      </div>
+    }
+    <div class="bk-card" [hidden]="!cargado || unaMateria">
       <div class="card-header"><span class="card-title">🎯 XP por materia</span></div>
-      <div style="height:200px"><canvas #subjectPie></canvas></div>
+      <div style="height:200px;position:relative"><canvas #subjectPie></canvas></div>
     </div>
   </div>
 
   <!-- Skills + Weekly activity -->
   <div class="bk-grid-2" style="margin-bottom:22px">
-    <div class="bk-card">
+    @if (cargado && unaMateria) {
+      <div class="bk-card">
+        <div class="card-header"><span class="card-title">📚 Lo que llevo, por tipo</span></div>
+        <div class="pg-tipos">
+          @for (t of porTipo; track t.tipo) {
+            <div class="pg-tipo" [class.pg-tipo--ok]="t.hechas === t.total">
+              <span class="pg-tipo-ico">{{ t.icono }}</span>
+              <div class="pg-tipo-body">
+                <div class="pg-tipo-top">
+                  <span class="pg-tipo-nombre">{{ t.nombre }}</span>
+                  <span class="pg-tipo-n">{{ t.hechas === t.total ? '✓ ' : '' }}{{ t.hechas }} de {{ t.total }}</span>
+                </div>
+                <div class="bk-progress" style="height:8px;margin-top:6px">
+                  <div class="bar" [style.width]="t.pct + '%'"></div>
+                </div>
+              </div>
+            </div>
+          }
+        </div>
+      </div>
+    }
+    <div class="bk-card" [hidden]="!cargado || unaMateria">
       <div class="card-header"><span class="card-title">💪 Nivel por materia</span></div>
-      <div style="height:200px"><canvas #skillBar></canvas></div>
+      <div style="height:200px;position:relative"><canvas #skillBar></canvas></div>
     </div>
     <div class="bk-card">
       <div class="card-header"><span class="card-title">📅 Actividad esta semana</span></div>
@@ -44,8 +91,8 @@
     </div>
   </div>
 
-  <!-- Skill details -->
-  <div class="bk-card">
+  <!-- Skill details: con una materia repite lo de arriba -->
+  <div class="bk-card" [hidden]="!cargado || unaMateria">
     <div class="card-header"><span class="card-title">🧬 Detalle de habilidades</span></div>
     <div class="skills-detail">
       @for (s of skillProgress; track s.name) {

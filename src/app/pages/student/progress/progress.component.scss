@@ -19,3 +19,49 @@
 .sk-level { font-size:.76rem; font-weight:800; }
 .sk-xp { font-size:.72rem; font-weight:700; color:var(--bk-yellow-light); }
 .sk-pct { font-weight:900; font-size:.9rem; white-space:nowrap; min-width:36px; text-align:right; }
+
+/* ── Mi camino (una sola materia) ── */
+.pg-cuenta { margin-left: auto; font-size: .85rem; font-weight: 900; color: var(--bk-purple, #7A1535); font-variant-numeric: tabular-nums; }
+.pg-camino { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 4px; position: relative; }
+.pg-paso { position: relative; display: flex; align-items: center; gap: 12px; padding: 7px 8px; border-radius: 12px; }
+/* La linea que une los pasos: el sendero. */
+.pg-paso:not(:last-child)::after {
+  content: ''; position: absolute; left: 21px; top: 36px; bottom: -8px; width: 2px; background: var(--border, #E3E4E8);
+}
+.pg-paso-n {
+  position: relative; z-index: 1; flex: none; width: 28px; height: 28px; border-radius: 50%;
+  display: grid; place-items: center; font-size: .78rem; font-weight: 900;
+  background: var(--surface2, #F8F8FA); color: var(--tx3, #7A6878); border: 2px solid var(--border, #E3E4E8);
+}
+.pg-paso-txt { flex: 1; min-width: 0; display: flex; flex-direction: column; }
+.pg-paso-titulo { font-size: .86rem; font-weight: 700; color: var(--bk-text, #1A1020); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.pg-paso-estado { font-size: .72rem; font-weight: 800; color: var(--tx3, #7A6878); }
+.pg-paso-ir {
+  flex: none; font-size: .78rem; font-weight: 900; text-decoration: none; color: #fff;
+  background: var(--bk-purple, #7A1535); padding: 6px 12px; border-radius: 999px;
+  &:focus-visible { outline: 2px solid var(--oro, #C4992A); outline-offset: 2px; }
+}
+
+.pg-paso--aprobada .pg-paso-n { background: var(--ok, #1A6B3C); border-color: var(--ok, #1A6B3C); color: #fff; }
+.pg-paso--aprobada .pg-paso-estado { color: var(--ok, #1A6B3C); }
+.pg-paso--aprobada:not(:last-child)::after { background: var(--ok, #1A6B3C); }
+.pg-paso--revision .pg-paso-n { border-color: #2563EB; color: #2563EB; }
+.pg-paso--revision .pg-paso-estado { color: #2563EB; }
+.pg-paso--corregir .pg-paso-n { border-color: #F59E0B; color: #B45309; }
+.pg-paso--corregir .pg-paso-estado { color: #B45309; }
+.pg-paso--siguiente { background: var(--guinda-lt, #F7EEF1); }
+.pg-paso--siguiente .pg-paso-n { background: var(--bk-purple, #7A1535); border-color: var(--bk-purple, #7A1535); color: #fff; box-shadow: 0 0 0 4px rgba(122,21,53,.15); }
+.pg-paso--siguiente .pg-paso-estado { color: var(--bk-purple, #7A1535); }
+.pg-paso--bloqueada { opacity: .55; }
+.pg-paso--bloqueada .pg-paso-n { font-size: .7rem; }
+
+/* ── Lo que llevo, por tipo ── */
+.pg-tipos { display: flex; flex-direction: column; gap: 12px; }
+.pg-tipo { display: flex; align-items: center; gap: 12px; }
+.pg-tipo-ico { flex: none; width: 38px; height: 38px; border-radius: 10px; display: grid; place-items: center; font-size: 1.15rem; background: var(--surface2, #F8F8FA); }
+.pg-tipo-body { flex: 1; min-width: 0; }
+.pg-tipo-top { display: flex; justify-content: space-between; gap: 10px; }
+.pg-tipo-nombre { font-size: .88rem; font-weight: 800; color: var(--bk-text, #1A1020); }
+.pg-tipo-n { font-size: .8rem; font-weight: 800; color: var(--tx3, #7A6878); font-variant-numeric: tabular-nums; }
+.pg-tipo--ok .pg-tipo-n { color: var(--ok, #1A6B3C); }
+.pg-tipo--ok .bar { background: var(--ok, #1A6B3C) !important; }
