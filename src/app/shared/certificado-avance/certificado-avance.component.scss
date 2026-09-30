@@ -1,0 +1,46 @@
+/* Vive en pantallas claras del alumno (dashboard, Mis Actividades). */
+:host { display: flex; flex-direction: column; gap: 10px; }
+
+.ca {
+  display: flex; align-items: center; gap: 14px; flex-wrap: wrap;
+  padding: 14px 18px; border-radius: 16px; background: var(--surface, #fff);
+  border: 1px solid var(--border, #E3E4E8); --mat: #7A1535;
+}
+.ca-ico { font-size: 1.8rem; line-height: 1; flex: none; }
+.ca-ico--grande { font-size: 2.4rem; animation: ca-salta 1.6s ease-in-out infinite; }
+@keyframes ca-salta { 0%, 100% { transform: translateY(0) rotate(0); } 50% { transform: translateY(-5px) rotate(-6deg); } }
+
+.ca-txt { flex: 1; min-width: 200px; display: flex; flex-direction: column; gap: 3px; }
+.ca-titulo { font-size: 15px; font-weight: 900; color: var(--tx1, #1A1020); }
+.ca-sub { font-size: 13px; color: var(--tx2, #3D2D3A); line-height: 1.45; b { color: var(--tx1, #1A1020); } }
+.ca-cuenta { flex: none; font-size: 14px; font-weight: 900; color: var(--mat); font-variant-numeric: tabular-nums; }
+
+.ca-barra { height: 8px; border-radius: 999px; background: var(--surface2, #F8F8FA); margin-top: 6px; overflow: hidden; }
+.ca-barra-fill {
+  height: 100%; border-radius: 999px; transition: width .4s ease;
+  background: linear-gradient(90deg, var(--mat), var(--oro, #C4992A));
+}
+
+/* Terminado: celebracion */
+.ca--listo, .ca--entregado {
+  border: 2px solid color-mix(in srgb, var(--mat) 55%, transparent);
+  background: linear-gradient(135deg, color-mix(in srgb, var(--mat) 14%, #fff), var(--oro-lt, #FBF5E8));
+  box-shadow: 0 10px 28px color-mix(in srgb, var(--mat) 18%, transparent);
+}
+.ca--listo .ca-titulo, .ca--entregado .ca-titulo { font-size: 17px; }
+.ca--solicitado { border-style: dashed; }
+
+.ca-btn {
+  flex: none; cursor: pointer; font-family: inherit; font-size: 14px; font-weight: 900; color: #fff;
+  background: color-mix(in srgb, var(--mat) 85%, #000); border: none; border-radius: 12px; padding: 11px 18px;
+  box-shadow: 0 6px 16px color-mix(in srgb, var(--mat) 35%, transparent);
+  transition: transform .1s, filter .15s;
+  &:hover:not(:disabled) { filter: brightness(1.1); }
+  &:active:not(:disabled) { transform: scale(.97); }
+  &:disabled { opacity: .6; cursor: wait; }
+  &:focus-visible { outline: 3px solid var(--oro, #C4992A); outline-offset: 2px; }
+}
+
+.ca-error { margin: 0; font-size: 13px; font-weight: 700; color: var(--danger, #9B1414); }
+
+@media (prefers-reduced-motion: reduce) { .ca-ico--grande { animation: none; } .ca-barra-fill { transition: none; } }

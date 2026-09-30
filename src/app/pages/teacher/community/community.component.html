@@ -19,6 +19,51 @@
     </div>
   } @else {
 
+    <!-- ══ Certificados por entregar: lo mas urgente, arriba ══ -->
+    @if (certificados.length) {
+      <section class="card tc-card tc-cert">
+        <header class="tc-card-head">
+          <h2>🎓 Certificados</h2>
+          <span class="tc-card-sub">{{ pendientes.length }} por entregar</span>
+        </header>
+
+        @if (pendientes.length) {
+          <p class="tc-cert-nota">
+            💡 Antes de entregarlo, aprovecha para una llamada corta con la familia:
+            felicítalos y cuéntales del curso completo.
+          </p>
+          <ul class="tc-cert-lista">
+            @for (c of pendientes; track c.id) {
+              <li class="tc-cert-item">
+                <app-avatar [bot]="c.avatarUrl" [iniciales]="iniciales(c.alumno, c.iniciales)" [px]="40" color="#7A1535"></app-avatar>
+                <div class="tc-logro-txt">
+                  <span class="tc-logro-quien"><b>{{ c.alumno }}</b> terminó <span class="tc-logro-medalla">{{ c.materia }}</span></span>
+                  <span class="tc-logro-meta">Lo pidió {{ cuando(c.solicitadoEn) }}</span>
+                </div>
+                <button type="button" class="tc-escribir" (click)="verCertificado(c)">👀 Ver</button>
+                <button type="button" class="tc-felicitar" [disabled]="entregando.has(c.id)" (click)="entregar(c)">
+                  {{ entregando.has(c.id) ? 'Entregando…' : '🎓 Entregar' }}
+                </button>
+              </li>
+            }
+          </ul>
+        }
+
+        @if (entregados.length) {
+          <p class="tc-cert-sub">Entregados recientemente</p>
+          <ul class="tc-cert-lista">
+            @for (c of entregados; track c.id) {
+              <li class="tc-cert-item tc-cert-item--ok">
+                <app-avatar [bot]="c.avatarUrl" [iniciales]="iniciales(c.alumno, c.iniciales)" [px]="32" color="#1A6B3C"></app-avatar>
+                <span class="tc-nombre">{{ c.alumno }} · {{ c.materia }}</span>
+                <button type="button" class="tc-escribir" (click)="verCertificado(c)">Ver</button>
+              </li>
+            }
+          </ul>
+        }
+      </section>
+    }
+
     <!-- Salones -->
     @if (salones.length > 1) {
       <div class="tc-salones" role="tablist" aria-label="Tus salones">

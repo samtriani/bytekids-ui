@@ -358,6 +358,12 @@ export class ShellComponent implements OnInit, OnDestroy {
       // La felicitacion de un maestro por un logro lleva a la misma pantalla.
       case 'felicitacion':
         return this.role === 'student' ? { ruta: ['/student/achievements'] } : null;
+      case 'certificado':
+        return id ? { ruta: ['/certificado', id] } : null;
+      case 'certificado_solicitud':
+        // Se entrega desde la Comunidad del maestro (coordinacion tambien
+        // entra ahi desde su panel de maestro).
+        return (this.role === 'student' || this.role === 'parent') ? null : { ruta: ['/teacher/community'] };
       case 'salon':
         // La Libreta se abre por salón. Sin este parámetro caía en el salón
         // por defecto: un quiz de Intermedio abría la libreta de Principiante.

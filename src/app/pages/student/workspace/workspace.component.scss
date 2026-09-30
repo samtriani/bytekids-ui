@@ -327,3 +327,11 @@
 }
 
 @media (prefers-reduced-motion: reduce) { .ws-animo { animation: none; } }
+
+/* ── Candado y siguiente actividad (30-sep) ── */
+.ws-candado { text-align: center; padding: 24px; }
+.ws-candado-ico { font-size: 4rem; animation: ws-flota 3.2s ease-in-out infinite; }
+.ws-candado .ws-done-sub { max-width: 440px; line-height: 1.6; b { color: #FCD34D; } }
+.ws-siguiente { font-size: 1rem; padding: 13px 24px; margin-top: 6px; box-shadow: 0 10px 26px rgba(0,0,0,.35); }
+.ws-siguiente-nota { margin: 4px 0 0; font-size: .86rem; color: #FCD34D; max-width: 420px; }
+@media (prefers-reduced-motion: reduce) { .ws-candado-ico { animation: none; } }

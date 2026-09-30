@@ -109,6 +109,15 @@ Lo que sí se puede hacer sin navegador, y conviene:
 - **ByteBot dentro de la actividad:** `<app-bytebot-panel>` es un panel
   lateral. **No navegues a `/student/ai-tutor` desde una actividad**: así era
   antes y el niño perdía la misión y lo que llevaba escrito.
+- **Certificados:** `/certificado/:id` es una página sin menú, para
+  imprimir en A4 horizontal (`@page` en su SCSS); "Descargar PDF" es
+  `window.print()`. Las medidas van en `cqw` para que se vea igual en
+  teléfono, laptop y papel. `<app-certificado-avance>` es el camino del
+  alumno hacia su certificado (dashboard y Mis Actividades).
+- **Actividades en orden:** el feed trae `bloqueada` y `requiere`. La lista
+  pinta el candado, el workspace tiene una pantalla `bloqueada` si se entra
+  directo por la URL, y al entregar ofrece "Siguiente →". El workspace
+  escucha `paramMap`: ir a la siguiente es la misma ruta con otro id.
 - **Borradores:** la respuesta del workspace se guarda sola en
   `localStorage` (`bk_borrador_<alumno>_<actividad>`) y se borra al entregar.
 

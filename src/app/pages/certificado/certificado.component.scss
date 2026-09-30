@@ -1,0 +1,107 @@
+/* El certificado. Se ve en pantalla y se imprime en A4 horizontal.
+   Las medidas internas van en cqw (ancho del certificado): asi el mismo
+   diseno se ve igual en un telefono, en una laptop y en la hoja impresa. */
+
+:host { display: block; min-height: 100vh; background: #EDE7E0; font-family: 'Nunito', system-ui, sans-serif; }
+
+.cp { max-width: 1060px; margin: 0 auto; padding-inline: 16px; padding-block: 18px 40px; }
+
+.cp-barra { display: flex; justify-content: space-between; gap: 10px; margin-bottom: 12px; }
+.cp-btn {
+  cursor: pointer; font-family: inherit; font-size: 14px; font-weight: 900; color: #fff;
+  background: #7A1535; border: none; border-radius: 12px; padding: 10px 18px;
+  &:hover { filter: brightness(1.12); }
+  &:focus-visible { outline: 3px solid #C4992A; outline-offset: 2px; }
+}
+.cp-btn--ghost { background: #fff; color: #3D2D3A; border: 1px solid #D8CFC6; }
+
+.cp-estado { text-align: center; color: #7A6878; padding: 40px 0; }
+.cp-error { text-align: center; padding: 50px 20px; color: #3D2D3A; span { font-size: 42px; } }
+.cp-preview, .cp-ayuda {
+  margin: 0 0 12px; padding: 10px 14px; border-radius: 12px; font-size: 13px; line-height: 1.5; color: #5C4A1A;
+  background: #FBF5E8; border: 1px solid rgba(196,153,42,.4);
+}
+.cp-ayuda { background: #fff; border-color: #E3DCD4; color: #5A4C58; }
+
+/* ── El certificado ── */
+.cert {
+  --mat: #7A1535;
+  container-type: inline-size;
+  width: 100%; aspect-ratio: 297 / 210; max-width: 100%;
+  background:
+    radial-gradient(circle at 0% 0%, rgba(196,153,42,.10), transparent 40%),
+    radial-gradient(circle at 100% 100%, rgba(122,21,53,.08), transparent 40%),
+    #FFFCF7;
+  box-shadow: 0 20px 50px rgba(60,30,20,.18);
+  padding: 2.4cqw;
+  color: #2A1C26;
+}
+.cert--preview { opacity: .92; }
+
+.cert-marco {
+  position: relative; height: 100%;
+  border: .35cqw solid var(--mat);
+  outline: .12cqw solid #C4992A; outline-offset: -.9cqw;
+  display: flex; flex-direction: column; align-items: center; justify-content: center;
+  text-align: center; padding: 2cqw 5cqw;
+}
+
+/* Esquinas doradas: un toque de "circuito" que dice tecnologia sin gritarlo. */
+.cert-esquina { position: absolute; width: 5cqw; height: 5cqw; border: .3cqw solid #C4992A; }
+.cert-esquina--1 { top: 1.6cqw; left: 1.6cqw; border-right: none; border-bottom: none; }
+.cert-esquina--2 { top: 1.6cqw; right: 1.6cqw; border-left: none; border-bottom: none; }
+.cert-esquina--3 { bottom: 1.6cqw; left: 1.6cqw; border-right: none; border-top: none; }
+.cert-esquina--4 { bottom: 1.6cqw; right: 1.6cqw; border-left: none; border-top: none; }
+
+.cert-top { display: flex; align-items: center; gap: 1.2cqw; margin-bottom: 1.2cqw; }
+.cert-logo { width: 5.4cqw; height: 5.4cqw; border-radius: 1.2cqw; object-fit: cover; }
+.cert-marca { font-size: 2cqw; font-weight: 900; letter-spacing: .06em; color: var(--mat); }
+
+.cert-eyebrow {
+  margin: 0; font-size: 1.35cqw; font-weight: 900; letter-spacing: .38em; text-transform: uppercase; color: #C4992A;
+}
+.cert-otorga { margin: .9cqw 0 0; font-size: 1.55cqw; color: #6A5664; }
+.cert-nombre {
+  margin: .5cqw 0 .2cqw; font-size: 5cqw; font-weight: 900; line-height: 1.05; color: #1A1020;
+  letter-spacing: -.01em; text-wrap: balance;
+  border-bottom: .15cqw solid #E3D2B8; padding: 0 3cqw .6cqw;
+}
+.cert-materia { margin: .4cqw 0 0; font-size: 3.4cqw; font-weight: 900; color: var(--mat); line-height: 1.1; }
+.cert-detalle { margin: 1cqw 0 0; font-size: 1.4cqw; color: #5A4C58; max-width: 62cqw; line-height: 1.5; b { color: #2A1C26; } }
+
+.cert-pie {
+  width: 100%; margin-top: 2.2cqw;
+  display: grid; grid-template-columns: 1fr auto 1fr; align-items: end; gap: 2cqw;
+}
+.cert-firma { display: flex; flex-direction: column; align-items: center; gap: .4cqw; }
+.cert-firma-nombre {
+  font-size: 1.7cqw; font-weight: 800; color: #1A1020;
+  border-bottom: .12cqw solid #2A1C26; padding: 0 2cqw .5cqw; min-width: 22cqw;
+}
+.cert-firma-rol { font-size: 1.15cqw; color: #7A6878; }
+
+/* El robot del nino, como sello. */
+.cert-sello { position: relative; display: flex; flex-direction: column; align-items: center; }
+.cert-sello app-avatar {
+  width: 10cqw; height: 10cqw; border-radius: 50%; overflow: hidden;
+  border: .45cqw solid #C4992A; box-shadow: 0 0 0 .35cqw #FFFCF7, 0 0 0 .6cqw var(--mat);
+  display: grid; place-items: center; background: #fff;
+}
+.cert-sello app-avatar ::ng-deep img, .cert-sello app-avatar ::ng-deep span { width: 100% !important; height: 100% !important; }
+.cert-sello-cinta {
+  margin-top: -.9cqw; position: relative; z-index: 1;
+  font-size: 1.1cqw; font-weight: 900; color: #fff; background: var(--mat);
+  padding: .35cqw 1.4cqw; border-radius: .4cqw; white-space: nowrap;
+}
+
+.cert-folio { position: absolute; bottom: 2.4cqw; left: 0; right: 0; margin: 0; font-size: 1cqw; letter-spacing: .12em; color: #A8989F; }
+
+/* ── Impresion: solo el certificado, A4 horizontal, sin margenes ── */
+@page { size: A4 landscape; margin: 0; }
+@media print {
+  :host { background: #fff; min-height: 0; }
+  .no-imprimir { display: none !important; }
+  .cp { max-width: none; padding: 0; }
+  .cert { width: 297mm; height: 210mm; aspect-ratio: auto; box-shadow: none; opacity: 1; }
+  * { -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+}

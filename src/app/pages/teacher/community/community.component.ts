@@ -5,6 +5,8 @@ import { ShellComponent } from '../../../shared/shell/shell.component';
 import { AvatarComponent } from '../../../shared/avatar/avatar.component';
 import { TEACHER_NAV } from '../shared/teacher-nav';
 import { AuthService } from '../../../services/auth.service';
+import { CertificadoApiService, FilaCertificado } from '../../../services/api/certificado-api.service';
+import { catchError, of } from 'rxjs';
 import {
   AlumnoMuro, ComunidadApiService, LogroMuro, MuroSalon, SalonComunidad,
 } from '../../../services/api/comunidad-api.service';
@@ -37,6 +39,12 @@ export class TeacherCommunityComponent implements OnInit, OnDestroy {
   cargandoSalones = true;
   cargandoMuro = false;
   error = '';
+  /** Certificados de sus alumnos: los pendientes arriba. */
+  certificados: FilaCertificado[] = [];
+  entregando = new Set<string>();
+  get pendientes(): FilaCertificado[] { return this.certificados.filter(c => !c.entregadoEn); }
+  get entregados(): FilaCertificado[] { return this.certificados.filter(c => !!c.entregadoEn).slice(0, 5); }
+
   /** Logros que se estan felicitando ahora mismo: el boton no se repite. */
   enviando = new Set<string>();
   aviso = '';
@@ -47,11 +55,15 @@ export class TeacherCommunityComponent implements OnInit, OnDestroy {
 
   constructor(
     private api: ComunidadApiService,
+    private certApi: CertificadoApiService,
     private auth: AuthService,
     private router: Router,
   ) {}
 
   ngOnInit(): void {
+    // Si la tabla de certificados aun no existe, la seccion simplemente no sale.
+    this.certApi.deMisAlumnos().pipe(catchError(() => of([]))).subscribe(c => this.certificados = c);
+
     this.api.salones().subscribe({
       next: salones => {
         this.salones = salones;
@@ -102,6 +114,30 @@ export class TeacherCommunityComponent implements OnInit, OnDestroy {
         this.avisar('No se pudo enviar la felicitación. Intenta de nuevo.');
       },
     });
+  }
+
+  /**
+   * Entregar el certificado: le llega al alumno y a su familia. Es el momento
+   * de la llamada de graduacion y de la invitacion al curso completo.
+   */
+  entregar(c: FilaCertificado): void {
+    if (c.entregadoEn || this.entregando.has(c.id)) return;
+    this.entregando.add(c.id);
+    this.certApi.entregar(c.id).subscribe({
+      next: fila => {
+        this.entregando.delete(c.id);
+        this.certificados = [fila, ...this.certificados.filter(x => x.id !== c.id)];
+        this.avisar(`🎓 Le llegó su certificado a ${this.primerNombre(c.alumno)} y a su familia`);
+      },
+      error: () => {
+        this.entregando.delete(c.id);
+        this.avisar('No se pudo entregar el certificado. Intenta de nuevo.');
+      },
+    });
+  }
+
+  verCertificado(c: FilaCertificado): void {
+    this.router.navigate(['/certificado', c.id]);
   }
 
   /** Abre Mensajes con la conversacion de ese alumno lista. */

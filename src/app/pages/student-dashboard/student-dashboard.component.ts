@@ -10,12 +10,13 @@ import { AuthService } from '../../services/auth.service';
 import { forkJoin } from 'rxjs';
 import { Chart, registerables } from 'chart.js';
 import { STUDENT_NAV } from '../student/shared/student-nav';
+import { CertificadoAvanceComponent } from '../../shared/certificado-avance/certificado-avance.component';
 Chart.register(...registerables);
 
 @Component({
   selector: 'app-student-dashboard',
   standalone: true,
-  imports: [CommonModule, ShellComponent, RouterLink],
+  imports: [CommonModule, ShellComponent, RouterLink, CertificadoAvanceComponent],
   templateUrl: './student-dashboard.component.html',
   styleUrls: ['./student-dashboard.component.scss']
 })

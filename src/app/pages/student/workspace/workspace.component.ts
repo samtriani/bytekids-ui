@@ -13,7 +13,7 @@ import { ByteBotPanelComponent } from '../../../shared/bytebot-panel/bytebot-pan
 import { AvatarComponent } from '../../../shared/avatar/avatar.component';
 import { catchError, forkJoin, of } from 'rxjs';
 
-type Screen = 'loading' | 'work' | 'quiz' | 'done' | 'error';
+type Screen = 'loading' | 'work' | 'quiz' | 'done' | 'error' | 'bloqueada';
 
 @Component({
   selector: 'app-workspace',
@@ -206,15 +206,50 @@ export class WorkspaceComponent implements OnInit {
 
   ngOnInit(): void {
     this.student = this.auth.getUser();
-    const id = this.route.snapshot.paramMap.get('id')!;
+    // Se escucha el id y no se lee una vez: "Siguiente actividad" navega a
+    // la misma ruta con otro id, y Angular reusa el componente en vez de
+    // crearlo de nuevo. Sin esto la pantalla se quedaba en la anterior.
+    this.route.paramMap.subscribe(params => {
+      const id = params.get('id');
+      if (id) this.cargar(id);
+    });
+  }
+
+  /** Todo lo de una actividad, desde cero: tambien al pasar a la siguiente. */
+  /** Cuenta las cargas: si el nino salta rapido, la respuesta vieja se ignora. */
+  private cargaVigente = 0;
+
+  private cargar(id: string): void {
+    const esta = ++this.cargaVigente;
+    this.screen = 'loading';
+    this.content = null;
+    this.existingSub = null;
+    this.rejectedSub = null;
+    this.codeAnswer = '';
+    this.submitResult = null;
+    this.questions = [];
+    this.answers = {};
+    this.currentQ = 0;
+    this.quizResult = null;
+    this.intentos = [];
+    this.preguntas = [];
+    this.revisados = new Set<number>();
+    this.estadoBorrador = '';
+    this.siguiente = null;
+    this.botAbierto = false;
+    window.scrollTo({ top: 0 });
 
     // Cargar contenido y mis entregas en paralelo
     Promise.all([
       this.contentApi.getById(id).pipe(catchError(() => of(null))).toPromise(),
       this.submissionApi.getMySubmissions().pipe(catchError(() => of([]))).toPromise(),
     ]).then(([content, subs]) => {
+      if (esta !== this.cargaVigente) return;
       if (!content) { this.screen = 'error'; return; }
       this.content = content;
+      // Entro directo por la URL a algo que todavia no le toca. La API no le
+      // dejaria entregar; aqui se le dice por que y a donde ir.
+      if (content.bloqueada) { this.screen = 'bloqueada'; return; }
       const allSubs = subs as any[];
       this.existingSub = allSubs.find(s =>
         (s.contentId || s.content?.id) === id && s.status !== 'rechazado'
@@ -230,11 +265,13 @@ export class WorkspaceComponent implements OnInit {
           qs:       this.quizApi.getQuestions(id).pipe(catchError(() => of([]))),
           intentos: this.quizApi.getMyAttempts(id).pipe(catchError(() => of([]))),
         }).subscribe(({ qs, intentos }) => {
+          if (esta !== this.cargaVigente) return;
           this.questions = qs;
           this.intentos  = intentos ?? [];
           // Si ya lo contesto, primero ve su resultado. Puede repetirlo desde
           // ahi, pero enterandose de como le fue.
           this.screen = (this.alreadyDone || this.intentos.length) ? 'done' : 'quiz';
+          if (this.screen === 'done') this.buscarSiguiente();
         });
       } else {
         // El borrador gana: es lo ultimo que el nino escribio, aunque se haya
@@ -245,6 +282,7 @@ export class WorkspaceComponent implements OnInit {
         this.preguntas = preguntasDeEntrega(interpretarInstrucciones(this.instrucciones));
         this.revisados = new Set(this.leer('bk_revisado_'));
         this.screen = this.alreadyDone ? 'done' : 'work';
+        if (this.alreadyDone) this.buscarSiguiente();
       }
     });
   }
@@ -270,6 +308,7 @@ export class WorkspaceComponent implements OnInit {
         this.borrarBorrador();
         this.screen = 'done';
         this.submitting = false;
+        this.buscarSiguiente();
       },
       error: () => { this.submitting = false; }
     });
@@ -302,6 +341,7 @@ export class WorkspaceComponent implements OnInit {
         this.quizResult = result;
         this.screen = 'done';
         this.quizSubmitting = false;
+        this.buscarSiguiente();
       },
       error: () => { this.quizSubmitting = false; }
     });
@@ -314,6 +354,30 @@ export class WorkspaceComponent implements OnInit {
    * vista y lo que llevaba escrito. Ahora abre el panel aqui mismo.
    */
   openAiTutor(): void { this.botAbierto = true; }
+
+  // ── Siguiente actividad ─────────────────────────────────────────────
+
+  /** La que sigue en el temario de esta materia, si ya esta abierta. */
+  siguiente: any = null;
+
+  /**
+   * Se pide el feed otra vez y no se calcula aqui: lo que acaba de entregar
+   * pudo haber desbloqueado la siguiente, y quien lo sabe es la API.
+   */
+  buscarSiguiente(): void {
+    const actual = this.content;
+    if (!actual) return;
+    this.contentApi.getMyFeed().pipe(catchError(() => of([]))).subscribe((feed: any[]) => {
+      this.siguiente = (feed ?? [])
+        .filter(c => c.subjectId === actual.subjectId && (c.orderIndex ?? 0) > (actual.orderIndex ?? 0))
+        .sort((a, b) => (a.orderIndex ?? 0) - (b.orderIndex ?? 0))[0] ?? null;
+    });
+  }
+
+  /** A otra actividad. cargar() se dispara solo con el cambio de id. */
+  irA(id: string): void {
+    this.router.navigate(['/student/missions', id]);
+  }
 
   /** Lleva al cuadro de respuesta y lo deja listo para escribir. */
   irARespuesta(): void {
