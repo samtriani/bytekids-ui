@@ -68,14 +68,22 @@ export class ChildrenComponent implements OnInit {
     this.familia.hijos().subscribe({
       next: hijos => {
         this.hijos = hijos;
-        // Si viene del panel con ?hijo=, abre ese.
-        const pedido = this.route.snapshot.queryParamMap.get('hijo');
-        this.elegir(hijos.find(h => h.id === pedido) ?? hijos[0] ?? null);
         this.cargando = false;
+        // Si viene del panel o de la campanita con ?hijo=, abre ese. Se
+        // escucha y no se lee una vez: la campanita puede traer a otro hijo
+        // estando ya en esta pantalla.
+        this.route.queryParamMap.subscribe(q => {
+          const pedido = q.get('hijo');
+          this.irATrabajos = q.get('ver') === 'trabajos';
+          this.elegir(hijos.find(h => h.id === pedido) ?? this.sel ?? hijos[0] ?? null);
+        });
       },
       error: () => { this.cargando = false; this.error = true; },
     });
   }
+
+  /** La campanita de una calificacion trae ?ver=trabajos: baja directo ahi. */
+  private irATrabajos = false;
 
   elegir(h: Hijo | null): void {
     this.sel = h;
@@ -85,7 +93,15 @@ export class ChildrenComponent implements OnInit {
     this.cargandoTrabajos = true;
     const pedido = h.id;
     this.familia.trabajos(h.id).subscribe({
-      next: t => { if (this.sel?.id === pedido) { this.trabajos = t; this.cargandoTrabajos = false; } },
+      next: t => {
+        if (this.sel?.id !== pedido) return;
+        this.trabajos = t;
+        this.cargandoTrabajos = false;
+        if (this.irATrabajos) {
+          this.irATrabajos = false;
+          setTimeout(() => document.getElementById('trabajos')?.scrollIntoView({ behavior: 'smooth', block: 'start' }));
+        }
+      },
       error: () => { this.cargandoTrabajos = false; },
     });
   }

@@ -72,6 +72,7 @@
 @media (prefers-reduced-motion: reduce) { .ph-spin { animation-duration: 2s; } }
 
 /* ── Sus trabajos ── */
+#trabajos { scroll-margin-top: 80px; }
 .ph-trab-ayuda { margin: 0 0 10px; font-size: .8rem; color: var(--tx3); }
 .ph-trabajos { display: flex; flex-direction: column; gap: 8px; }
 .ph-trab { border: 1px solid var(--border2); border-radius: 12px; background: var(--surface2); overflow: hidden; }

@@ -358,6 +358,8 @@ export class ShellComponent implements OnInit, OnDestroy {
       // La felicitacion de un maestro por un logro lleva a la misma pantalla.
       case 'felicitacion':
         return this.role === 'student' ? { ruta: ['/student/achievements'] } : null;
+      case 'trabajo_hijo':
+        return this.role === 'parent' && id ? { ruta: ['/parent/children'], params: { hijo: id, ver: 'trabajos' } } : null;
       case 'logro_hijo':
         return this.role === 'parent' ? { ruta: ['/parent/achievements'] } : null;
       case 'certificado':
