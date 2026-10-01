@@ -82,6 +82,51 @@
           }
         </section>
 
+        <!-- ══ Sus trabajos: lo que escribio y lo que le dijo su maestro ══ -->
+        <section class="ph-card">
+          <header class="ph-card-head"><h2>📝 Sus trabajos</h2></header>
+          @if (cargandoTrabajos) {
+            <p class="ph-nada">Cargando sus trabajos…</p>
+          } @else if (trabajos.length) {
+            <p class="ph-trab-ayuda">Toca uno para ver lo que escribió{{ hayComentarios ? ' y lo que le dijo su maestro' : '' }}.</p>
+            <div class="ph-trabajos">
+              @for (t of trabajos; track t.actividadId) {
+                <details class="ph-trab ph-trab--{{ t.estado }}">
+                  <summary>
+                    <span class="ph-trab-ico">{{ ICONO[t.tipo] || '🎯' }}</span>
+                    <span class="ph-trab-txt">
+                      <b>{{ t.titulo }}</b>
+                      <small>{{ ESTADO[t.estado] }} · {{ fecha(t.entregadoEn) }}</small>
+                    </span>
+                    @if (t.calificacion !== null) {
+                      <span class="ph-trab-cal" [style.color]="colorCal(t.calificacion)">{{ sobreDiez(t.calificacion) }}/10</span>
+                    }
+                    @if (t.comentario) { <span class="ph-trab-msg" title="Tiene comentario de su maestro">💬</span> }
+                  </summary>
+                  <div class="ph-trab-cuerpo">
+                    @if (t.texto) {
+                      <span class="ph-trab-lbl">Lo que escribió {{ primerNombre(sel.nombre) }}</span>
+                      <pre class="ph-trab-texto">{{ t.texto }}</pre>
+                    } @else if (t.tipo === 'quiz') {
+                      <p class="ph-nada">Es un quiz: se califica solo. Sacó {{ t.calificacion !== null ? sobreDiez(t.calificacion) + '/10' : '—' }}.</p>
+                    }
+                    @if (t.comentario) {
+                      <div class="ph-trab-fb">
+                        <span class="ph-trab-lbl">💬 Lo que le dijo {{ t.revisadoPor || 'su maestro' }}</span>
+                        <p>{{ t.comentario }}</p>
+                      </div>
+                    } @else if (t.estado === 'revision') {
+                      <p class="ph-nada">⏳ Su maestro todavía no lo revisa.</p>
+                    }
+                  </div>
+                </details>
+              }
+            </div>
+          } @else {
+            <p class="ph-nada">Todavía no entrega trabajos. Aquí vas a poder leer lo que haga y lo que le diga su maestro.</p>
+          }
+        </section>
+
         <!-- ══ Certificados ══ -->
         @if (sel.certificados.length) {
           <section class="ph-card ph-card--oro">
