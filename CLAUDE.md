@@ -89,6 +89,8 @@ Lo que sí se puede hacer sin navegador, y conviene:
   `/progress/students/{id}` desde pantallas de papás. Nivel, constancia y el
   consejo de "cómo acompañarlo" viven en `pages/parent/shared/familia.ts`;
   el nivel usa los mismos 500 XP que ve el niño. Menú: `PARENT_NAV`.
+  "Sus trabajos" (Mis hijos) usa `trabajos(hijoId)` → `/familia/hijos/{id}/trabajos`:
+  la API revisa que sea su hijo; se pide al elegir al hijo, no con el panel.
 - **Menús:** `TEACHER_NAV`, `STUDENT_NAV` y `PARENT_NAV` son compartidos. Estaban copiados
   en nueve pantallas y ya se habían separado (a una le faltaba "Calendario").
 - **Filtros:** `.filtros-panel`, `.filter-btn`, `.filter-n` viven en

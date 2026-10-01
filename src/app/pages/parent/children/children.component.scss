@@ -70,3 +70,31 @@
 .ph-logro-ico { font-size: 1.5rem; }
 
 @media (prefers-reduced-motion: reduce) { .ph-spin { animation-duration: 2s; } }
+
+/* ── Sus trabajos ── */
+.ph-trab-ayuda { margin: 0 0 10px; font-size: .8rem; color: var(--tx3); }
+.ph-trabajos { display: flex; flex-direction: column; gap: 8px; }
+.ph-trab { border: 1px solid var(--border2); border-radius: 12px; background: var(--surface2); overflow: hidden; }
+.ph-trab > summary {
+  display: flex; align-items: center; gap: 10px; padding: 10px 12px; cursor: pointer; list-style: none;
+  &::-webkit-details-marker { display: none; }
+  &:focus-visible { outline: 2px solid var(--guinda); outline-offset: -2px; }
+}
+.ph-trab[open] > summary { background: var(--surface); border-bottom: 1px solid var(--border2); }
+.ph-trab-ico { font-size: 1.3rem; flex: none; }
+.ph-trab-txt { flex: 1; min-width: 0; display: flex; flex-direction: column;
+  b { font-size: .88rem; color: var(--tx1); } small { font-size: .74rem; color: var(--tx3); } }
+.ph-trab--aprobada .ph-trab-txt small { color: var(--ok); }
+.ph-trab--corregir .ph-trab-txt small { color: #B45309; }
+.ph-trab-cal { flex: none; font-size: .95rem; font-weight: 900; font-variant-numeric: tabular-nums; }
+.ph-trab-msg { flex: none; font-size: 1rem; }
+.ph-trab-cuerpo { padding: 12px 14px; display: flex; flex-direction: column; gap: 12px; background: var(--surface); }
+.ph-trab-lbl { display: block; font-size: .74rem; font-weight: 900; color: var(--tx3); text-transform: uppercase; letter-spacing: .05em; margin-bottom: 6px; }
+.ph-trab-texto {
+  margin: 0; padding: 12px; border-radius: 10px; background: var(--surface2); border: 1px solid var(--border2);
+  font-family: inherit; font-size: .88rem; line-height: 1.6; color: var(--tx1);
+  white-space: pre-wrap; overflow-wrap: anywhere; max-height: 320px; overflow-y: auto;
+}
+.ph-trab-fb { background: var(--guinda-lt); border-left: 3px solid var(--guinda); border-radius: 10px; padding: 10px 12px;
+  p { margin: 0; font-size: .88rem; line-height: 1.55; color: var(--tx1); }
+  .ph-trab-lbl { color: var(--guinda); } }

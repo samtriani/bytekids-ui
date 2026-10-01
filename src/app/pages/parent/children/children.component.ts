@@ -5,7 +5,8 @@ import { ShellComponent } from '../../../shared/shell/shell.component';
 import { AvatarComponent } from '../../../shared/avatar/avatar.component';
 import { CaminoComponent } from '../../../shared/camino/camino.component';
 import { AuthService } from '../../../services/auth.service';
-import { FamiliaApiService, Hijo } from '../../../services/api/familia-api.service';
+import { FamiliaApiService, Hijo, TrabajoHijo } from '../../../services/api/familia-api.service';
+import { sobreDiez } from '../../../shared/calificacion';
 import { PARENT_NAV } from '../shared/parent-nav';
 import { consejo, constancia, nivel, primerNombre, XP_POR_NIVEL } from '../shared/familia';
 
@@ -34,6 +35,14 @@ export class ChildrenComponent implements OnInit {
   hijos: Hijo[] = [];
   sel: Hijo | null = null;
   semanas: BarraSemana[] = [];
+
+  /** Lo que entrego el hijo elegido. Se pide al elegirlo, no con el panel. */
+  trabajos: TrabajoHijo[] = [];
+  cargandoTrabajos = false;
+  get hayComentarios(): boolean { return this.trabajos.some(t => !!t.comentario); }
+  readonly sobreDiez = sobreDiez;
+  readonly ICONO: Record<string, string> = { mision: '🚀', tarea: '🔍', quiz: '❓', proyecto: '🏗️' };
+  readonly ESTADO: Record<string, string> = { aprobada: 'Aprobado', revision: 'Esperando revisión', corregir: 'Su maestro le pidió ajustes' };
   cargando = true;
   error = false;
 
@@ -71,7 +80,18 @@ export class ChildrenComponent implements OnInit {
   elegir(h: Hijo | null): void {
     this.sel = h;
     this.semanas = this.porSemana(h?.xpReciente ?? []);
+    this.trabajos = [];
+    if (!h) return;
+    this.cargandoTrabajos = true;
+    const pedido = h.id;
+    this.familia.trabajos(h.id).subscribe({
+      next: t => { if (this.sel?.id === pedido) { this.trabajos = t; this.cargandoTrabajos = false; } },
+      error: () => { this.cargandoTrabajos = false; },
+    });
   }
+
+  /** Color de la calificacion, de 0 a 100 como se guarda. */
+  colorCal(score: number): string { return score >= 80 ? '#1A6B3C' : score >= 60 ? '#B45309' : '#9B1414'; }
 
   /**
    * XP ganado en cada semana (de lunes a domingo), desde la primera semana

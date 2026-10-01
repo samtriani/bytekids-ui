@@ -22,6 +22,14 @@ export interface Hijo {
   xpReciente: { fecha: string; xp: number }[];
 }
 
+/** Un trabajo entregado, con la calificacion y el comentario del maestro. */
+export interface TrabajoHijo {
+  actividadId: string; titulo: string; tipo: string; materia: string | null; color: string | null; orden: number;
+  estado: 'aprobada' | 'revision' | 'corregir'; calificacion: number | null;
+  texto: string | null; comentario: string | null; revisadoPor: string | null;
+  entregadoEn: string | null; revisadoEn: string | null;
+}
+
 /**
  * Los hijos de quien pregunta, con todo su avance. Una sola llamada: la ruta
  * no recibe ids, asi que no hay forma de pedir los de otra familia.
@@ -34,6 +42,12 @@ export class FamiliaApiService {
   private cache: { t: number; obs: Observable<Hijo[]> } | null = null;
 
   constructor(private http: HttpClient) {}
+
+  /** Lo que entrego un hijo. La API revisa que sea hijo de quien pregunta. */
+  trabajos(hijoId: string): Observable<TrabajoHijo[]> {
+    return this.http.get<any>(`${environment.apiUrl}/familia/hijos/${hijoId}/trabajos`)
+      .pipe(map(r => (r.data ?? []) as TrabajoHijo[]));
+  }
 
   hijos(): Observable<Hijo[]> {
     if (this.cache && Date.now() - this.cache.t < 30_000) return this.cache.obs;
