@@ -84,7 +84,12 @@ Lo que sí se puede hacer sin navegador, y conviene:
 
 ## Cosas que ya están resueltas y conviene reusar
 
-- **Menús:** `TEACHER_NAV` y `STUDENT_NAV` son compartidos. Estaban copiados
+- **Familias:** todo el módulo de papás sale de `FamiliaApiService.hijos()`
+  (`/familia/hijos`, sin ids: solo los hijos de quien pregunta). No uses
+  `/progress/students/{id}` desde pantallas de papás. Nivel, constancia y el
+  consejo de "cómo acompañarlo" viven en `pages/parent/shared/familia.ts`;
+  el nivel usa los mismos 500 XP que ve el niño. Menú: `PARENT_NAV`.
+- **Menús:** `TEACHER_NAV`, `STUDENT_NAV` y `PARENT_NAV` son compartidos. Estaban copiados
   en nueve pantallas y ya se habían separado (a una le faltaba "Calendario").
 - **Filtros:** `.filtros-panel`, `.filter-btn`, `.filter-n` viven en
   `styles.scss` justo para que alcancen a todas las pantallas.

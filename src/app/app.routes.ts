@@ -34,7 +34,6 @@ import { CertificadoComponent } from './pages/certificado/certificado.component'
 
 import { ParentDashboardComponent } from './pages/parent-dashboard/parent-dashboard.component';
 import { ChildrenComponent } from './pages/parent/children/children.component';
-import { ProgressComponent as PProgress } from './pages/parent/progress/progress.component';
 import { AchievementsComponent as PAchiev } from './pages/parent/achievements/achievements.component';
 import { MessagesComponent as PMessages } from './pages/parent/messages/messages.component';
 import { CalendarComponent as PCalendar } from './pages/parent/calendar/calendar.component';
@@ -103,7 +102,8 @@ export const routes: Routes = [
 
   { path: 'parent', component: ParentDashboardComponent, canActivate: PARENT },
   { path: 'parent/children', component: ChildrenComponent, canActivate: PARENT },
-  { path: 'parent/progress', component: PProgress, canActivate: PARENT },
+  // "Progreso" se fundio con "Mis hijos": repetian casi lo mismo.
+  { path: 'parent/progress', redirectTo: 'parent/children', pathMatch: 'full' },
   { path: 'parent/achievements', component: PAchiev, canActivate: PARENT },
   { path: 'parent/messages', component: PMessages, canActivate: PARENT },
   { path: 'parent/calendar', component: PCalendar, canActivate: PARENT },

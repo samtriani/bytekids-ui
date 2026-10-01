@@ -1,108 +1,83 @@
-<app-shell role="parent" [userName]="parentName" [userAvatar]="parentInitials"
-  [navItems]="navItems" pageTitle="Calendario"></app-shell>
-<div class="page-wrap">
-  <div class="ph">
-    <div class="ph-left"><h1>Calendario escolar</h1><p>Horario de clases de tus hijos</p></div>
-  </div>
+<app-shell role="parent" [userName]="parentName" [userAvatar]="parentInitials" [navItems]="navItems" pageTitle="Calendario"></app-shell>
 
-  @if (loading) {
-    <div style="text-align:center;padding:60px 0;color:var(--tx3)">Cargando calendario…</div>
+<div class="page-wrap pc">
+  <header class="pc-head">
+    <h1>📅 Calendario</h1>
+    <p>Los días que estudiaron y sus clases en vivo.</p>
+  </header>
+
+  @if (cargando) {
+    <div class="pc-estado">Cargando…</div>
+  } @else if (error) {
+    <div class="pc-vacio"><span>⚠️</span><p>No pudimos cargar el calendario. Intenta de nuevo en un momento.</p></div>
+  } @else if (!hijos.length) {
+    <div class="pc-vacio"><span>👨‍👩‍👧</span><p>Todavía no hay hijos vinculados a tu cuenta.</p></div>
   } @else {
-    <div class="cal-layout">
-      <!-- Grid del mes -->
-      <div class="card card-p" style="flex:1">
-        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:16px">
-          <button class="cal-nav" (click)="prevMonth()">‹</button>
-          <h2 style="font-size:1rem;font-weight:800;color:var(--tx1)">{{ monthName }}</h2>
-          <button class="cal-nav" (click)="nextMonth()">›</button>
-        </div>
-        <div class="cal-days-header">
-          @for (d of days; track d) { <div class="cal-day-name">{{ d }}</div> }
-        </div>
-        <div class="cal-grid">
-          @for (week of weeks; track $index) {
-            @for (d of week; track $index) {
-              <div class="cal-cell"
-                [class.today]="isToday(d)"
-                [class.selected]="d===selectedDay"
-                [class.has-event]="hasEvent(d)"
-                [class.empty]="!d"
-                (click)="d&&(selectedDay=d)">
-                @if (d) {
-                  <span class="cal-num">{{ d }}</span>
-                  @if (hasEvent(d)) {
-                    <span class="event-pip"
-                      [class.activity-yes]="activityOn(d).length"
-                      [class.activity-no]="!activityOn(d).length"
-                      [title]="activityOn(d).length ? 'Tuvo actividad' : 'Sin actividad registrada'">
-                    </span>
-                  }
+    <div class="pc-cols">
+
+      <!-- ══ El mes ══ -->
+      <section class="pc-card">
+        <header class="pc-mes-head">
+          <button type="button" class="pc-flecha" (click)="cambiarMes(-1)" [disabled]="!puedeAtras" aria-label="Mes anterior">‹</button>
+          <h2>{{ tituloMes }}</h2>
+          <button type="button" class="pc-flecha" (click)="cambiarMes(1)" [disabled]="esEsteMes" aria-label="Mes siguiente">›</button>
+        </header>
+
+        <div class="pc-grid" role="grid">
+          @for (d of DIAS_CORTOS; track $index) { <span class="pc-dsem">{{ d }}</span> }
+          @for (semana of semanas; track $index) {
+            @for (c of semana; track $index) {
+              <div class="pc-dia" [class.pc-dia--vacio]="!c.dia" [class.pc-dia--hoy]="c.hoy"
+                   [class.pc-dia--activo]="c.quien.length" [attr.title]="titulo(c) || null">
+                @if (c.dia) {
+                  <span class="pc-num">{{ c.dia }}</span>
+                  <span class="pc-puntos">
+                    @for (q of c.quien; track $index) { <span class="pc-punto" [style.background]="q.color"></span> }
+                  </span>
                 }
               </div>
             }
           }
         </div>
-      </div>
 
-      <!-- Panel lateral -->
-      <div style="display:flex;flex-direction:column;gap:12px;width:270px">
-        <div class="card card-p">
-          <div class="card-title" style="margin-bottom:10px">{{ selectedDay }} — {{ monthName }}</div>
-          @if (selEvts.length) {
-            <div style="display:flex;flex-direction:column;gap:8px">
-              @for (e of selEvts; track e.title) {
-                <div class="event-item" [style.border-left-color]="e.color" [style.background]="e.color+'08'">
-                  <div style="font-size:.64rem;font-weight:800;color:var(--tx3);text-transform:uppercase;margin-bottom:2px">{{ e.who }}</div>
-                  <div style="font-weight:700;font-size:.84rem;color:var(--tx1)">{{ e.title }}</div>
-                  <div style="font-size:.74rem;color:var(--tx3);margin-top:2px">🕐 {{ e.time }}</div>
-                </div>
-              }
-            </div>
+        <footer class="pc-pie">
+          @if (diasActivos) {
+            <span>🔥 <b>{{ diasActivos }}</b> {{ diasActivos === 1 ? 'día' : 'días' }} con actividad este mes</span>
           } @else {
-            <p style="text-align:center;padding:16px 0;font-size:.84rem;color:var(--tx3)">Sin clases este día</p>
+            <span>Sin actividad registrada este mes.</span>
           }
-
-          @if (selActivity.length) {
-            <div style="margin-top:10px;padding-top:10px;border-top:1px solid var(--border)">
-              <div style="font-size:.7rem;font-weight:800;color:var(--tx3);text-transform:uppercase;letter-spacing:.05em;margin-bottom:6px">Actividad</div>
-              @for (a of selActivity; track a.name) {
-                <div style="display:flex;align-items:center;gap:8px;margin-bottom:5px">
-                  <span style="width:8px;height:8px;border-radius:50%;flex-shrink:0" [style.background]="a.color"></span>
-                  <span style="font-size:.78rem;font-weight:600;color:var(--tx1)">{{ a.name }}</span>
-                  <span style="font-size:.72rem;color:var(--ok);font-weight:700;margin-left:auto">+{{ a.xp }} XP ✓</span>
-                </div>
+          @if (hijos.length > 1) {
+            <span class="pc-leyenda">
+              @for (h of hijos; track h.id; let i = $index) {
+                <span><span class="pc-punto" [style.background]="color(i)"></span> {{ primerNombre(h.nombre) }}</span>
               }
-            </div>
-          } @else if (selEvts.length) {
-            <div style="margin-top:10px;padding-top:10px;border-top:1px solid var(--border)">
-              <p style="font-size:.76rem;color:var(--tx3);text-align:center">Sin actividad registrada este día</p>
-            </div>
+            </span>
           }
-        </div>
+        </footer>
+      </section>
 
-        @if (upcomingEvents.length) {
-          <div class="card card-p">
-            <div class="card-title" style="margin-bottom:10px">Próximas clases</div>
-            <div style="display:flex;flex-direction:column;gap:8px">
-              @for (e of upcomingEvents; track e.day + e.title) {
-                <div class="upcoming-item">
-                  <span class="up-day" [style.background]="e.color+'18'" [style.color]="e.color">{{ e.day }}</span>
-                  <div>
-                    <div style="font-weight:700;font-size:.82rem">{{ e.title }}</div>
-                    <div style="font-size:.7rem;color:var(--tx3)">{{ e.time }}</div>
-                  </div>
-                </div>
-              }
-            </div>
-          </div>
+      <!-- ══ Clases en vivo ══ -->
+      <section class="pc-card">
+        <h2 class="pc-sub">🎥 Clases en vivo cada semana</h2>
+        @if (clases.length) {
+          <ul class="pc-clases">
+            @for (c of clases; track $index) {
+              <li class="pc-clase" [style.--c]="c.color">
+                <span class="pc-clase-dia">{{ c.dia }}</span>
+                <span class="pc-clase-hora">{{ c.inicio }} – {{ c.fin }}</span>
+                <span class="pc-clase-txt">
+                  <b>{{ c.materia }}</b>
+                  @if (hijos.length > 1) { <small>{{ primerNombre(c.hijo.nombre) }}</small> }
+                </span>
+              </li>
+            }
+          </ul>
+        } @else {
+          <p class="pc-nada">
+            No tiene clases en vivo programadas. Sus actividades las puede hacer a su ritmo, cuando quiera.
+          </p>
         }
-
-        <div class="card card-p" style="background:var(--guinda-lt);border-color:var(--guinda-border)">
-          <div style="font-weight:800;font-size:.84rem;color:var(--guinda);margin-bottom:4px">🤖 Asistente de planeación</div>
-          <div style="font-size:.75rem;color:var(--tx2);margin-bottom:10px">¿Dudas sobre el horario o el avance de tus hijos? El Asistente IA puede ayudarte.</div>
-          <a routerLink="/parent/ai-assistant" class="btn btn-primary btn-block">Abrir Asistente IA</a>
-        </div>
-      </div>
+      </section>
     </div>
   }
 </div>

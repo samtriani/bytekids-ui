@@ -1,68 +1,135 @@
-<app-shell role="parent" [userName]="parentName" [userAvatar]="parentInitials"
-  [navItems]="navItems" pageTitle="Mis Hijos"></app-shell>
-<div class="page-wrap">
-  <div class="ph"><div class="ph-left"><h1>Mis Hijos</h1><p>Perfil completo y seguimiento de cada hijo en ByteKids</p></div></div>
+<app-shell role="parent" [userName]="parentName" [userAvatar]="parentInitials" [navItems]="navItems" pageTitle="Mis hijos"></app-shell>
 
-  @if (loading) {
-    <div style="text-align:center;padding:60px 0;color:var(--tx3)">Cargando datos…</div>
-  } @else if (!children.length) {
-    <div style="text-align:center;padding:60px 0;color:var(--tx3)">
-      <div style="font-size:3rem;margin-bottom:8px">👦</div>
-      <p>No hay hijos vinculados a tu cuenta aún.<br>Contacta al administrador de ByteKids.</p>
-    </div>
+<div class="page-wrap ph">
+
+  @if (cargando) {
+    <div class="ph-estado"><span class="ph-spin"></span> Cargando…</div>
+  } @else if (error) {
+    <div class="ph-vacio"><span>⚠️</span><p>No pudimos cargar la información. Intenta de nuevo en un momento.</p></div>
+  } @else if (!sel) {
+    <div class="ph-vacio"><span>👨‍👩‍👧</span><h2>Todavía no hay hijos vinculados</h2><p>Escríbele a coordinación por Mensajes.</p></div>
   } @else {
-    <!-- Selector de hijo -->
-    <div class="child-tabs mb14">
-      @for (c of children; track c.id) {
-        <div class="child-tab card card-p" [class.active]="c.id===sel?.id" (click)="sel=c">
-          <div class="ct-av" [style.background]="c.color+'18'" [style.color]="c.color">{{ c.av }}</div>
-          <div style="flex:1">
-            <div class="ct-name">{{ c.name }}</div>
-            <div class="ct-grade">Nivel {{ c.level }}</div>
-          </div>
-          <div>
-            <div style="font-weight:900;font-size:1rem" [style.color]="c.color">{{ c.xp }}</div>
-            <div style="font-size:.62rem;color:var(--tx3);text-align:right">XP</div>
-          </div>
-        </div>
-      }
-    </div>
 
-    <!-- KPIs -->
-    @if (sel) {
-      <div class="g4 mb14">
-        <div class="kpi blue"><div class="kpi-ico">⭐</div><div><div class="kpi-val">{{ sel.xp }}</div><div class="kpi-lbl">XP Total</div><div class="kpi-dl flat">Nivel {{ sel.level }}</div></div></div>
-        <div class="kpi"><div class="kpi-ico">📈</div><div><div class="kpi-val">{{ sel.prog }}%</div><div class="kpi-lbl">Progreso</div><div class="kpi-dl" [class]="sel.prog>=70?'up':'flat'">Este período</div></div></div>
-        <div class="kpi gold"><div class="kpi-ico">🔥</div><div><div class="kpi-val">{{ sel.streak }}d</div><div class="kpi-lbl">Racha actual</div><div class="kpi-dl flat">¡Sigue así!</div></div></div>
-        <div class="kpi green"><div class="kpi-ico">✅</div><div><div class="kpi-val">{{ sel.missions }}</div><div class="kpi-lbl">Misiones</div><div class="kpi-dl up">Completadas</div></div></div>
-      </div>
-
-      <div class="g2">
-        <!-- Materias -->
-        <div class="card card-p">
-          <div class="section-title">Materias que estudia</div>
-          <div class="chips mb14">
-            @for (s of sel.subjects; track s) { <span class="chip on">{{ s }}</span> }
-            @if (!sel.subjects.length) { <span class="chip">Sin materias aún</span> }
-          </div>
-          <div class="card-title mb8">Progreso general</div>
-          <div class="prog" style="height:10px;margin-bottom:6px">
-            <div class="prog-bar" [style.width]="sel.prog+'%'" [style.background]="pc(sel.prog)"></div>
-          </div>
-          <p style="font-size:.75rem;color:var(--tx3);margin-bottom:16px">{{ sel.prog }}% completado en este período</p>
-          <a routerLink="/parent/progress" class="btn btn-outline btn-block">📈 Ver progreso detallado</a>
-        </div>
-
-        <!-- Actividad reciente -->
-        <div class="card card-p">
-          <div class="section-title">Actividad reciente</div>
-          @for (a of sel.recent; track a) {
-            <div class="act-item"><div class="act-dot"></div><span style="font-size:.84rem;color:var(--tx2)">{{ a }}</span></div>
-          }
-          <div class="divider"></div>
-          <a routerLink="/parent/ai-assistant" class="btn btn-primary btn-block">🤖 Preguntar al Asistente IA</a>
-        </div>
+    <!-- Selector, solo si hay mas de uno -->
+    @if (hijos.length > 1) {
+      <div class="ph-selector" role="tablist">
+        @for (h of hijos; track h.id) {
+          <button type="button" role="tab" class="ph-sel" [class.ph-sel--on]="h.id === sel.id"
+                  [attr.aria-selected]="h.id === sel.id" (click)="elegir(h)">
+            <app-avatar [bot]="h.avatarUrl" [iniciales]="h.iniciales || '?'" [px]="28" color="#7A1535"></app-avatar>
+            {{ primerNombre(h.nombre) }}
+          </button>
+        }
       </div>
     }
+
+    <!-- ══ Quien es y como va ══ -->
+    <section class="ph-hero">
+      <app-avatar [bot]="sel.avatarUrl" [iniciales]="sel.iniciales || '?'" [px]="96" color="#7A1535"></app-avatar>
+      <div class="ph-hero-txt">
+        <h1>{{ sel.nombre }}</h1>
+        <div class="ph-hero-datos">
+          <span class="ph-dato">⭐ Nivel {{ nivel(sel.xp).n }} · {{ nivel(sel.xp).nombre }}</span>
+          <span class="ph-dato">{{ sel.xp }} XP</span>
+          @if (sel.racha > 0) { <span class="ph-dato">🔥 {{ sel.racha }} días seguidos</span> }
+          <span class="ph-chip ph-chip--{{ constancia(sel).tono }}">{{ constancia(sel).texto }}</span>
+        </div>
+        <div class="ph-nivel">
+          <div class="ph-nivel-barra"><div class="ph-nivel-fill" [style.width.%]="nivel(sel.xp).pct"></div></div>
+          <small>{{ nivel(sel.xp).enNivel }} / {{ XP_POR_NIVEL }} XP para el nivel {{ nivel(sel.xp).n + 1 }}</small>
+        </div>
+      </div>
+    </section>
+
+    <div class="ph-consejo">
+      <span class="ph-consejo-ico">{{ consejo(sel).icono }}</span>
+      <p><b>Cómo acompañarlo esta semana:</b> {{ consejo(sel).texto }}</p>
+    </div>
+
+    <div class="ph-cols">
+      <!-- ══ Camino de cada materia ══ -->
+      <div class="ph-col">
+        @for (m of sel.materias; track m.id) {
+          <section class="ph-card" [style.--mat]="m.color || '#7A1535'">
+            <header class="ph-card-head">
+              <h2>{{ m.icono || '📘' }} {{ m.nombre }}</h2>
+              <span class="ph-mat-n">{{ m.aprobadas }} de {{ m.total }}</span>
+            </header>
+            <div class="ph-barra"><div class="ph-barra-fill" [style.width.%]="pct(m.aprobadas, m.total)"></div></div>
+            <app-camino [pasos]="m.camino" [color]="m.color || '#7A1535'"></app-camino>
+          </section>
+        } @empty {
+          <section class="ph-card"><p class="ph-nada">Todavía no tiene materias asignadas.</p></section>
+        }
+      </div>
+
+      <div class="ph-col">
+        <!-- ══ XP por semana ══ -->
+        <section class="ph-card">
+          <header class="ph-card-head"><h2>📈 Cuánto estudió cada semana</h2></header>
+          @if (semanas.length) {
+            <div class="ph-semanas" role="img" aria-label="XP ganado por semana">
+              @for (s of semanas; track s.etiqueta) {
+                <div class="ph-semana">
+                  <span class="ph-semana-xp">{{ s.xp ? '+' + s.xp : '' }}</span>
+                  <div class="ph-semana-barra-wrap"><div class="ph-semana-barra" [style.height.%]="s.alto" [class.ph-semana-barra--cero]="!s.xp"></div></div>
+                  <span class="ph-semana-lbl">{{ s.etiqueta }}</span>
+                </div>
+              }
+            </div>
+          } @else {
+            <p class="ph-nada">🌱 Aquí vas a ver cuánto XP gana cada semana en cuanto empiece.</p>
+          }
+        </section>
+
+        <!-- ══ Certificados ══ -->
+        @if (sel.certificados.length) {
+          <section class="ph-card ph-card--oro">
+            <header class="ph-card-head"><h2>🎓 Certificados</h2></header>
+            <ul class="ph-lista">
+              @for (c of sel.certificados; track c.materia) {
+                <li>
+                  @if (c.estado === 'entregado') {
+                    <span>🏅 <b>{{ c.materia }}</b> · Folio {{ c.folio }}</span>
+                    <a [routerLink]="['/certificado', c.id]" class="ph-link">Ver →</a>
+                  } @else {
+                    <span>⏳ <b>{{ c.materia }}</b> · Ya lo pidió, su maestro lo está preparando</span>
+                  }
+                </li>
+              }
+            </ul>
+          </section>
+        }
+
+        <!-- ══ Logros ══ -->
+        <section class="ph-card">
+          <header class="ph-card-head">
+            <h2>🏆 Sus logros</h2>
+            <a routerLink="/parent/achievements" class="ph-link">Ver todos →</a>
+          </header>
+          @if (sel.logros.length) {
+            <ul class="ph-logros">
+              @for (l of sel.logros.slice(0, 6); track $index) {
+                <li><span class="ph-logro-ico">{{ l.icono || '🏆' }}</span><span><b>{{ l.titulo }}</b><small>{{ fecha(l.cuando) }} · +{{ l.xp }} XP</small></span></li>
+              }
+            </ul>
+          } @else {
+            <p class="ph-nada">Aún no tiene logros. El primero llega con su primera actividad.</p>
+          }
+        </section>
+
+        <!-- ══ Clases en vivo ══ -->
+        @if (sel.clases.length) {
+          <section class="ph-card">
+            <header class="ph-card-head"><h2>📅 Sus clases en vivo</h2></header>
+            <ul class="ph-lista">
+              @for (c of sel.clases; track $index) {
+                <li><span><b>{{ dia(c.dia) }}</b> · {{ hora(c.inicio) }} a {{ hora(c.fin) }}</span><small>{{ c.materia || c.salon }}</small></li>
+              }
+            </ul>
+          </section>
+        }
+      </div>
+    </div>
   }
 </div>

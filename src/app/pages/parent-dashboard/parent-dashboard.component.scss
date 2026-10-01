@@ -1,6 +1,81 @@
-.child-card { border-top: 4px solid var(--em-guinda); }
-.act-row { display:flex; align-items:flex-start; gap:10px; padding:7px; border-radius:7px; transition:background .15s; }
-.act-row:hover { background:var(--bg-card2); }
-.act-dot { width:8px; height:8px; border-radius:50%; margin-top:5px; flex-shrink:0; }
-.msg-preview { display:flex; align-items:center; gap:9px; padding:7px; border-radius:7px; transition:background .15s; }
-.msg-preview:hover { background:var(--bg-card2); }
+/* Panel de la familia. Tema claro de la plataforma; guinda y oro. */
+
+.pf-head { display: flex; justify-content: space-between; align-items: flex-end; gap: 16px; flex-wrap: wrap; margin-bottom: 20px; }
+.pf-head h1 { margin: 0; font-size: 1.6rem; font-weight: 900; color: var(--tx1); }
+.pf-head p { margin: 4px 0 0; color: var(--tx3); font-size: .92rem; }
+
+.pf-btn {
+  display: inline-flex; align-items: center; justify-content: center; gap: 6px;
+  font-family: inherit; font-size: .86rem; font-weight: 800; text-decoration: none; cursor: pointer;
+  color: #fff; background: var(--guinda); border: none; border-radius: 12px; padding: 10px 16px;
+  transition: filter .15s;
+  &:hover { filter: brightness(1.12); }
+  &:focus-visible { outline: 2px solid var(--oro); outline-offset: 2px; }
+}
+.pf-btn--ghost { color: var(--guinda); background: var(--surface); border: 1px solid var(--guinda-border); }
+
+.pf-estado { display: flex; align-items: center; gap: 10px; padding: 40px 4px; color: var(--tx3); }
+.pf-spin { width: 18px; height: 18px; border-radius: 50%; border: 2px solid var(--border); border-top-color: var(--guinda); animation: pf-gira .8s linear infinite; }
+@keyframes pf-gira { to { transform: rotate(360deg); } }
+.pf-vacio { text-align: center; padding: 50px 20px; background: var(--surface); border: 1px solid var(--border); border-radius: 16px;
+  span { font-size: 2.6rem; } h2 { margin: 8px 0 4px; font-size: 1.15rem; color: var(--tx1); } p { margin: 0; color: var(--tx3); } }
+
+/* ── Tarjeta de cada hijo ── */
+.pf-hijos { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 18px; margin-bottom: 20px; }
+.pf-hijos--uno { grid-template-columns: minmax(0, 1fr); }
+@media (max-width: 900px) { .pf-hijos { grid-template-columns: minmax(0, 1fr); } }
+
+.pf-hijo {
+  background: linear-gradient(160deg, var(--guinda-lt) 0%, var(--surface) 38%);
+  border: 1px solid var(--guinda-border); border-radius: 20px; padding: 20px;
+  display: flex; flex-direction: column; gap: 14px; box-shadow: var(--sh1);
+}
+.pf-hijo-top { display: flex; align-items: center; gap: 14px; }
+.pf-hijo-quien { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 4px; align-items: flex-start; }
+.pf-hijo-quien h2 { margin: 0; font-size: 1.2rem; font-weight: 900; color: var(--tx1); }
+.pf-nivel { font-size: .8rem; font-weight: 700; color: var(--tx2); }
+.pf-racha { flex: none; font-size: 1rem; font-weight: 900; color: #B45309; background: var(--warn-lt); padding: 6px 12px; border-radius: 999px; }
+
+.pf-chip { font-size: .72rem; font-weight: 800; padding: 3px 10px; border-radius: 999px; }
+.pf-chip--ok     { color: var(--ok); background: var(--ok-lt); }
+.pf-chip--medio  { color: var(--info); background: var(--info-lt); }
+.pf-chip--alerta { color: var(--danger); background: var(--danger-lt); }
+.pf-chip--nuevo  { color: var(--warn); background: var(--warn-lt); }
+
+.pf-materia { --mat: #7A1535; background: var(--surface); border: 1px solid var(--border2); border-radius: 14px; padding: 12px 14px; }
+.pf-materia-top { display: flex; justify-content: space-between; gap: 10px; }
+.pf-materia-nombre { font-size: .92rem; font-weight: 800; color: var(--tx1); }
+.pf-materia-n { font-size: .85rem; font-weight: 900; color: var(--mat); font-variant-numeric: tabular-nums; }
+.pf-barra { height: 9px; border-radius: 999px; background: var(--surface2); margin: 8px 0; overflow: hidden; }
+.pf-barra-fill { height: 100%; border-radius: 999px; background: linear-gradient(90deg, var(--mat), var(--oro)); transition: width .4s; }
+.pf-le-toca { margin: 0; font-size: .84rem; color: var(--tx2); b { color: var(--tx1); } }
+.pf-le-toca--ok { color: var(--ok); font-weight: 800; }
+
+.pf-cert {
+  display: block; text-decoration: none; font-size: .88rem; font-weight: 800; color: #5C4A1A;
+  background: var(--oro-lt); border: 1px solid rgba(196,153,42,.45); border-radius: 12px; padding: 10px 14px;
+  &:hover { background: #F7EBCF; }
+}
+
+.pf-consejo { display: flex; gap: 10px; align-items: flex-start; background: var(--info-lt); border-radius: 12px; padding: 12px 14px;
+  p { margin: 0; font-size: .86rem; line-height: 1.5; color: var(--tx2); b { color: var(--info); } } }
+.pf-consejo-ico { font-size: 1.3rem; line-height: 1.2; }
+
+/* ── Logros y mensajes ── */
+.pf-cols { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 18px; align-items: start; }
+@media (max-width: 900px) { .pf-cols { grid-template-columns: minmax(0, 1fr); } }
+.pf-card { background: var(--surface); border: 1px solid var(--border); border-radius: 16px; padding: 18px; box-shadow: var(--sh1); }
+.pf-card-head { display: flex; justify-content: space-between; align-items: baseline; margin-bottom: 10px;
+  h3 { margin: 0; font-size: 1rem; font-weight: 900; color: var(--tx1); }
+  a { font-size: .8rem; font-weight: 800; color: var(--guinda); text-decoration: none; } }
+.pf-lista { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 8px; }
+.pf-logro, .pf-msg { display: flex; align-items: center; gap: 12px; padding: 8px; border-radius: 12px; background: var(--surface2); }
+.pf-logro-ico { font-size: 1.5rem; flex: none; }
+.pf-lista-txt { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 2px; font-size: .86rem; color: var(--tx2);
+  b { color: var(--tx1); } small { font-size: .74rem; color: var(--tx3); } }
+.pf-gu { color: var(--guinda) !important; }
+.pf-msg-txt { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.pf-msg-cuando { flex: none; font-size: .72rem; color: var(--tx4); }
+.pf-nada { margin: 0; font-size: .86rem; color: var(--tx3); line-height: 1.5; }
+
+@media (prefers-reduced-motion: reduce) { .pf-spin { animation-duration: 2s; } }

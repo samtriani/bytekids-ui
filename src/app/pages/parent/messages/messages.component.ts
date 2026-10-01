@@ -2,22 +2,14 @@ import { Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { RouterLink } from '@angular/router';
-import { ShellComponent, NavItem } from '../../../shared/shell/shell.component';
+import { ShellComponent } from '../../../shared/shell/shell.component';
+import { PARENT_NAV } from '../shared/parent-nav';
 import { AvatarComponent } from '../../../shared/avatar/avatar.component';
 import { MessageApiService } from '../../../services/api/message-api.service';
 import { AuthService } from '../../../services/auth.service';
 import { forkJoin, of } from 'rxjs';
 import { catchError } from 'rxjs/operators';
 
-const NAV: NavItem[] = [
-  {label:'Mi Panel',      icon:'🏠', route:'/parent'},
-  {label:'Mis Hijos',     icon:'👦', route:'/parent/children'},
-  {label:'Progreso',      icon:'📈', route:'/parent/progress'},
-  {label:'Logros',        icon:'🏆', route:'/parent/achievements'},
-  {label:'Mensajes',      icon:'💬', route:'/parent/messages'},
-  {label:'Calendario',    icon:'📅', route:'/parent/calendar'},
-  {label:'Asistente IA',  icon:'🤖', route:'/parent/ai-assistant', badge:'IA'},
-];
 
 @Component({
   selector: 'app-parent-messages',
@@ -27,7 +19,7 @@ const NAV: NavItem[] = [
   styleUrls: ['./messages.component.scss']
 })
 export class MessagesComponent implements OnInit {
-  navItems = NAV;
+  navItems = PARENT_NAV;
   parentName = '';
   parentInitials = '';
   loading = true;

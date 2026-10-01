@@ -1,116 +1,122 @@
-<app-shell role="parent" [userName]="parentName" [userAvatar]="parentInitials" [navItems]="navItems" pageTitle="Panel de Familia"></app-shell>
-<div class="app-shell-content fade-in">
+<app-shell role="parent" [userName]="parentName" [userAvatar]="parentInitials" [navItems]="navItems" pageTitle="Panel de familia"></app-shell>
 
-  @if (loading) {
-    <div style="text-align:center;padding:80px 0;color:var(--text-muted)">Cargando panel…</div>
+<div class="page-wrap pf">
+
+  <header class="pf-head">
+    <div>
+      <h1>Hola, {{ firstName }} 👋</h1>
+      <p>
+        @if (hijos.length) { Así van {{ nombresHijos }} en ByteKids Academy. }
+        @else if (!cargando) { Aquí vas a ver el avance de tus hijos en ByteKids Academy. }
+      </p>
+    </div>
+    <a routerLink="/parent/messages" class="pf-btn pf-btn--ghost">💬 Escribir a su maestro</a>
+  </header>
+
+  @if (cargando) {
+    <div class="pf-estado"><span class="pf-spin"></span> Cargando el avance de tus hijos…</div>
+  } @else if (error) {
+    <div class="pf-vacio"><span>⚠️</span><p>No pudimos cargar la información. Intenta de nuevo en un momento.</p></div>
+  } @else if (!hijos.length) {
+    <div class="pf-vacio">
+      <span>👨‍👩‍👧</span>
+      <h2>Todavía no hay hijos vinculados a tu cuenta</h2>
+      <p>Escríbele a coordinación por Mensajes y lo dejamos listo.</p>
+    </div>
   } @else {
-    <div class="page-header">
-      <div>
-        <h1>Bienvenido, {{ firstName }} 👋</h1>
-        <p>
-          @if (children.length) {
-            Seguimiento de {{ childrenNames }}
-          } @else {
-            Aún no tienes hijos vinculados. Contacta al coordinador.
+
+    <!-- ══ Cada hijo ══ -->
+    <div class="pf-hijos" [class.pf-hijos--uno]="hijos.length === 1">
+      @for (h of hijos; track h.id) {
+        <article class="pf-hijo">
+          <div class="pf-hijo-top">
+            <app-avatar [bot]="h.avatarUrl" [iniciales]="h.iniciales || '?'" [px]="68" color="#7A1535"></app-avatar>
+            <div class="pf-hijo-quien">
+              <h2>{{ h.nombre }}</h2>
+              <span class="pf-nivel">⭐ Nivel {{ nivel(h.xp).n }} · {{ nivel(h.xp).nombre }} · {{ h.xp }} XP</span>
+              <span class="pf-chip pf-chip--{{ constancia(h).tono }}">{{ constancia(h).texto }}</span>
+            </div>
+            @if (h.racha > 0) {
+              <div class="pf-racha" title="Días seguidos con actividad">🔥 {{ h.racha }}</div>
+            }
+          </div>
+
+          @for (m of h.materias; track m.id) {
+            <div class="pf-materia" [style.--mat]="m.color || '#7A1535'">
+              <div class="pf-materia-top">
+                <span class="pf-materia-nombre">{{ m.icono || '📘' }} {{ m.nombre }}</span>
+                <span class="pf-materia-n">{{ m.aprobadas }} de {{ m.total }}</span>
+              </div>
+              <div class="pf-barra"><div class="pf-barra-fill" [style.width.%]="pct(m.aprobadas, m.total)"></div></div>
+              @if (m.siguiente) {
+                <p class="pf-le-toca">👉 Le toca: <b>{{ m.siguiente.titulo }}</b></p>
+              } @else if (m.aprobadas === m.total) {
+                <p class="pf-le-toca pf-le-toca--ok">🎉 ¡Terminó todas las actividades!</p>
+              }
+            </div>
           }
-        </p>
-      </div>
-      <a routerLink="/parent/ai-assistant" class="btn btn-primary">🤖 Asistente IA</a>
+
+          @if (certificadoListo(h); as cert) {
+            <a class="pf-cert" [routerLink]="['/certificado', cert.id]">🎓 Su certificado de {{ cert.materia }} está listo · Ver →</a>
+          }
+
+          <!-- Lo que la familia puede hacer esta semana -->
+          <div class="pf-consejo">
+            <span class="pf-consejo-ico">{{ consejo(h).icono }}</span>
+            <p><b>Esta semana:</b> {{ consejo(h).texto }}</p>
+          </div>
+
+          <a class="pf-btn" routerLink="/parent/children" [queryParams]="{ hijo: h.id }">Ver todo su avance →</a>
+        </article>
+      }
     </div>
 
-    @if (children.length) {
-      <!-- Children cards -->
-      <div class="grid-2" style="margin-bottom:20px">
-        @for (c of children; track c.id) {
-          <div class="card card-padded child-card" [style.border-top-color]="c.color">
-            <div style="display:flex;align-items:center;gap:12px;margin-bottom:14px">
-              <div class="avatar" style="width:48px;height:48px;font-size:.9rem"
-                   [style.background]="c.color+'12'" [style.color]="c.color">{{ c.avatar }}</div>
-              <div style="flex:1">
-                <div style="font-weight:800;font-size:1rem">{{ c.fullName }}</div>
-                <div style="font-size:.76rem;color:var(--text-muted)">Nivel {{ c.level }}{{ c.subject !== '—' ? ' · ' + c.subject : '' }}</div>
-              </div>
-              <span class="badge badge-guinda"
-                    [style.background]="c.color+'12'" [style.color]="c.color"
-                    [style.border-color]="c.color+'25'">Activo</span>
-            </div>
-            <div class="grid-3" style="margin-bottom:12px">
-              <div style="text-align:center">
-                <div style="font-weight:800;font-size:1.2rem" [style.color]="c.color">{{ c.xp }}</div>
-                <div style="font-size:.66rem;color:var(--text-muted);text-transform:uppercase;font-weight:600">XP</div>
-              </div>
-              <div style="text-align:center">
-                <div style="font-weight:800;font-size:1.2rem">{{ c.progress }}%</div>
-                <div style="font-size:.66rem;color:var(--text-muted);text-transform:uppercase;font-weight:600">Progreso</div>
-              </div>
-              <div style="text-align:center">
-                <div style="font-weight:800;font-size:1.2rem">🔥{{ c.streak }}d</div>
-                <div style="font-size:.66rem;color:var(--text-muted);text-transform:uppercase;font-weight:600">Racha</div>
-              </div>
-            </div>
-            <div class="progress-wrap" style="height:7px;margin-bottom:10px">
-              <div class="progress-bar" [style.width]="c.progress+'%'" [style.background]="c.color"></div>
-            </div>
-            <a routerLink="/parent/children" class="btn btn-ghost btn-sm" style="width:100%;justify-content:center">Ver perfil completo →</a>
-          </div>
+    <!-- ══ Logros y mensajes ══ -->
+    <div class="pf-cols">
+      <section class="pf-card">
+        <header class="pf-card-head">
+          <h3>🏆 Logros recientes</h3>
+          <a routerLink="/parent/achievements">Ver todos →</a>
+        </header>
+        @if (logrosRecientes.length) {
+          <ul class="pf-lista">
+            @for (l of logrosRecientes; track $index) {
+              <li class="pf-logro">
+                <span class="pf-logro-ico">{{ l.icono }}</span>
+                <div class="pf-lista-txt">
+                  <span><b>{{ primerNombre(l.hijo.nombre) }}</b> ganó <b class="pf-gu">{{ l.titulo }}</b></span>
+                  <small>{{ l.cuando }}</small>
+                </div>
+              </li>
+            }
+          </ul>
+        } @else {
+          <p class="pf-nada">Todavía no hay logros. El primero llega con la primera actividad: ¡anímenlo a empezar!</p>
         }
-      </div>
+      </section>
 
-      <div class="grid-2">
-        <!-- Weekly activity chart -->
-        <div class="card card-padded">
-          <div class="card-header-row">
-            <span class="card-title">Actividad semanal (XP)</span>
-            <a routerLink="/parent/progress" class="btn btn-ghost btn-sm">Ver progreso →</a>
-          </div>
-          <div style="height:200px"><canvas #actChart></canvas></div>
-        </div>
-
-        <!-- Activity + Messages -->
-        <div style="display:flex;flex-direction:column;gap:14px">
-          <div class="card card-padded" style="flex:1">
-            <div class="card-header-row">
-              <span class="card-title">Actividad reciente</span>
-              <a routerLink="/parent/children" class="btn btn-ghost btn-sm">Ver todo →</a>
-            </div>
-            @if (recentActivity.length) {
-              @for (a of recentActivity; track $index) {
-                <div class="act-row">
-                  <div class="act-dot" [style.background]="a.color"></div>
-                  <div>
-                    <div style="font-size:.82rem;font-weight:600;color:var(--text-primary)">{{ a.icon }} {{ a.text }}</div>
-                    <div style="font-size:.7rem;color:var(--text-muted)">{{ a.child }} · {{ a.time }}</div>
-                  </div>
+      <section class="pf-card">
+        <header class="pf-card-head">
+          <h3>💬 Mensajes de maestros</h3>
+          <a routerLink="/parent/messages">Abrir →</a>
+        </header>
+        @if (mensajes.length) {
+          <ul class="pf-lista">
+            @for (m of mensajes; track $index) {
+              <li class="pf-msg">
+                <app-avatar [bot]="m.bot" [iniciales]="m.iniciales" [px]="34" color="#0EA5E9"></app-avatar>
+                <div class="pf-lista-txt">
+                  <span><b>{{ m.de }}</b></span>
+                  <small class="pf-msg-txt">{{ m.texto }}</small>
                 </div>
-              }
-            } @else {
-              <p style="font-size:.82rem;color:var(--text-muted);padding:8px 0">Sin actividad registrada aún.</p>
+                <small class="pf-msg-cuando">{{ m.cuando }}</small>
+              </li>
             }
-          </div>
-
-          <div class="card card-padded">
-            <div class="card-header-row">
-              <span class="card-title">Mensajes de maestros</span>
-              <a routerLink="/parent/messages" class="btn btn-outline btn-sm">💬 Abrir</a>
-            </div>
-            @if (inboxMessages.length) {
-              @for (m of inboxMessages; track $index) {
-                <div class="msg-preview">
-                  <div class="avatar" style="width:30px;height:30px;font-size:.66rem;flex-shrink:0">{{ m.avatar }}</div>
-                  <div style="flex:1;min-width:0">
-                    <div style="font-weight:700;font-size:.8rem">{{ m.from }}</div>
-                    <div style="font-size:.75rem;color:var(--text-muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis">{{ m.text }}</div>
-                  </div>
-                  <span style="font-size:.68rem;color:var(--text-dim);white-space:nowrap">{{ m.time }}</span>
-                </div>
-              }
-            } @else {
-              <p style="font-size:.82rem;color:var(--text-muted);padding:8px 0">Sin mensajes nuevos.</p>
-            }
-          </div>
-        </div>
-      </div>
-    }
+          </ul>
+        } @else {
+          <p class="pf-nada">Sin mensajes por ahora. Si tienes una duda, escríbele a su maestro cuando quieras.</p>
+        }
+      </section>
+    </div>
   }
-
 </div>
