@@ -1,69 +1,73 @@
-<app-shell role="parent" [userName]="parentName" [userAvatar]="parentInitials"
-  [navItems]="navItems" pageTitle="Logros"></app-shell>
-<div class="page-wrap">
-  <div class="ph"><div class="ph-left"><h1>Logros y reconocimientos</h1><p>Medallas obtenidas por tus hijos en ByteKids Academy</p></div></div>
+<app-shell role="parent" [userName]="parentName" [userAvatar]="parentInitials" [navItems]="navItems" pageTitle="Logros"></app-shell>
 
-  @if (loading) {
-    <div style="text-align:center;padding:60px 0;color:var(--tx3)">Cargando logros…</div>
-  } @else if (!children.length) {
-    <div style="text-align:center;padding:60px 0;color:var(--tx3)">
-      <div style="font-size:3rem;margin-bottom:8px">👨‍👩‍👧</div>
-      <p>No hay hijos vinculados a tu cuenta aún.<br>Contacta al coordinador de ByteKids.</p>
-    </div>
+<div class="page-wrap pl">
+  <header class="pl-head">
+    <h1>🏆 Logros de tus hijos</h1>
+    <p>Cada medalla es algo que lograron de verdad. Pregúntenles cómo la ganaron: les encanta contarlo.</p>
+  </header>
+
+  @if (cargando) {
+    <div class="pl-estado">Cargando…</div>
+  } @else if (error) {
+    <div class="pl-vacio"><span>⚠️</span><p>No pudimos cargar los logros. Intenta de nuevo en un momento.</p></div>
+  } @else if (!hijos.length) {
+    <div class="pl-vacio"><span>👨‍👩‍👧</span><p>Todavía no hay hijos vinculados a tu cuenta.</p></div>
   } @else {
-    <!-- Resumen por hijo -->
-    <div class="g2 mb14">
-      @for (c of children; track c.id || c._id) {
-        <div class="card card-p" style="display:flex;align-items:center;gap:14px">
-          <div style="width:44px;height:44px;border-radius:12px;background:var(--guinda-lt);color:var(--guinda);
-                      display:flex;align-items:center;justify-content:center;
-                      font-weight:900;font-size:.85rem;flex-shrink:0">
-            {{ c.initials || '?' }}
-          </div>
-          <div style="flex:1;min-width:0">
-            <div style="font-weight:800;font-size:.95rem;color:var(--tx1)">{{ c.displayName || c.username || 'Alumno' }}</div>
-            <div style="font-size:.74rem;color:var(--tx3);margin-top:2px">
-              {{ countByChild(c.id || c._id) }} logro(s) desbloqueado(s)
-            </div>
-          </div>
-          <div style="text-align:right;flex-shrink:0">
-            <div style="font-weight:900;font-size:1rem;color:var(--guinda)">{{ xpByChild(c.id || c._id) }} XP</div>
-            <div style="font-size:.64rem;color:var(--tx3)">ganados</div>
-          </div>
-        </div>
-      }
-    </div>
 
-    <!-- Filtros -->
-    <div class="chips mb14">
-      @for (f of filters; track f) {
-        <button class="chip" [class.on]="filt===f" (click)="filt=f">{{ f }}</button>
-      }
-    </div>
-
-    <!-- Grid de logros -->
-    @if (rows.length) {
-      <div class="ach-grid">
-        @for (a of rows; track a.title + a.childId) {
-          <div class="ach-card card card-p earned">
-            <div class="ac-top">
-              <span class="tag tag-guinda" style="font-size:.62rem">{{ a.childName.split(' ')[0] }}</span>
-            </div>
-            <div class="ach-icon">{{ a.icon }}</div>
-            <div class="ach-title">{{ a.title }}</div>
-            <div class="ach-desc">{{ a.desc }}</div>
-            <div class="ach-foot">
-              <span class="tag tag-guinda" style="font-size:.62rem">+{{ a.xpReward }} XP</span>
-              <span style="font-size:.68rem;color:var(--ok);font-weight:700">✓ {{ a.date }}</span>
-            </div>
-          </div>
+    @if (hijos.length > 1) {
+      <div class="pl-filtro" role="tablist">
+        <button type="button" class="pl-chip" [class.pl-chip--on]="!filtro" (click)="filtro = ''">Todos</button>
+        @for (h of hijos; track h.id) {
+          <button type="button" class="pl-chip" [class.pl-chip--on]="filtro === h.id" (click)="filtro = h.id">
+            {{ primerNombre(h.nombre) }} <span class="pl-chip-n">{{ h.logros.length }}</span>
+          </button>
         }
       </div>
-    } @else {
-      <div style="text-align:center;padding:48px 0;color:var(--tx3)">
-        <div style="font-size:3rem;margin-bottom:8px">🏆</div>
-        <p style="font-size:.9rem">Aún no hay logros desbloqueados.<br>¡Sigan completando misiones para ganar medallas!</p>
-      </div>
+    }
+
+    @for (h of visibles; track h.id) {
+      <section class="pl-hijo">
+        <header class="pl-hijo-head">
+          <app-avatar [bot]="h.avatarUrl" [iniciales]="h.iniciales || '?'" [px]="52" color="#7A1535"></app-avatar>
+          <div>
+            <h2>{{ h.nombre }}</h2>
+            <span>{{ h.logros.length }} {{ h.logros.length === 1 ? 'logro' : 'logros' }} · +{{ xpDeLogros(h) }} XP en medallas</span>
+          </div>
+        </header>
+
+        <!-- Los certificados, primero: son lo mas grande que puede ganar -->
+        @for (c of h.certificados; track c.materia) {
+          <div class="pl-cert" [class.pl-cert--pend]="c.estado !== 'entregado'">
+            <span class="pl-cert-ico">{{ c.estado === 'entregado' ? '🎓' : '⏳' }}</span>
+            <div class="pl-cert-txt">
+              @if (c.estado === 'entregado') {
+                <b>Certificado de {{ c.materia }}</b>
+                <small>Folio {{ c.folio }}</small>
+              } @else {
+                <b>Pidió su certificado de {{ c.materia }}</b>
+                <small>Su maestro lo está preparando. Les avisamos cuando esté listo.</small>
+              }
+            </div>
+            @if (c.estado === 'entregado') {
+              <a class="pl-btn" [routerLink]="['/certificado', c.id]">Ver certificado →</a>
+            }
+          </div>
+        }
+
+        @if (h.logros.length) {
+          <ul class="pl-grid">
+            @for (l of h.logros; track $index) {
+              <li class="pl-logro">
+                <span class="pl-logro-ico">{{ l.icono || '🏆' }}</span>
+                <b>{{ l.titulo }}</b>
+                <small>{{ fecha(l.cuando) }} · +{{ l.xp }} XP</small>
+              </li>
+            }
+          </ul>
+        } @else {
+          <p class="pl-nada">🌱 {{ primerNombre(h.nombre) }} todavía no gana su primer logro. Llega con su primera actividad: ¡anímenlo!</p>
+        }
+      </section>
     }
   }
 </div>

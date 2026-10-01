@@ -2,7 +2,8 @@ import { Component, ViewChild, ElementRef, AfterViewChecked } from '@angular/cor
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { RouterLink } from '@angular/router';
-import { ShellComponent, NavItem } from '../../../shared/shell/shell.component';
+import { ShellComponent } from '../../../shared/shell/shell.component';
+import { PARENT_NAV } from '../shared/parent-nav';
 import { AiTutorService, ChatMessage } from '../../../services/ai-tutor.service';
 import { AuthService } from '../../../services/auth.service';
 import { formatearMensaje } from '../../../shared/formato-chat';
@@ -14,15 +15,7 @@ import { formatearMensaje } from '../../../shared/formato-chat';
 export class AiAssistantComponent implements AfterViewChecked {
   @ViewChild('chatEnd') chatEnd!: ElementRef;
 
-  navItems: NavItem[] = [
-    { label:'Dashboard',    icon:'🏠', route:'/parent' },
-    { label:'Mis Hijos',    icon:'👦', route:'/parent/children' },
-    { label:'Progreso',     icon:'📈', route:'/parent/progress' },
-    { label:'Logros',       icon:'🏆', route:'/parent/achievements' },
-    { label:'Mensajes',     icon:'💬', route:'/parent/messages' },
-    { label:'Calendario',   icon:'📅', route:'/parent/calendar' },
-    { label:'Asistente IA', icon:'🤖', route:'/parent/ai-assistant', badge:'✨' },
-  ];
+  navItems = PARENT_NAV;
 
   get parentName():     string { return this.auth.getUser()?.displayName || 'Padre/Madre'; }
   get parentInitials(): string { return this.auth.getUser()?.initials    || 'P'; }

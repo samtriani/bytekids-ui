@@ -1,109 +1,113 @@
 import { Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { RouterLink } from '@angular/router';
-import { ShellComponent, NavItem } from '../../../shared/shell/shell.component';
-import { UserApiService } from '../../../services/api/user-api.service';
-import { ProgressApiService } from '../../../services/api/progress-api.service';
+import { ActivatedRoute, RouterLink } from '@angular/router';
+import { ShellComponent } from '../../../shared/shell/shell.component';
+import { AvatarComponent } from '../../../shared/avatar/avatar.component';
+import { CaminoComponent } from '../../../shared/camino/camino.component';
 import { AuthService } from '../../../services/auth.service';
-import { forkJoin, of } from 'rxjs';
-import { catchError } from 'rxjs/operators';
+import { FamiliaApiService, Hijo } from '../../../services/api/familia-api.service';
+import { PARENT_NAV } from '../shared/parent-nav';
+import { consejo, constancia, nivel, primerNombre, XP_POR_NIVEL } from '../shared/familia';
 
-const NAV: NavItem[] = [
-  {label:'Mi Panel',      icon:'🏠', route:'/parent'},
-  {label:'Mis Hijos',     icon:'👦', route:'/parent/children'},
-  {label:'Progreso',      icon:'📈', route:'/parent/progress'},
-  {label:'Logros',        icon:'🏆', route:'/parent/achievements'},
-  {label:'Mensajes',      icon:'💬', route:'/parent/messages'},
-  {label:'Calendario',    icon:'📅', route:'/parent/calendar'},
-  {label:'Asistente IA',  icon:'🤖', route:'/parent/ai-assistant', badge:'IA'},
-];
-const COLORS = ['#7C3AED','#2563EB','#06B6D4','#10B981','#F59E0B','#EC4899'];
+/** Una barra de la grafica de XP por semana. */
+interface BarraSemana { etiqueta: string; xp: number; alto: number; }
 
+/**
+ * Todo el avance de un hijo: su camino en cada materia, su XP por semana,
+ * sus certificados, sus logros y sus clases.
+ *
+ * Absorbe la vieja pantalla de "Progreso", que repetia casi lo mismo con un
+ * porcentaje inventado (XP entre 5).
+ */
 @Component({
   selector: 'app-parent-children',
   standalone: true,
-  imports: [CommonModule, RouterLink, ShellComponent],
+  imports: [CommonModule, RouterLink, ShellComponent, AvatarComponent, CaminoComponent],
   templateUrl: './children.component.html',
-  styleUrls: ['./children.component.scss']
+  styleUrls: ['./children.component.scss'],
 })
 export class ChildrenComponent implements OnInit {
-  navItems = NAV;
+  navItems = PARENT_NAV;
   parentName = '';
   parentInitials = '';
-  children: any[] = [];
-  sel: any = null;
-  loading = true;
 
-  constructor(
-    private userApi: UserApiService,
-    private progressApi: ProgressApiService,
-    private auth: AuthService
-  ) {}
+  hijos: Hijo[] = [];
+  sel: Hijo | null = null;
+  semanas: BarraSemana[] = [];
+  cargando = true;
+  error = false;
+
+  readonly nivel = nivel;
+  readonly constancia = constancia;
+  readonly consejo = consejo;
+  readonly primerNombre = primerNombre;
+  readonly XP_POR_NIVEL = XP_POR_NIVEL;
+  readonly DIAS: Record<string, string> = {
+    lunes: 'Lunes', martes: 'Martes', miercoles: 'Miércoles', 'miércoles': 'Miércoles',
+    jueves: 'Jueves', viernes: 'Viernes', sabado: 'Sábado', 'sábado': 'Sábado', domingo: 'Domingo',
+    monday: 'Lunes', tuesday: 'Martes', wednesday: 'Miércoles', thursday: 'Jueves',
+    friday: 'Viernes', saturday: 'Sábado', sunday: 'Domingo',
+  };
+
+  constructor(private familia: FamiliaApiService, private auth: AuthService, private route: ActivatedRoute) {}
 
   ngOnInit(): void {
     const user = this.auth.getUser();
-    this.parentName    = user?.displayName || 'Padre/Madre';
-    this.parentInitials = user?.initials   || 'P';
-    const parentId = user?.userId ?? '';
-    if (!parentId) { this.loading = false; return; }
+    this.parentName = user?.displayName || 'Familia';
+    this.parentInitials = user?.initials || 'F';
 
-    this.userApi.getStudentsOfParent(parentId).pipe(catchError(() => of([]))).subscribe(students => {
-      if (!students.length) { this.loading = false; return; }
-      forkJoin(students.map((s: any) => {
-        const sid = s.id || s._id;
-        return forkJoin({
-          student:  of(s),
-          xp:       this.progressApi.getStudentXp(sid).pipe(catchError(() => of(0))),
-          streak:   this.progressApi.getStudentStreak(sid).pipe(catchError(() => of(0))),
-          subjects: this.progressApi.getStudentSubjects(sid).pipe(catchError(() => of([]))),
-          activity: this.progressApi.getStudentActivity(sid).pipe(catchError(() => of([]))),
-        });
-      })).subscribe({
-        next: (results: any[]) => {
-          this.children = results.map((r, i) => this.buildChild(r, i));
-          this.sel = this.children[0] ?? null;
-          this.loading = false;
-        },
-        error: () => { this.loading = false; }
-      });
+    this.familia.hijos().subscribe({
+      next: hijos => {
+        this.hijos = hijos;
+        // Si viene del panel con ?hijo=, abre ese.
+        const pedido = this.route.snapshot.queryParamMap.get('hijo');
+        this.elegir(hijos.find(h => h.id === pedido) ?? hijos[0] ?? null);
+        this.cargando = false;
+      },
+      error: () => { this.cargando = false; this.error = true; },
     });
   }
 
-  private buildChild(r: any, i: number): any {
-    const s = r.student;
-    const av = s.initials || (s.displayName || '').split(' ')
-      .map((w: string) => w[0] || '').join('').slice(0, 2).toUpperCase();
-    const subjectNames = (r.subjects as any[])
-      .map((sub: any) => sub.subject?.name || sub.subjectName || sub.name)
-      .filter(Boolean);
-    const prog = this.calcProg(r.subjects);
-    const missions = (r.subjects as any[]).reduce((acc: number, sub: any) => acc + (sub.missionsCompleted ?? 0), 0);
-    const recent = [...(r.activity as any[])]
-      .sort((a: any, b: any) => new Date(b.activityDate).getTime() - new Date(a.activityDate).getTime())
-      .slice(0, 3)
-      .map((a: any) => `${a.missionsCompleted ?? 0} misión(es) el ${a.activityDate} — +${a.xpEarned ?? 0} XP ⭐`);
+  elegir(h: Hijo | null): void {
+    this.sel = h;
+    this.semanas = this.porSemana(h?.xpReciente ?? []);
+  }
 
-    return {
-      id:       s.id || s._id,
-      name:     s.displayName || s.username,
-      av,
-      color:    COLORS[i % COLORS.length],
-      xp:       r.xp,
-      streak:   r.streak,
-      prog,
-      level:    Math.floor(r.xp / 200) + 1,
-      missions,
-      subjects: subjectNames,
-      recent:   recent.length ? recent : ['Sin actividad registrada aún 📚'],
+  /**
+   * XP ganado en cada semana (de lunes a domingo), desde la primera semana
+   * con actividad y hasta 8 atras. Ganado y no acumulado: "cuanto estudio
+   * cada semana" es lo que le dice algo a un papa.
+   */
+  private porSemana(dias: { fecha: string; xp: number }[]): BarraSemana[] {
+    if (!dias.length) return [];
+    const dia = (f: string) => new Date(f + 'T12:00:00');
+    const lunesDe = (d: Date) => {
+      const x = new Date(d.getFullYear(), d.getMonth(), d.getDate());
+      x.setDate(x.getDate() - ((x.getDay() + 6) % 7));
+      return x;
     };
+    const primera = lunesDe(new Date(Math.min(...dias.map(d => dia(d.fecha).getTime()))));
+    const lunes: Date[] = [];
+    for (let s = lunesDe(new Date()); s >= primera && lunes.length < 8; s.setDate(s.getDate() - 7)) {
+      lunes.unshift(new Date(s));
+    }
+    const barras = lunes.map(l => {
+      const ini = l.getTime(), fin = ini + 7 * 86400000;
+      const xp = dias.filter(d => { const t = dia(d.fecha).getTime(); return t >= ini && t < fin; })
+                     .reduce((s, d) => s + d.xp, 0);
+      return { etiqueta: l.toLocaleDateString('es-MX', { day: 'numeric', month: 'short' }).replace('.', ''), xp, alto: 0 };
+    });
+    const max = Math.max(...barras.map(b => b.xp), 1);
+    return barras.map(b => ({ ...b, alto: b.xp ? Math.max(8, Math.round(b.xp / max * 100)) : 4 }));
   }
 
-  private calcProg(subjects: any[]): number {
-    if (!subjects.length) return 0;
-    const sum = subjects.reduce((acc: number, sub: any) =>
-      acc + Math.min(100, Math.round((sub.xpInSubject ?? 0) / 5)), 0);
-    return Math.round(sum / subjects.length);
-  }
+  pct(a: number, t: number): number { return t ? Math.round(a / t * 100) : 0; }
 
-  pc(p: number): string { return p >= 80 ? 'var(--ok)' : p < 60 ? 'var(--danger)' : 'var(--guinda)'; }
+  dia(d: string): string { return this.DIAS[(d || '').toLowerCase()] ?? d; }
+
+  hora(t: string): string { return (t || '').slice(0, 5); }
+
+  fecha(iso: string | null): string {
+    return iso ? new Date(iso).toLocaleDateString('es-MX', { day: 'numeric', month: 'long' }) : '';
+  }
 }

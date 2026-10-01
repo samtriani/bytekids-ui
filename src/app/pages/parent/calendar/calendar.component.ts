@@ -1,188 +1,139 @@
 import { Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { RouterLink } from '@angular/router';
-import { ShellComponent, NavItem } from '../../../shared/shell/shell.component';
-import { UserApiService } from '../../../services/api/user-api.service';
-import { ClassroomApiService } from '../../../services/api/classroom-api.service';
-import { ScheduleApiService } from '../../../services/api/schedule-api.service';
-import { ProgressApiService } from '../../../services/api/progress-api.service';
+import { ShellComponent } from '../../../shared/shell/shell.component';
+import { AvatarComponent } from '../../../shared/avatar/avatar.component';
 import { AuthService } from '../../../services/auth.service';
-import { forkJoin, of } from 'rxjs';
-import { catchError, switchMap, map } from 'rxjs/operators';
+import { FamiliaApiService, Hijo } from '../../../services/api/familia-api.service';
+import { PARENT_NAV } from '../shared/parent-nav';
+import { primerNombre } from '../shared/familia';
 
-const NAV: NavItem[] = [
-  {label:'Mi Panel',      icon:'🏠', route:'/parent'},
-  {label:'Mis Hijos',     icon:'👦', route:'/parent/children'},
-  {label:'Progreso',      icon:'📈', route:'/parent/progress'},
-  {label:'Logros',        icon:'🏆', route:'/parent/achievements'},
-  {label:'Mensajes',      icon:'💬', route:'/parent/messages'},
-  {label:'Calendario',    icon:'📅', route:'/parent/calendar'},
-  {label:'Asistente IA',  icon:'🤖', route:'/parent/ai-assistant', badge:'IA'},
-];
-const DAY_MAP: Record<string, number> = {
-  SUNDAY:0, MONDAY:1, TUESDAY:2, WEDNESDAY:3, THURSDAY:4, FRIDAY:5, SATURDAY:6,
-};
-const COLORS = ['#7C3AED','#2563EB','#06B6D4','#10B981','#F59E0B','#EC4899'];
+/** Un color por hijo, para distinguir sus puntos en el mes. */
+const COLORES = ['#7A1535', '#2563EB', '#C4992A', '#1A6B3C', '#7C3AED', '#EC4899'];
 
+interface Celda { fecha: string | null; dia: number | null; hoy: boolean; quien: { color: string; xp: number; nombre: string }[]; }
+
+/**
+ * El calendario de la familia: que dias estudio cada hijo y cuando tiene
+ * clases en vivo.
+ *
+ * Antes pedia los salones del nino a /classrooms/student/{id}, una ruta que
+ * no deja entrar a papas: fallaba en silencio y el calendario salia vacio
+ * siempre. Ahora todo sale de /familia/hijos.
+ */
 @Component({
   selector: 'app-parent-calendar',
   standalone: true,
-  imports: [CommonModule, RouterLink, ShellComponent],
+  imports: [CommonModule, ShellComponent, AvatarComponent],
   templateUrl: './calendar.component.html',
-  styleUrls: ['./calendar.component.scss']
+  styleUrls: ['./calendar.component.scss'],
 })
 export class CalendarComponent implements OnInit {
-  navItems = NAV;
+  navItems = PARENT_NAV;
   parentName = '';
   parentInitials = '';
-  loading = true;
 
-  days = ['Dom','Lun','Mar','Mié','Jue','Vie','Sáb'];
-  weeks: (number | null)[][] = [];
-  currentYear  = new Date().getFullYear();
-  currentMonth = new Date().getMonth();
-  today        = new Date().getDate();
-  selectedDay  = new Date().getDate();
-  events: Record<number, any[]> = {};
-  private cachedSchedules: any[] = [];
-  private cachedActivityResults: any[] = [];
-  activityByDay: Record<number, { name: string; color: string; xp: number }[]> = {};
+  hijos: Hijo[] = [];
+  cargando = true;
+  error = false;
 
-  get monthName(): string {
-    const s = new Date(this.currentYear, this.currentMonth, 1)
-      .toLocaleDateString('es-MX', { month:'long', year:'numeric' });
-    return s.charAt(0).toUpperCase() + s.slice(1);
-  }
-  get selEvts(): any[] { return this.events[this.selectedDay] ?? []; }
-  get upcomingEvents(): any[] {
-    const ref = (this.currentYear === new Date().getFullYear() &&
-                 this.currentMonth === new Date().getMonth()) ? this.today : 1;
-    return Object.entries(this.events)
-      .filter(([d]) => +d >= ref)
-      .sort(([a],[b]) => +a - +b)
-      .slice(0, 6)
-      .flatMap(([d, evts]) => evts.map(e => ({ ...e, day: +d })));
-  }
-  hasEvent(d: number | null): boolean { return !!(d && this.events[d]?.length); }
-  isToday(d: number | null): boolean {
-    const n = new Date();
-    return !!d && d === n.getDate() && this.currentMonth === n.getMonth() && this.currentYear === n.getFullYear();
-  }
+  mes = new Date(new Date().getFullYear(), new Date().getMonth(), 1);
+  semanas: Celda[][] = [];
+  readonly DIAS_CORTOS = ['L', 'M', 'M', 'J', 'V', 'S', 'D'];
+  readonly primerNombre = primerNombre;
 
-  constructor(
-    private userApi:      UserApiService,
-    private classroomApi: ClassroomApiService,
-    private scheduleApi:  ScheduleApiService,
-    private progressApi:  ProgressApiService,
-    private auth:         AuthService
-  ) {}
+  /** Las clases de todos los hijos, ordenadas de lunes a domingo. */
+  clases: { hijo: Hijo; color: string; dia: string; orden: number; inicio: string; fin: string; materia: string }[] = [];
+
+  private readonly ORDEN_DIA: Record<string, [number, string]> = {
+    lunes: [1, 'Lunes'], monday: [1, 'Lunes'], martes: [2, 'Martes'], tuesday: [2, 'Martes'],
+    miercoles: [3, 'Miércoles'], 'miércoles': [3, 'Miércoles'], wednesday: [3, 'Miércoles'],
+    jueves: [4, 'Jueves'], thursday: [4, 'Jueves'], viernes: [5, 'Viernes'], friday: [5, 'Viernes'],
+    sabado: [6, 'Sábado'], 'sábado': [6, 'Sábado'], saturday: [6, 'Sábado'],
+    domingo: [7, 'Domingo'], sunday: [7, 'Domingo'],
+  };
+
+  constructor(private familia: FamiliaApiService, private auth: AuthService) {}
 
   ngOnInit(): void {
     const user = this.auth.getUser();
-    this.parentName    = user?.displayName || 'Padre/Madre';
-    this.parentInitials = user?.initials   || 'P';
-    this.buildGrid();
-    const parentId = user?.userId ?? '';
-    if (!parentId) { this.loading = false; return; }
-
-    this.userApi.getStudentsOfParent(parentId).pipe(catchError(() => of([]))).subscribe(students => {
-      if (!students.length) { this.loading = false; return; }
-      forkJoin(students.map((s: any, i: number) => forkJoin({
-        schedules: this.classroomApi.getClassroomsByStudent(s.id || s._id).pipe(
-          catchError(() => of([])),
-          switchMap((classrooms: any[]) => {
-            if (!classrooms.length) return of([]);
-            return forkJoin(classrooms.map((c: any) =>
-              this.scheduleApi.getByClassroom(c.id || c._id).pipe(catchError(() => of([])))
-            )).pipe(map((arrays: any[][]) => arrays.flat().map(sch => ({
-              ...sch, studentName: s.displayName || s.username, studentColor: COLORS[i % COLORS.length],
-            }))));
-          })
-        ),
-        activity: this.progressApi.getStudentActivity(s.id || s._id).pipe(catchError(() => of([]))),
-        meta: of({ name: s.displayName || s.username, color: COLORS[i % COLORS.length] }),
-      }))).subscribe({
-        next: (results: any[]) => {
-          this.cachedSchedules        = results.flatMap(r => r.schedules);
-          this.cachedActivityResults  = results;
-          this.buildActivityByDay(results);
-          this.buildEvents();
-          this.loading = false;
-        },
-        error: () => { this.loading = false; }
-      });
+    this.parentName = user?.displayName || 'Familia';
+    this.parentInitials = user?.initials || 'F';
+    this.familia.hijos().subscribe({
+      next: hijos => {
+        this.hijos = hijos;
+        this.clases = hijos.flatMap((h, i) => h.clases.map(c => {
+          const [orden, dia] = this.ORDEN_DIA[(c.dia || '').toLowerCase()] ?? [8, c.dia];
+          return { hijo: h, color: this.color(i), dia, orden, inicio: (c.inicio || '').slice(0, 5),
+                   fin: (c.fin || '').slice(0, 5), materia: c.materia || c.salon };
+        })).sort((a, b) => a.orden - b.orden || a.inicio.localeCompare(b.inicio));
+        this.armarMes();
+        this.cargando = false;
+      },
+      error: () => { this.cargando = false; this.error = true; },
     });
   }
 
-  prevMonth(): void {
-    if (this.currentMonth === 0) { this.currentMonth = 11; this.currentYear--; }
-    else this.currentMonth--;
-    this.selectedDay = 1;
-    this.buildGrid();
-    this.buildEvents();
-    this.buildActivityByDay(this.cachedActivityResults);
+  color(i: number): string { return COLORES[i % COLORES.length]; }
+
+  get tituloMes(): string {
+    const t = this.mes.toLocaleDateString('es-MX', { month: 'long', year: 'numeric' });
+    return t.charAt(0).toUpperCase() + t.slice(1);
   }
 
-  nextMonth(): void {
-    if (this.currentMonth === 11) { this.currentMonth = 0; this.currentYear++; }
-    else this.currentMonth++;
-    this.selectedDay = 1;
-    this.buildGrid();
-    this.buildEvents();
-    this.buildActivityByDay(this.cachedActivityResults);
+  get esEsteMes(): boolean {
+    const h = new Date();
+    return this.mes.getFullYear() === h.getFullYear() && this.mes.getMonth() === h.getMonth();
   }
 
-  get selActivity(): { name: string; color: string; xp: number }[] {
-    return this.activityOn(this.selectedDay);
+  /**
+   * /familia/hijos trae los ultimos 70 dias de actividad. Un mes mas viejo
+   * saldria "sin actividad" sin ser cierto: no se deja ir hasta alla.
+   */
+  get puedeAtras(): boolean {
+    const limite = new Date(Date.now() - 70 * 86400000);
+    return this.mes > new Date(limite.getFullYear(), limite.getMonth(), 1);
   }
 
-  activityOn(d: number | null): { name: string; color: string; xp: number }[] {
-    return d ? (this.activityByDay[d] ?? []) : [];
+  cambiarMes(delta: number): void {
+    this.mes = new Date(this.mes.getFullYear(), this.mes.getMonth() + delta, 1);
+    this.armarMes();
   }
 
-  private buildActivityByDay(results: any[]): void {
-    const map: Record<number, { name: string; color: string; xp: number }[]> = {};
-    for (const r of results) {
-      for (const a of (r.activity as any[])) {
-        if (!a.activityDate || (!a.missionsCompleted && !a.xpEarned)) continue;
-        const d = new Date(a.activityDate);
-        if (d.getFullYear() !== this.currentYear || d.getMonth() !== this.currentMonth) continue;
-        const day = d.getDate();
-        if (!map[day]) map[day] = [];
-        map[day].push({ name: r.meta.name, color: r.meta.color, xp: a.xpEarned ?? 0 });
-      }
+  /** Dias del mes con actividad, de cualquier hijo. */
+  get diasActivos(): number {
+    return this.semanas.flat().filter(c => c.quien.length).length;
+  }
+
+  private armarMes(): void {
+    const y = this.mes.getFullYear(), m = this.mes.getMonth();
+    const hoy = new Date();
+    const clave = (d: Date) => `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
+    const hoyClave = clave(hoy);
+
+    // fecha → quien estudio ese dia
+    const porDia = new Map<string, { color: string; xp: number; nombre: string }[]>();
+    this.hijos.forEach((h, i) => h.xpReciente.forEach(d => {
+      if (d.xp <= 0) return;
+      const lista = porDia.get(d.fecha) ?? [];
+      lista.push({ color: this.color(i), xp: d.xp, nombre: primerNombre(h.nombre) });
+      porDia.set(d.fecha, lista);
+    }));
+
+    const primero = new Date(y, m, 1);
+    const vacias = (primero.getDay() + 6) % 7;   // lunes primero
+    const ultimo = new Date(y, m + 1, 0).getDate();
+    const celdas: Celda[] = [];
+    for (let i = 0; i < vacias; i++) celdas.push({ fecha: null, dia: null, hoy: false, quien: [] });
+    for (let d = 1; d <= ultimo; d++) {
+      const f = clave(new Date(y, m, d));
+      celdas.push({ fecha: f, dia: d, hoy: f === hoyClave, quien: porDia.get(f) ?? [] });
     }
-    this.activityByDay = map;
+    while (celdas.length % 7) celdas.push({ fecha: null, dia: null, hoy: false, quien: [] });
+    this.semanas = [];
+    for (let i = 0; i < celdas.length; i += 7) this.semanas.push(celdas.slice(i, i + 7));
   }
 
-  private buildGrid(): void {
-    const firstDay    = new Date(this.currentYear, this.currentMonth, 1).getDay();
-    const daysInMonth = new Date(this.currentYear, this.currentMonth + 1, 0).getDate();
-    let week: (number | null)[] = Array(firstDay).fill(null);
-    const grid: (number | null)[][] = [];
-    for (let d = 1; d <= daysInMonth; d++) {
-      week.push(d);
-      if (week.length === 7) { grid.push(week); week = []; }
-    }
-    if (week.length) { while (week.length < 7) week.push(null); grid.push(week); }
-    this.weeks = grid;
-  }
-
-  private buildEvents(): void {
-    const evts: Record<number, any[]> = {};
-    const daysInMonth = new Date(this.currentYear, this.currentMonth + 1, 0).getDate();
-    for (let day = 1; day <= daysInMonth; day++) {
-      const dow = new Date(this.currentYear, this.currentMonth, day).getDay();
-      const matches = this.cachedSchedules.filter(sch => DAY_MAP[sch.dayOfWeek ?? ''] === dow);
-      if (matches.length) {
-        evts[day] = matches.map(sch => ({
-          title: `${sch.subjectName || 'Clase'} — ${sch.studentName}`,
-          time:  sch.startTime ?? '—',
-          color: sch.studentColor,
-          who:   sch.studentName,
-        }));
-      }
-    }
-    this.events = evts;
+  titulo(c: Celda): string {
+    return c.quien.map(q => `${q.nombre}: +${q.xp} XP`).join(' · ');
   }
 }
