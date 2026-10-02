@@ -164,3 +164,18 @@
 .ins-flecha { flex: none; color: #6B7FBB; font-size: .9rem; transition: transform .2s; }
 .ins-acordeon:not([open]) .ins-flecha { transform: rotate(-90deg); }
 @media (prefers-reduced-motion: reduce) { .ins-flecha { transition: none; } }
+
+/* ── El boton del enlace, al final del paso que lo pide ── */
+.ins-enlace {
+  display: flex; align-items: center; gap: 12px; margin-top: 14px; padding: 14px 16px;
+  border-radius: 14px; text-decoration: none; color: #fff;
+  background: linear-gradient(135deg, var(--acento), color-mix(in srgb, var(--acento) 70%, #000));
+  box-shadow: 0 6px 18px color-mix(in srgb, var(--acento) 35%, transparent);
+  transition: transform .15s ease, box-shadow .15s ease;
+  &:hover { transform: translateY(-1px); box-shadow: 0 10px 24px color-mix(in srgb, var(--acento) 45%, transparent); }
+  &:focus-visible { outline: 3px solid #fff; outline-offset: 2px; }
+}
+.ins-enlace-ico { font-size: 1.6rem; flex: none; }
+.ins-enlace-txt { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 2px;
+  b { font-size: .98rem; } small { font-size: .78rem; opacity: .9; } }
+.ins-enlace-flecha { font-size: 1.2rem; flex: none; }

@@ -8,7 +8,7 @@ import { QuizApiService } from '../../../services/api/quiz-api.service';
 import { AuthService } from '../../../services/auth.service';
 import { sobreDiez } from '../../../shared/calificacion';
 import { InstruccionesComponent } from '../../../shared/instrucciones/instrucciones.component';
-import { interpretarInstrucciones, preguntasDeEntrega } from '../../../shared/instrucciones/instrucciones';
+import { interpretarInstrucciones, preguntasDeEntrega, seccionDelEnlace } from '../../../shared/instrucciones/instrucciones';
 import { ByteBotPanelComponent } from '../../../shared/bytebot-panel/bytebot-panel.component';
 import { AvatarComponent } from '../../../shared/avatar/avatar.component';
 import { catchError, forkJoin, of } from 'rxjs';
@@ -134,6 +134,12 @@ export class WorkspaceComponent implements OnInit {
   get instrucciones(): string { return this.body?.instructions ?? ''; }
   get starterCode():   string { return this.body?.starter_code ?? ''; }
   get materialUrl():   string { return this.body?.url ?? ''; }
+  /**
+   * Las instrucciones dicen donde abrir el enlace: el boton va ahi y no
+   * arriba. Se calcula al cargar (junto con las preguntas de entrega), no en cada
+   * ciclo: interpretar el texto en un getter de plantilla es caro.
+   */
+  enlaceEnInstrucciones = false;
 
   get materialTipo(): string {
     const t = this.body?.resource_type ?? '';
@@ -296,7 +302,9 @@ export class WorkspaceComponent implements OnInit {
         const borrador = this.alreadyDone ? '' : this.leerBorrador();
         this.codeAnswer = borrador || this.existingSub?.codeSubmitted || this.rejectedSub?.codeSubmitted || '';
         if (borrador) this.estadoBorrador = 'guardado';
-        this.preguntas = preguntasDeEntrega(interpretarInstrucciones(this.instrucciones));
+        const secciones = interpretarInstrucciones(this.instrucciones);
+        this.preguntas = preguntasDeEntrega(secciones);
+        this.enlaceEnInstrucciones = !!this.materialUrl && !!seccionDelEnlace(secciones);
         this.revisados = new Set(this.leer('bk_revisado_'));
         this.screen = this.alreadyDone ? 'done' : 'work';
         if (this.alreadyDone) this.buscarSiguiente();

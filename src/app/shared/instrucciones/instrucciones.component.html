@@ -76,6 +76,16 @@
               <p class="ins-entrega-nota">✍️ Esto es lo que escribes en tu respuesta. También lo tienes junto al cuadro para escribir.</p>
             }
             <ng-container [ngTemplateOutlet]="bloquesTpl" [ngTemplateOutletContext]="{ $implicit: s }"></ng-container>
+            @if (s.id === idEnlace) {
+              <a class="ins-enlace" [href]="enlace" target="_blank" rel="noopener noreferrer">
+                <span class="ins-enlace-ico" aria-hidden="true">🚀</span>
+                <span class="ins-enlace-txt">
+                  <b>¡Ya leíste todo! Ahora sí, ábrelo</b>
+                  <small>{{ enlaceTipo ? enlaceTipo + ' · ' : '' }}Se abre en otra pestaña. ByteKids se queda aquí esperándote.</small>
+                </span>
+                <span class="ins-enlace-flecha" aria-hidden="true">↗</span>
+              </a>
+            }
             @if (esMarcable(s) && !estaLista(s)) {
               <button type="button" class="ins-listo-grande" (click)="alternar(s)">✓ ¡Listo, ya hice este paso!</button>
             }

@@ -113,6 +113,10 @@ Lo que sí se puede hacer sin navegador, y conviene:
   plantilla los interpola. `preguntasDeEntrega()` saca lo que el niño tiene
   que escribir para mostrarlo junto al cuadro de respuesta. Si escribes
   contenido nuevo, sigue esas convenciones (ver `bytekids-api/sql/mi_primera_ia/curso.py`).
+  **El botón del enlace** sale al final de la primera sección que dice "enlace"
+  (`seccionDelEnlace`); si ninguna lo dice, arriba como antes. Arriba, el niño lo
+  picaba antes de leer y no sabía cuándo regresar. Las piezas que mandan fuera
+  llevan una sección `🔙 REGRESA A BYTEKIDS`.
 - **ByteBot dentro de la actividad:** `<app-bytebot-panel>` es un panel
   lateral. **No navegues a `/student/ai-tutor` desde una actividad**: así era
   antes y el niño perdía la misión y lo que llevaba escrito.

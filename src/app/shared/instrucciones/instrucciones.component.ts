@@ -1,6 +1,6 @@
 import { Component, EventEmitter, Input, OnChanges, Output } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { interpretarInstrucciones, Seccion, TipoSeccion } from './instrucciones';
+import { interpretarInstrucciones, Seccion, seccionDelEnlace, TipoSeccion } from './instrucciones';
 
 /**
  * Las instrucciones de una actividad, como camino de tarjetas.
@@ -32,10 +32,18 @@ export class InstruccionesComponent implements OnChanges {
    *          entero para repasar era un chorizo.
    */
   @Input() modo: 'trabajo' | 'repaso' = 'trabajo';
+  /**
+   * La pagina de afuera de la actividad. Si las instrucciones hablan del
+   * enlace, el boton sale al final de esa seccion (ver seccionDelEnlace).
+   */
+  @Input() enlace = '';
+  @Input() enlaceTipo = '';
   /** Pide abrir a ByteBot desde un globo de ByteBot. */
   @Output() pedirByteBot = new EventEmitter<void>();
 
   secciones: Seccion[] = [];
+  /** Id de la seccion que lleva el boton del enlace. */
+  idEnlace = '';
   /** Las secciones que se pueden marcar como listas. */
   marcables = new Set<string>();
   listas = new Set<string>();
@@ -51,6 +59,7 @@ export class InstruccionesComponent implements OnChanges {
 
   ngOnChanges(): void {
     this.secciones = interpretarInstrucciones(this.texto);
+    this.idEnlace = this.enlace ? (seccionDelEnlace(this.secciones)?.id ?? '') : '';
 
     // Se marcan los pasos. Si el texto no trae PARTE/PASO --textos viejos--
     // se marcan sus secciones con titulo, para que tambien se puedan encoger.
@@ -81,7 +90,10 @@ export class InstruccionesComponent implements OnChanges {
   /** Nombre corto para el indice: "PARTE 2 · ARMA TU PROYECTO (5 min)" → "Arma tu proyecto". */
   corto(s: Seccion): string {
     const t = s.titulo.replace(/^(PARTE|PASO)\s+\d+\s*[·\-–:]\s*/i, '').replace(/\([^)]*\)/g, '').trim();
-    const limpio = t.toLowerCase().replace(/[^\p{L}\p{N}¿?¡! ]/gu, '').trim();
+    const limpio = t.toLowerCase().replace(/[^\p{L}\p{N}¿?¡! ]/gu, '').trim()
+      // Al pasar a minusculas, los nombres propios no deben perderse.
+      .replace(/(^|\s)ia(?=\s|$|[?!])/g, '$1IA')
+      .replace(/bytekids/g, 'ByteKids').replace(/bytebot/g, 'ByteBot');
     return limpio.charAt(0).toUpperCase() + limpio.slice(1);
   }
 
