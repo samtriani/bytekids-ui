@@ -98,6 +98,26 @@ function tipoDeTitulo(titulo: string): { tipo: TipoSeccion; numero: string } {
   return { tipo: 'normal', numero: '' };
 }
 
+/**
+ * La seccion donde las instrucciones mandan a abrir el enlace, o null.
+ *
+ * El boton del enlace va al FINAL de esa seccion, no arriba de todo: arriba,
+ * el nino lo picaba antes de leer nada, se iba a la otra pagina y no sabia
+ * ni que hacer alla ni cuando regresar. Asi lee el paso, la meta y el
+ * "regresa", y luego abre.
+ */
+export function seccionDelEnlace(secciones: Seccion[]): Seccion | null {
+  const textos = (b: Bloque): string[] => {
+    switch (b.tipo) {
+      case 'parrafo': return [b.lead, b.texto];
+      case 'numerada': case 'vinetas': return b.items.flatMap(it => [it.lead, it.texto]);
+      case 'aviso': return [b.texto];
+      default: return [];
+    }
+  };
+  return secciones.find(s => s.bloques.some(b => textos(b).some(t => /\benlace\b/i.test(t ?? '')))) ?? null;
+}
+
 // ── El interprete ──────────────────────────────────────────────────────────
 
 export function interpretarInstrucciones(texto: string): Seccion[] {
