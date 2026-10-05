@@ -484,3 +484,7 @@
   gap: 12px; flex-wrap: wrap; margin-top: 14px;
 }
 .hf-resumen { font-size: 12px; color: var(--tx3); }
+
+/* Lo que falta para agregar la clase, en rojo (ver addSchedule) */
+.hf-campo .select.hf-falta, .hf-campo .input.hf-falta { border-color: var(--danger); box-shadow: 0 0 0 3px var(--danger-lt); }
+.hf-nota { display: block; margin-top: 6px; font-size: 12px; font-weight: 700; color: var(--danger); }
