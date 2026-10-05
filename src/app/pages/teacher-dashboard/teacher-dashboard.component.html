@@ -88,12 +88,13 @@
         </div>
       </button>
 
-      <button class="kpi kpi--link red" (click)="verEnRiesgo()">
-        <div class="kpi-ico">⚠️</div>
+      <button class="kpi kpi--link" [class.red]="(salon?.atencion ?? 0) > 0"
+              [class.green]="(salon?.atencion ?? 0) === 0" (click)="verAtencion()">
+        <div class="kpi-ico">{{ (salon?.atencion ?? 0) ? '⚠️' : '✅' }}</div>
         <div>
-          <div class="kpi-val">{{ salon?.enRiesgo ?? 0 }}</div>
-          <div class="kpi-lbl">Necesitan apoyo</div>
-          <div class="kpi-dl">Menos del 40% →</div>
+          <div class="kpi-val">{{ salon?.atencion ?? 0 }}</div>
+          <div class="kpi-lbl">Necesitan atención</div>
+          <div class="kpi-dl">{{ (salon?.atencion ?? 0) ? 'Ver quiénes →' : 'Nadie por ahora' }}</div>
         </div>
       </button>
     </div>
@@ -115,7 +116,7 @@
 
       <div class="card">
         <div class="card-h">
-          <span class="card-title">Distribución del grupo</span>
+          <span class="card-title">¿Cómo va el grupo?</span>
           <a routerLink="/teacher/reports" class="btn btn-ghost btn-sm">Reportes →</a>
         </div>
         <div class="card-p" style="padding-top:12px">
@@ -149,31 +150,46 @@
           }
         </div>
 
+        @if (salon?.atencion) {
+          <div class="td-filtro">
+            <button type="button" class="filter-btn" [class.active]="soloAtencion"
+                    (click)="soloAtencion = !soloAtencion">
+              ⚠️ Solo los que necesitan atención <span class="filter-n">{{ salon?.atencion }}</span>
+            </button>
+          </div>
+        }
+
         <div class="td-lista">
           @if (!alumnosFiltrados.length) {
             <p class="td-nada">
               {{ busqueda.trim()
                  ? 'Ningún alumno de este salón coincide con esa búsqueda.'
+                 : soloAtencion ? 'Nadie necesita atención en este salón. 🎉'
                  : 'Este salón todavía no tiene alumnos inscritos.' }}
             </p>
           }
           @for (a of alumnosFiltrados; track a.id) {
-            <div class="sl-row">
-              <div class="av">{{ a.iniciales }}</div>
+            <div class="sl-row" [class.sl-row--alerta]="necesita(a)">
+              <app-avatar class="sl-av" [bot]="a.avatarUrl" [iniciales]="a.iniciales" [px]="32"></app-avatar>
               <div class="sl-info">
                 <div class="sl-nombre">{{ a.nombre }}</div>
+                <!-- El avance es avance, no un juicio: siempre del color del salón -->
                 <div class="prog"><div class="prog-bar" [style.width]="a.progreso + '%'"
-                                       [style.background]="pc(a.progreso)"></div></div>
+                                       [style.background]="salon?.color"></div></div>
                 <!-- El porcentaje solo engaña: 50% de 2 no es 50% de 17 -->
                 <div class="sl-detalle">
                   {{ a.hechas }} de {{ a.totales }} actividades
+                  @if (a.promedio !== null) { · promedio {{ sobreDiez(a.promedio) }} }
                   @if (a.porCalificar) {
                     <span class="sl-pend">· {{ a.porCalificar }} por calificar</span>
                   }
                 </div>
+                @if (a.razon) {
+                  <div class="sl-razon">{{ a.razon }}</div>
+                }
               </div>
-              <span class="sl-pct" [style.color]="pc(a.progreso)">{{ a.progreso }}%</span>
-              <span class="tag" [class]="sc(a.estado)">{{ a.estado }}</span>
+              <span class="sl-pct">{{ a.progreso }}%</span>
+              <span class="tag" [class]="ESTADOS[a.estado].tag">{{ ESTADOS[a.estado].icono }} {{ ESTADOS[a.estado].etiqueta }}</span>
             </div>
           }
         </div>
@@ -191,7 +207,7 @@
               <span class="alert-ico">{{ a.icono }}</span>
               <span class="alert-txt">{{ a.texto }}</span>
               @if (a.accion && a.ruta) {
-                <a [routerLink]="a.ruta" class="alert-accion">{{ a.accion }} →</a>
+                <a [routerLink]="a.ruta" [queryParams]="a.params" class="alert-accion">{{ a.accion }} →</a>
               }
             </div>
           }

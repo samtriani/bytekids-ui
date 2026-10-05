@@ -3,27 +3,36 @@ import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { Router, RouterLink } from '@angular/router';
 import { ShellComponent } from '../../shared/shell/shell.component';
+import { AvatarComponent } from '../../shared/avatar/avatar.component';
 import { TEACHER_NAV } from '../teacher/shared/teacher-nav';
 import { ClassroomApiService } from '../../services/api/classroom-api.service';
-import { SubmissionApiService } from '../../services/api/submission-api.service';
 import { AuthService } from '../../services/auth.service';
+import { sobreDiez } from '../../shared/calificacion';
 import { forkJoin, of } from 'rxjs';
 import { catchError, map } from 'rxjs/operators';
 import { Chart, registerables } from 'chart.js';
 Chart.register(...registerables);
+
+/**
+ * Lo decide la API (SeguimientoService.diagnosticar). Antes el panel marcaba
+ * "Apoyo" a todo el que llevara menos de 40% del temario: al inicio de un
+ * curso, todo el grupo en rojo, y el rojo dejaba de decir algo.
+ */
+type EstadoAlumno = 'bien' | 'nuevo' | 'sin_empezar' | 'atorado' | 'sin_actividad' | 'calificaciones_bajas';
 
 /** Un alumno visto desde el salón que se está mirando. */
 interface AlumnoDelSalon {
   id: string;
   nombre: string;
   iniciales: string;
-  hechas: number;        // aprobadas + materiales leídos
+  avatarUrl: string | null;
+  hechas: number;        // entregadas (aunque no estén calificadas) + materiales vistos
   totales: number;       // piezas asignadas al salón
   progreso: number;      // %
   porCalificar: number;  // entregas suyas esperando revisión
-  rechazadas: number;
-  sinEmpezar: boolean;
-  estado: 'Excelente' | 'Bien' | 'Regular' | 'Apoyo' | 'Sin empezar';
+  promedio: number | null;
+  estado: EstadoAlumno;
+  razon: string;
 }
 
 interface Salon {
@@ -35,7 +44,7 @@ interface Salon {
   piezas: number;
   promedio: number;
   porCalificar: number;
-  enRiesgo: number;
+  atencion: number;     // alumnos con una alerta concreta
 }
 
 interface Alerta {
@@ -44,12 +53,27 @@ interface Alerta {
   tipo: string;
   accion?: string;      // etiqueta del botón
   ruta?: string;        // a dónde lleva
+  params?: Record<string, string>;
 }
+
+interface InfoEstado { etiqueta: string; icono: string; tag: string; color: string; orden: number; }
+
+/** Cómo se ve cada estado. `orden`: lo que el maestro atiende primero. */
+const ESTADOS: Record<EstadoAlumno, InfoEstado> = {
+  atorado:              { etiqueta: 'Atorado',               icono: '🧱', tag: 'tag-red',    color: '#9B1414', orden: 0 },
+  sin_empezar:          { etiqueta: 'Sin empezar',           icono: '🔕', tag: 'tag-gray',   color: '#9CA3AF', orden: 1 },
+  sin_actividad:        { etiqueta: 'Sin actividad',         icono: '😴', tag: 'tag-oro',    color: '#C4992A', orden: 2 },
+  calificaciones_bajas: { etiqueta: 'Calificaciones bajas',  icono: '📉', tag: 'tag-guinda', color: '#7A1535', orden: 3 },
+  nuevo:                { etiqueta: 'Recién llegado',        icono: '🌱', tag: 'tag-blue',   color: '#1A6B3C', orden: 4 },
+  bien:                 { etiqueta: 'Va bien',               icono: '✅', tag: 'tag-green',  color: '#1A6B3C', orden: 5 },
+};
+
+const NECESITA_ATENCION: EstadoAlumno[] = ['atorado', 'sin_empezar', 'sin_actividad', 'calificaciones_bajas'];
 
 @Component({
   selector: 'app-teacher-dashboard',
   standalone: true,
-  imports: [CommonModule, FormsModule, RouterLink, ShellComponent],
+  imports: [CommonModule, FormsModule, RouterLink, ShellComponent, AvatarComponent],
   templateUrl: './teacher-dashboard.component.html',
   styleUrls: ['./teacher-dashboard.component.scss']
 })
@@ -63,6 +87,8 @@ export class TeacherDashboardComponent implements OnInit {
   // panel se quedara sin las entradas nuevas.
   navItems = TEACHER_NAV;
 
+  readonly ESTADOS = ESTADOS;
+  readonly sobreDiez = sobreDiez;
 
   teacher: any = null;
   salones: Salon[] = [];
@@ -71,10 +97,11 @@ export class TeacherDashboardComponent implements OnInit {
 
   /** Búsqueda del listado. El maestro con 30 alumnos no scrollea: escribe. */
   busqueda = '';
+  /** Desde el KPI de atención: la lista muestra solo a quienes la necesitan. */
+  soloAtencion = false;
 
   constructor(
     private classroomApi: ClassroomApiService,
-    private submissionApi: SubmissionApiService,
     private auth: AuthService,
     private router: Router,
   ) {}
@@ -86,11 +113,16 @@ export class TeacherDashboardComponent implements OnInit {
     return this.salones.find(s => s.id === this.salonActivoId) ?? this.salones[0] ?? null;
   }
 
+  /** Primero quienes necesitan atención, en el orden en que conviene atenderlos. */
   get alumnosFiltrados(): AlumnoDelSalon[] {
     const t = this.busqueda.trim().toLowerCase();
-    const lista = this.salon?.alumnos ?? [];
-    return t ? lista.filter(a => a.nombre.toLowerCase().includes(t)) : lista;
+    let lista = this.salon?.alumnos ?? [];
+    if (this.soloAtencion) lista = lista.filter(a => this.necesita(a));
+    if (t) lista = lista.filter(a => a.nombre.toLowerCase().includes(t));
+    return [...lista].sort((a, b) => ESTADOS[a.estado].orden - ESTADOS[b.estado].orden);
   }
+
+  necesita(a: AlumnoDelSalon): boolean { return NECESITA_ATENCION.includes(a.estado); }
 
   ngOnInit(): void {
     this.teacher = this.auth.getUser();
@@ -98,9 +130,8 @@ export class TeacherDashboardComponent implements OnInit {
   }
 
   // ── Carga ───────────────────────────────────────────────────────────────
-  // Una sola llamada por salón: la libreta ya trae alumnos, piezas asignadas,
-  // calificaciones y materiales leídos. Antes eran tres llamadas POR ALUMNO
-  // a endpoints de progreso que ni siquiera traían el dato que se usaba.
+  // Una llamada por salón: el seguimiento ya trae avance y alertas de cada
+  // alumno. La regla de quién necesita atención vive en la API, con pruebas.
   private cargar(): void {
     this.classroomApi.getMyClassrooms().pipe(catchError(() => of([]))).subscribe(salones => {
       if (!salones?.length) { this.loading = false; return; }
@@ -108,10 +139,10 @@ export class TeacherDashboardComponent implements OnInit {
       forkJoin(
         salones.map((c: any) =>
           forkJoin({
-            libreta:  this.submissionApi.getGradebook(c.id).pipe(catchError(() => of(null))),
+            seg:      this.classroomApi.seguimiento(c.id).pipe(catchError(() => of(null))),
             materias: this.classroomApi.getSubjects(c.id).pipe(catchError(() => of([]))),
           }).pipe(
-            map(({ libreta, materias }) => this.armarSalon(c, libreta, materias)),
+            map(({ seg, materias }) => this.armarSalon(c, seg, materias)),
           ))
       ).subscribe(resultado => {
         this.salones = resultado as Salon[];
@@ -122,41 +153,21 @@ export class TeacherDashboardComponent implements OnInit {
     });
   }
 
-  private armarSalon(c: any, libreta: any, materias: any[] = []): Salon {
-    const alumnosRaw: any[] = libreta?.students ?? [];
-    const contenidos: any[] = libreta?.content   ?? [];
-    const materiales: any[] = libreta?.materials ?? [];
-    const grades  = libreta?.grades ?? {};
-    const reads   = libreta?.reads  ?? {};
-    const piezas  = contenidos.length + materiales.length;
-
-    const alumnos: AlumnoDelSalon[] = alumnosRaw.map(a => {
-      const suyas   = grades[a.id] ?? {};
-      const leidos  = reads[a.id]  ?? {};
-
-      let aprobadas = 0, porCalificar = 0, rechazadas = 0, entregas = 0;
-      for (const c of contenidos) {
-        const g = suyas[c.id];
-        if (!g) continue;
-        entregas++;
-        if (g.status === 'aprobado')  aprobadas++;
-        else if (g.status === 'enviado')   porCalificar++;
-        else if (g.status === 'rechazado') rechazadas++;
-      }
-      const materialesVistos = materiales.filter(m => leidos[m.id]).length;
-
-      const hechas   = aprobadas + materialesVistos;
-      const progreso = piezas ? Math.round((hechas / piezas) * 100) : 0;
-
-      return {
-        id: a.id,
-        nombre: a.name,
-        iniciales: a.initials || this.iniciales(a.name),
-        hechas, totales: piezas, progreso, porCalificar, rechazadas,
-        sinEmpezar: entregas === 0 && materialesVistos === 0,
-        estado: this.estadoDe(progreso, entregas === 0 && materialesVistos === 0),
-      };
-    });
+  private armarSalon(c: any, seg: any, materias: any[] = []): Salon {
+    const piezas: number = seg?.piezas ?? 0;
+    const alumnos: AlumnoDelSalon[] = (seg?.alumnos ?? []).map((a: any) => ({
+      id: a.id,
+      nombre: a.nombre,
+      iniciales: a.iniciales || this.iniciales(a.nombre),
+      avatarUrl: a.avatarUrl ?? null,
+      hechas: a.hechas,
+      totales: piezas,
+      progreso: piezas ? Math.min(100, Math.round((a.hechas / piezas) * 100)) : 0,
+      porCalificar: a.porCalificar,
+      promedio: a.promedio ?? null,
+      estado: (a.estado in ESTADOS ? a.estado : 'bien') as EstadoAlumno,
+      razon: a.razon || '',
+    }));
 
     return {
       id: c.id,
@@ -168,7 +179,7 @@ export class TeacherDashboardComponent implements OnInit {
       promedio: alumnos.length
         ? Math.round(alumnos.reduce((s, a) => s + a.progreso, 0) / alumnos.length) : 0,
       porCalificar: alumnos.reduce((s, a) => s + a.porCalificar, 0),
-      enRiesgo: alumnos.filter(a => a.progreso < 40).length,
+      atencion: alumnos.filter(a => this.necesita(a)).length,
     };
   }
 
@@ -176,15 +187,11 @@ export class TeacherDashboardComponent implements OnInit {
     return (nombre || '').split(' ').map(p => p[0] || '').join('').slice(0, 2).toUpperCase() || '??';
   }
 
-  private estadoDe(p: number, sinEmpezar: boolean): AlumnoDelSalon['estado'] {
-    if (sinEmpezar) return 'Sin empezar';
-    return p >= 80 ? 'Excelente' : p >= 60 ? 'Bien' : p >= 40 ? 'Regular' : 'Apoyo';
-  }
+  private primerNombre(nombre: string): string { return (nombre || '').trim().split(/\s+/)[0]; }
 
   // ── Alertas: cada una con algo que hacer ────────────────────────────────
-  // Las de antes eran informativas y algunas falsas: "lleva varios días sin
-  // actividad" salía de leer un campo que la API no manda, así que le tocaba
-  // a todos por igual.
+  // Una por alumno que necesita atención, con SU razón y el botón para
+  // resolverla. "3 alumnos necesitan apoyo" no le decía al maestro qué hacer.
   get alertas(): Alerta[] {
     const s = this.salon;
     if (!s) return [];
@@ -205,27 +212,28 @@ export class TeacherDashboardComponent implements OnInit {
         texto: s.porCalificar === 1
           ? 'Hay 1 entrega esperando tu calificación.'
           : `Hay ${s.porCalificar} entregas esperando tu calificación.`,
-        accion: 'Calificar', ruta: '/teacher/gradebook',
+        accion: 'Calificar', ruta: '/teacher/gradebook', params: { salon: s.id },
       });
     }
 
-    const sinEmpezar = s.alumnos.filter(a => a.sinEmpezar);
-    if (sinEmpezar.length) {
+    const MAX = 5;
+    const atender = s.alumnos.filter(a => this.necesita(a))
+      .sort((a, b) => ESTADOS[a.estado].orden - ESTADOS[b.estado].orden);
+    for (const a of atender.slice(0, MAX)) {
+      const e = ESTADOS[a.estado];
+      const revisar = a.estado === 'atorado';
       lista.push({
-        icono: '🔕', tipo: 'alert-info',
-        texto: sinEmpezar.length === 1
-          ? `${sinEmpezar[0].nombre} todavía no entrega nada.`
-          : `${sinEmpezar.length} alumnos todavía no entregan nada.`,
-        accion: 'Escribirles', ruta: '/teacher/messages',
+        icono: e.icono, tipo: revisar ? 'alert-warn' : 'alert-info',
+        texto: `${this.primerNombre(a.nombre)}: ${a.razon}`,
+        accion: revisar ? 'Revisar' : 'Escribirle',
+        ruta: revisar ? '/teacher/gradebook' : '/teacher/messages',
+        params: revisar ? { salon: s.id } : { to: a.id },
       });
     }
-
-    const conRechazo = s.alumnos.filter(a => a.rechazadas > 0);
-    if (conRechazo.length) {
+    if (atender.length > MAX) {
       lista.push({
-        icono: '↩️', tipo: 'alert-info',
-        texto: `${conRechazo.length} ${conRechazo.length === 1 ? 'alumno tiene una entrega' : 'alumnos tienen entregas'} que pediste corregir.`,
-        accion: 'Revisar', ruta: '/teacher/gradebook',
+        icono: '👀', tipo: 'alert-info',
+        texto: `Y ${atender.length - MAX} más. Puedes verlos todos en la lista de alumnos.`,
       });
     }
 
@@ -240,7 +248,7 @@ export class TeacherDashboardComponent implements OnInit {
     if (!lista.length) {
       lista.push({
         icono: '✅', tipo: 'alert-ok',
-        texto: 'Todo al corriente: nada pendiente de calificar en este salón.',
+        texto: 'Todo al corriente: nadie necesita atención y no hay nada por calificar.',
       });
     }
     return lista;
@@ -250,6 +258,7 @@ export class TeacherDashboardComponent implements OnInit {
   cambiarSalon(id: string): void {
     this.salonActivoId = id;
     this.busqueda = '';
+    this.soloAtencion = false;
     setTimeout(() => this.pintarGraficas(), 30);
   }
 
@@ -264,10 +273,11 @@ export class TeacherDashboardComponent implements OnInit {
     return this.salon ? { queryParams: { salon: this.salon.id } } : {};
   }
 
-  /** Desde el KPI de riesgo: en vez de solo informar, filtra la lista. */
-  verEnRiesgo(): void {
-    const enRiesgo = (this.salon?.alumnos ?? []).filter(a => a.progreso < 40);
-    if (enRiesgo.length === 1) this.busqueda = enRiesgo[0].nombre;
+  /** Desde el KPI de atención: en vez de solo informar, filtra la lista. */
+  verAtencion(): void {
+    if (!this.salon?.atencion) return;
+    this.soloAtencion = true;
+    this.busqueda = '';
     document.querySelector('#lista-alumnos')?.scrollIntoView({ behavior: 'smooth', block: 'center' });
   }
 
@@ -281,10 +291,8 @@ export class TeacherDashboardComponent implements OnInit {
     this.pieChart?.destroy();
 
     const alumnos = s.alumnos;
-    const excelente = alumnos.filter(a => a.progreso >= 80).length;
-    const medio     = alumnos.filter(a => a.progreso >= 40 && a.progreso < 80).length;
-    const apoyo     = alumnos.filter(a => a.progreso < 40).length;
 
+    // El avance es avance, no un juicio: todas las barras del color del salón.
     this.barChart = new Chart(this.barC.nativeElement, {
       type: 'bar',
       data: {
@@ -292,8 +300,8 @@ export class TeacherDashboardComponent implements OnInit {
         datasets: [{
           label: '% del temario',
           data: alumnos.map(a => a.progreso),
-          backgroundColor: alumnos.map(a => this.pc(a.progreso) + 'CC'),
-          borderColor: alumnos.map(a => this.pc(a.progreso)),
+          backgroundColor: s.color + 'CC',
+          borderColor: s.color,
           borderWidth: 1.5, borderRadius: 5,
         }],
       },
@@ -318,12 +326,21 @@ export class TeacherDashboardComponent implements OnInit {
       },
     });
 
+    // ¿Cómo va el grupo? "Va bien" junta a los recién llegados: no hay
+    // nada que hacer con ellos todavía.
+    const grupos: { etiqueta: string; color: string; n: number }[] = [
+      { etiqueta: 'Va bien',              color: ESTADOS.bien.color,                 n: alumnos.filter(a => a.estado === 'bien' || a.estado === 'nuevo').length },
+      { etiqueta: 'Atorados',             color: ESTADOS.atorado.color,              n: alumnos.filter(a => a.estado === 'atorado').length },
+      { etiqueta: 'Sin empezar',          color: ESTADOS.sin_empezar.color,          n: alumnos.filter(a => a.estado === 'sin_empezar').length },
+      { etiqueta: 'Sin actividad',        color: ESTADOS.sin_actividad.color,        n: alumnos.filter(a => a.estado === 'sin_actividad').length },
+      { etiqueta: 'Calificaciones bajas', color: ESTADOS.calificaciones_bajas.color, n: alumnos.filter(a => a.estado === 'calificaciones_bajas').length },
+    ].filter(g => g.n > 0);
+
     this.pieChart = new Chart(this.pieC.nativeElement, {
       type: 'doughnut',
       data: {
-        labels: ['Excelente (80%+)', 'En camino (40-79%)', 'Necesita apoyo (<40%)'],
-        datasets: [{ data: [excelente, medio, apoyo],
-          backgroundColor: ['#1A6B3C', '#C4992A', '#9B1414'], borderWidth: 0 }],
+        labels: grupos.map(g => `${g.etiqueta} (${g.n})`),
+        datasets: [{ data: grupos.map(g => g.n), backgroundColor: grupos.map(g => g.color), borderWidth: 0 }],
       },
       options: {
         responsive: true, maintainAspectRatio: false, cutout: '65%',
@@ -340,14 +357,5 @@ export class TeacherDashboardComponent implements OnInit {
         },
       },
     });
-  }
-
-  pc(p: number): string { return p >= 80 ? '#1A6B3C' : p < 40 ? '#9B1414' : '#C4992A'; }
-
-  sc(estado: string): string {
-    return estado === 'Excelente'   ? 'tag-green'
-         : estado === 'Apoyo'       ? 'tag-red'
-         : estado === 'Sin empezar' ? 'tag-gray'
-         : 'tag-oro';
   }
 }
