@@ -6,6 +6,7 @@ import { ShellComponent } from '../../../shared/shell/shell.component';
 import { TEACHER_NAV } from '../shared/teacher-nav';
 import { AiTutorService, ChatMessage } from '../../../services/ai-tutor.service';
 import { formatearMensaje } from '../../../shared/formato-chat';
+import { AuthService } from '../../../services/auth.service';
 
 @Component({ selector: 'app-ai-assistant-teacher', standalone: true,
   imports: [CommonModule, FormsModule, RouterLink, ShellComponent],
@@ -33,7 +34,15 @@ export class AiAssistantComponent implements AfterViewChecked {
     '🤖 Cómo explicar robótica a niños de 10 años',
   ];
 
-  constructor(private aiService: AiTutorService) {}
+  /** Quien inicio sesion. Aqui estaba escrito a mano un nombre de prueba. */
+  userName = '';
+  userAvatar = '';
+
+  constructor(private aiService: AiTutorService, auth: AuthService) {
+    const u = auth.getUser();
+    this.userName = u?.displayName || 'Maestro';
+    this.userAvatar = u?.initials || 'M';
+  }
   ngAfterViewChecked() { if (this.shouldScroll) { try { this.chatEnd.nativeElement.scrollIntoView({behavior:'smooth'}); } catch {} this.shouldScroll=false; } }
 
   async send(text?: string) {

@@ -8,6 +8,7 @@ import { UserApiService } from '../../../services/api/user-api.service';
 import { ClassroomApiService } from '../../../services/api/classroom-api.service';
 import { forkJoin } from 'rxjs';
 import { formatearMensaje } from '../../../shared/formato-chat';
+import { AuthService } from '../../../services/auth.service';
 
 @Component({ selector: 'app-ai-reports', standalone: true,
   imports: [CommonModule, FormsModule, RouterLink, ShellComponent],
@@ -49,7 +50,16 @@ export class AiReportsComponent implements OnInit, AfterViewChecked {
     '🇲🇽 Estrategia para expandir a más escuelas',
   ];
 
-  constructor(private aiService: AiTutorService, private userApi: UserApiService, private classroomApi: ClassroomApiService) {}
+  /** Quien inicio sesion. Aqui estaba escrito a mano un nombre de prueba. */
+  userName = '';
+  userAvatar = '';
+
+  constructor(private aiService: AiTutorService, private userApi: UserApiService, private classroomApi: ClassroomApiService,
+              auth: AuthService) {
+    const u = auth.getUser();
+    this.userName = u?.displayName || 'Coordinación';
+    this.userAvatar = u?.initials || 'C';
+  }
 
   ngOnInit() {
     forkJoin({
