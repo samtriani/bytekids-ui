@@ -6,13 +6,14 @@ import { ShellComponent, NavItem } from '../../../shared/shell/shell.component';
 import { AiTutorService, ChatMessage } from '../../../services/ai-tutor.service';
 import { MissionStateService } from '../../../services/mission-state.service';
 import { AuthService } from '../../../services/auth.service';
+import { AvatarComponent } from '../../../shared/avatar/avatar.component';
 import { STUDENT_NAV } from '../shared/student-nav';
 import { formatearMensaje } from '../../../shared/formato-chat';
 
 @Component({
   selector: 'app-ai-tutor',
   standalone: true,
-  imports: [CommonModule, FormsModule, RouterLink, ShellComponent],
+  imports: [CommonModule, FormsModule, RouterLink, ShellComponent, AvatarComponent],
   templateUrl: './ai-tutor.component.html',
   styleUrls: ['./ai-tutor.component.scss']
 })
@@ -135,6 +136,7 @@ export class AiTutorComponent implements AfterViewChecked, OnInit {
 
   get studentName(): string     { return this.auth.getUser()?.displayName || 'Alumno'; }
   get studentInitials(): string { return this.auth.getUser()?.initials || 'A'; }
+  get studentBot(): string | null { return this.auth.getUser()?.avatarUrl ?? null; }
 
   constructor(
     private aiService: AiTutorService,
