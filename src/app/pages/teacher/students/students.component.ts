@@ -9,6 +9,7 @@ import { SubmissionApiService } from '../../../services/api/submission-api.servi
 import { ProgressApiService } from '../../../services/api/progress-api.service';
 import { AchievementApiService } from '../../../services/api/achievement-api.service';
 import { AuthService } from '../../../services/auth.service';
+import { sobreDiez } from '../../../shared/calificacion';
 import { forkJoin, of } from 'rxjs';
 import { catchError, map } from 'rxjs/operators';
 
@@ -365,8 +366,51 @@ export class StudentsComponent implements OnInit {
     if (alumno) this.openStudent(alumno);
   }
 
+  /**
+   * Lo que de verdad hizo el alumno, con nombre. Antes salia "2 misión(es)"
+   * de un contador diario que sumaba materiales, quizzes y misiones por
+   * igual: un curso con 2 misiones mostraba 4.
+   */
+  recientes: { titulo: string; icono: string; estado: string; color: string; nota: string; fecha: string }[] = [];
+  cargandoRecientes = false;
+  private static readonly ICONO: Record<string, string> = { material: '📚', mision: '🚀', tarea: '🔍', quiz: '❓', proyecto: '🏗️' };
+
+  private cargarRecientes(id: string): void {
+    this.recientes = [];
+    this.cargandoRecientes = true;
+    this.submissionApi.getByStudent(id).pipe(catchError(() => of([]))).subscribe(lista => {
+      if (this.selected?.id !== id) return;
+      const vistas = new Set<string>();
+      this.recientes = (lista as any[])
+        .filter(e => e.status !== 'borrador')
+        .sort((a, b) => new Date(b.submittedAt).getTime() - new Date(a.submittedAt).getTime())
+        .filter(e => { const k = e.contentId; if (vistas.has(k)) return false; vistas.add(k); return true; })
+        .slice(0, 6)
+        .map(e => {
+          const tipo = e.contentType ?? '';
+          const quizSinPasar = tipo === 'quiz' && e.status === 'enviado';
+          const [estado, color] =
+            tipo === 'material'      ? ['Material visto', 'var(--tx3)']
+            : e.status === 'aprobado'  ? ['Aprobada', 'var(--ok)']
+            : e.status === 'rechazado' ? ['Por corregir', '#B45309']
+            : quizSinPasar             ? ['Quiz sin aprobar', '#B45309']
+            :                            ['Esperando revisión', 'var(--info)'];
+          return {
+            titulo: e.contentTitle || 'Actividad',
+            icono: StudentsComponent.ICONO[tipo] ?? '🎯',
+            estado, color,
+            nota: e.score != null && tipo !== 'material' ? sobreDiez(e.score) + '/10' : '',
+            fecha: e.submittedAt
+              ? new Date(e.submittedAt).toLocaleDateString('es-MX', { day: 'numeric', month: 'short' }) : '',
+          };
+        });
+      this.cargandoRecientes = false;
+    });
+  }
+
   openStudent(s: any) {
     this.selected = s;
+    this.cargarRecientes(s.id);
     this.logros = [];
     this.cargandoLogros = true;
     this.achievementApi.getStudentAchievements(s.id)

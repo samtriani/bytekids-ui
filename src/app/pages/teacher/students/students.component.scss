@@ -47,3 +47,11 @@
   white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
 }
 .stu-logro-fec { font-size: .66rem; color: var(--tx3); }
+
+/* ── Actividad reciente del modal: lo que hizo, con nombre ── */
+.st-recientes { display: flex; flex-direction: column; }
+.st-reciente { display: flex; align-items: center; gap: 10px; padding: 7px 0; border-bottom: 1px solid var(--border); }
+.st-reciente:last-child { border-bottom: 0; }
+.st-rec-ico { font-size: 1.05rem; flex: none; }
+.st-rec-txt { min-width: 0; display: flex; flex-direction: column;
+  b { font-size: .82rem; color: var(--tx1); } small { font-size: .72rem; color: var(--tx3); font-weight: 700; } }
