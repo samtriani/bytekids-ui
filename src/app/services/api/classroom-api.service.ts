@@ -21,6 +21,11 @@ export class ClassroomApiService {
     return this.http.get<any>(`${BASE}/${id}`).pipe(map(r => r.data));
   }
 
+  /** Avance y alertas de cada alumno del salón (SeguimientoService en la API). */
+  seguimiento(classroomId: string): Observable<any> {
+    return this.http.get<any>(`${environment.apiUrl}/seguimiento/salones/${classroomId}`).pipe(map(r => r.data));
+  }
+
   getStudents(classroomId: string): Observable<any[]> {
     return this.http.get<any>(`${BASE}/${classroomId}/students`).pipe(map(r => r.data ?? []));
   }

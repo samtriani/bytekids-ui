@@ -123,3 +123,10 @@
    identico solo se distinguen leyendo hasta el parentesis. */
 .filter-btn[style*="border-color"] { border-width: 1.5px; }
 .filter-btn[style*="background"] .filter-n { background: rgba(255, 255, 255, .25); }
+
+/* ── Seguimiento: la alerta va aparte del avance ── */
+.td-filtro { padding: 0 16px 8px; }
+.sl-av { flex-shrink: 0; }
+.sl-row--alerta { background: color-mix(in srgb, var(--danger-lt) 45%, transparent); }
+.sl-razon { margin-top: 3px; font-size: .74rem; font-weight: 700; color: var(--tx2); }
+.sl-pct { color: var(--tx3); }
