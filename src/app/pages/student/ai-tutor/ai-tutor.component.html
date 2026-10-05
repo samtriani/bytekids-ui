@@ -51,7 +51,8 @@
             }
             <div class="msg-bubble" [innerHTML]="formatMessage(msg.content)"></div>
             @if (msg.role === 'user') {
-              <div class="msg-avatar user">AX</div>
+              <!-- Su robot, como en el resto de la plataforma (decia "AX" fijo) -->
+              <app-avatar class="msg-avatar user-bot" [bot]="studentBot" [iniciales]="studentInitials" [px]="34"></app-avatar>
             }
           </div>
         }

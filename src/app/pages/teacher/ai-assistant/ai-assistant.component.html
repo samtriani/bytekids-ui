@@ -14,7 +14,7 @@
           <div class="chat-msg" [class]="msg.role">
             @if (msg.role==='assistant') { <div class="msg-av bot"><img src="assets/logo-bytekids.jpeg" class="msg-img" alt=""></div> }
             <div class="msg-bubble" [innerHTML]="formatMessage(msg.content)"></div>
-            @if (msg.role==='user') { <div class="msg-av user">MG</div> }
+            @if (msg.role==='user') { <div class="msg-av user">{{ userAvatar }}</div> }
           </div>
         }
         @if (isLoading) {
