@@ -187,14 +187,22 @@
 
         <div style="margin-bottom:14px">
           <div style="font-size:.72rem;font-weight:800;color:var(--tx3);text-transform:uppercase;margin-bottom:6px">Actividad reciente</div>
-          @if (selected.missions.length) {
-            <div style="display:flex;flex-direction:column;gap:4px">
-              @for (m of selected.missions; track m) {
-                <div style="font-size:.8rem;color:var(--tx2);padding:4px 0;border-bottom:1px solid var(--border)">{{ m }}</div>
+          @if (cargandoRecientes) {
+            <div style="font-size:.82rem;color:var(--tx3)">Cargando…</div>
+          } @else if (recientes.length) {
+            <div class="st-recientes">
+              @for (r of recientes; track $index) {
+                <div class="st-reciente">
+                  <span class="st-rec-ico">{{ r.icono }}</span>
+                  <span class="st-rec-txt">
+                    <b>{{ r.titulo }}</b>
+                    <small><span [style.color]="r.color">{{ r.estado }}</span>{{ r.nota ? ' · ' + r.nota : '' }} · {{ r.fecha }}</small>
+                  </span>
+                </div>
               }
             </div>
           } @else {
-            <div style="font-size:.82rem;color:var(--tx3)">Sin actividad registrada aún.</div>
+            <div style="font-size:.82rem;color:var(--tx3)">Todavía no entrega actividades.</div>
           }
         </div>
 
