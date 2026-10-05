@@ -92,8 +92,8 @@
             </div>
 
             <div class="rd-actions">
-              <a routerLink="/teacher/students" class="btn btn-primary btn-block">👨‍🎓 Ver alumnos</a>
-              <a routerLink="/teacher/reports"  class="btn btn-outline btn-block">📊 Reportes</a>
+              <a routerLink="/teacher/students" [queryParams]="{ salon: sel._id || sel.id }" class="btn btn-primary btn-block">👨‍🎓 Ver alumnos</a>
+              <a routerLink="/teacher/reports" [queryParams]="{ salon: sel._id || sel.id }" class="btn btn-outline btn-block">📊 Reportes</a>
               <a routerLink="/teacher/create"   class="btn btn-ghost btn-block">＋ Nueva misión</a>
               <a routerLink="/teacher/messages" class="btn btn-ghost btn-block">💬 Enviar mensaje</a>
             </div>
