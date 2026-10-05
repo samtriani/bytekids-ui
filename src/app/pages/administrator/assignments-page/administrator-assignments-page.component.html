@@ -315,16 +315,21 @@
             <div class="hf-fila">
               <label class="hf-campo">
                 <span class="hf-label">Materia</span>
-                <select class="select" [(ngModel)]="scheduleForm.subjectId">
+                <select class="select" [(ngModel)]="scheduleForm.subjectId"
+                        [class.hf-falta]="faltaHorario && !scheduleForm.subjectId">
                   <option value="">Selecciona…</option>
                   @for (s of selectedClassroomSubjects; track s.id) {
                     <option [value]="s.id">{{ s.icon ?? '📚' }} {{ s.name }}</option>
                   }
                 </select>
+                @if (!selectedClassroomSubjects.length) {
+                  <span class="hf-nota">Este salón no tiene materias. Asígnale una arriba, en la columna 📚 Materias.</span>
+                }
               </label>
               <label class="hf-campo">
                 <span class="hf-label">Maestro</span>
-                <select class="select" [(ngModel)]="scheduleForm.teacherId">
+                <select class="select" [(ngModel)]="scheduleForm.teacherId"
+                        [class.hf-falta]="faltaHorario && !scheduleForm.teacherId">
                   <option value="">Selecciona…</option>
                   @for (t of teachers; track t.id) {
                     <option [value]="t.id">{{ t.displayName }}</option>
@@ -375,8 +380,7 @@
               }
               <button class="btn btn-primary"
                       (click)="addSchedule()"
-                      [disabled]="saving || !scheduleForm.subjectId || !scheduleForm.teacherId
-                                  || !diasSeleccionados.length || !scheduleForm.startDate || !scheduleForm.endDate">
+                      [disabled]="saving">
                 {{ saving
                    ? 'Guardando…'
                    : diasSeleccionados.length > 1

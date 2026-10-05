@@ -75,11 +75,19 @@ export class AdministratorAssignmentsPageComponent implements OnInit {
    * Solo llena lo que este vacio: nunca pisa algo que el usuario ya escribio.
    */
   private precargarDesdeHorarioExistente() {
-    const ref = this.schedules?.[0];
-    if (!ref) return;
-
     const f = this.scheduleForm;
     if (f.subjectId || f.teacherId || f.startDate || f.endDate) return;
+    this.faltaHorario = false;
+
+    const ref = this.schedules?.[0];
+    if (!ref) {
+      // Salon nuevo, sin horario: lo que el salon ya sabe. Su maestro
+      // titular y, si solo tiene una materia, esa. Antes habia que
+      // escogerlas a mano y, si no, el boton se quedaba mudo.
+      f.teacherId = this.selectedClassroom?.teacherId ?? '';
+      if (this.selectedClassroomSubjects?.length === 1) f.subjectId = this.selectedClassroomSubjects[0].id;
+      return;
+    }
 
     f.subjectId = ref.subjectId ?? '';
     f.teacherId = ref.teacherId ?? '';
@@ -409,10 +417,39 @@ export class AdministratorAssignmentsPageComponent implements OnInit {
     );
   }
 
+  /** Se intento agregar con campos vacios: se marcan en rojo. */
+  faltaHorario = false;
+
+  /** Lo que falta para poder agregar la clase, en palabras. */
+  get faltanEnHorario(): string[] {
+    const f = this.scheduleForm;
+    const faltan: string[] = [];
+    if (!f.subjectId) faltan.push('la materia');
+    if (!f.teacherId) faltan.push('el maestro');
+    if (!this.diasSeleccionados.length) faltan.push('al menos un día');
+    if (!f.startTime || !f.endTime) faltan.push('las horas');
+    if (!f.startDate) faltan.push('el primer día del curso');
+    if (!f.endDate) faltan.push('el último día del curso');
+    return faltan;
+  }
+
   addSchedule() {
     const f = this.scheduleForm;
     const dias = this.diasEnOrden;
-    if (!f.subjectId || !f.teacherId || !dias.length || !f.startTime || !f.endTime || !f.startDate || !f.endDate) return;
+    // El boton ya no se deshabilita en silencio: dice que falta.
+    const faltan = this.faltanEnHorario;
+    if (faltan.length) {
+      this.faltaHorario = true;
+      const lista = faltan.length === 1 ? faltan[0]
+        : faltan.slice(0, -1).join(', ') + ' y ' + faltan[faltan.length - 1];
+      this.showToast(`Para agregar la clase falta escoger ${lista}.`);
+      return;
+    }
+    if (f.endDate < f.startDate) {
+      this.showToast('El último día del curso no puede ser antes del primero.');
+      return;
+    }
+    this.faltaHorario = false;
 
     this.saving = true;
     // El backend rechaza si el maestro ya tiene clase ese dia y hora, y ese
@@ -570,6 +607,7 @@ export class AdministratorAssignmentsPageComponent implements OnInit {
 
 function resolveToastType(msg: string): string {
   const m = msg.toLowerCase();
+  if (m.includes('falta') || m.includes('no puede ser')) return 'warn';
   if (m.includes('actualiz') || m.includes('cambiad') || m.includes('guardad') || m.includes('editad')) return 'warn';
   if (m.includes('eliminad') || m.includes('removid') || m.includes('baja') || m.includes('quitad') || m.includes('desactivad') || m.includes('error')) return 'error';
   if (m.includes('cread') || m.includes('agregad') || m.includes('inscrit') || m.includes('asignad') || m.includes('alta')) return 'ok';
