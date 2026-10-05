@@ -39,7 +39,8 @@
                 <span class="cm-logro-txt">
                   <span class="cm-logro-quien">
                     {{ l.esMio ? 'Tú' : l.nombre }}
-                    <span class="cm-logro-verbo">desbloqueó</span>
+                    <!-- El espacio va DENTRO: Angular borra el que queda solo entre etiquetas -->
+                    <span class="cm-logro-verbo">{{ l.esMio ? 'desbloqueaste' : 'desbloqueó' }} </span>
                     <strong>{{ l.titulo }}</strong>
                   </span>
                   <span class="cm-logro-meta">{{ l.cuando }} · +{{ l.xp }} XP</span>
