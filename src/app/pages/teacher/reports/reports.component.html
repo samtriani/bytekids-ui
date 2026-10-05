@@ -1,93 +1,124 @@
 <app-shell role="teacher" [userName]="teacherName" [userAvatar]="teacherInitials"
-  [navItems]="navItems" [pageTitle]="'Reportes — ' + classroomName"></app-shell>
+  [navItems]="navItems" [pageTitle]="'Reportes — ' + (salon?.nombre || 'Mis salones')"></app-shell>
 <div class="page-wrap">
   <div class="ph">
     <div class="ph-left">
-      <h1>Reportes — {{ classroomName }}</h1>
-      <p>Análisis de rendimiento del período seleccionado</p>
+      <h1>Reportes — {{ salon?.nombre || 'Mis salones' }}</h1>
+      <p>Cómo le fue al salón en {{ periodo }}</p>
+      <!-- Solo en papel: de quién y cuándo es el reporte -->
+      <p class="rp-solo-papel">{{ teacherName }} · impreso el {{ fechaImpresion }} · ByteKids Academy</p>
     </div>
-    <div class="ph-right" style="display:flex;gap:8px;align-items:center;flex-wrap:wrap">
-      <select class="select" [(ngModel)]="period" (ngModelChange)="onPeriodChange()" style="width:auto;padding:6px 10px">
-        @for (p of periods; track p) { <option>{{ p }}</option> }
+    <div class="ph-right rp-acciones">
+      <select class="select" [(ngModel)]="periodo" (ngModelChange)="recalcular()" aria-label="Mes del reporte">
+        @for (p of periodos; track p) { <option [value]="p">{{ p }}</option> }
       </select>
-      <button class="btn btn-outline" (click)="exportPDF()">📄 Exportar PDF</button>
-      <button class="btn btn-ghost" (click)="sendToDirector()">📨 Enviar al Director</button>
+      <button class="btn btn-outline" (click)="imprimir()" [disabled]="!salon">🖨️ Imprimir / PDF</button>
       <a routerLink="/teacher/ai-assistant" class="btn btn-primary">🤖 Análisis IA</a>
     </div>
   </div>
 
-  @if (toast) { <div class="alert alert-ok" style="margin-bottom:14px">{{ toast }}</div> }
-
   @if (loading) {
-    <div style="text-align:center;padding:48px;color:var(--tx2)">Cargando reportes...</div>
+    <div class="rp-cargando">Cargando tus salones…</div>
+  } @else if (!salones.length) {
+    <div class="card card-p rp-cargando">Todavía no tienes salones asignados.</div>
   } @else {
 
-    <div class="g4 mb14">
-      <div class="kpi"><div class="kpi-ico">👨‍🎓</div><div><div class="kpi-val">{{ kpis.total }}</div><div class="kpi-lbl">Alumnos {{ classroomName }}</div></div></div>
-      <div class="kpi gold"><div class="kpi-ico">📈</div><div><div class="kpi-val">{{ kpis.avg }}</div><div class="kpi-lbl">Promedio salón</div></div></div>
-      <div class="kpi green"><div class="kpi-ico">✅</div><div><div class="kpi-val">{{ kpis.missions }}</div><div class="kpi-lbl">Actividades en {{ period }}</div></div></div>
-      <div class="kpi red"><div class="kpi-ico">⚠️</div><div><div class="kpi-val">{{ kpis.needSupport }}</div><div class="kpi-lbl">Necesitan apoyo</div></div></div>
-    </div>
-
-    <div class="g2 mb14">
-      <div class="card">
-        <div class="card-h"><span class="card-title">Progreso por alumno</span></div>
-        <div class="card-p" style="padding-top:10px"><div style="height:190px"><canvas #barC></canvas></div></div>
-      </div>
-      <div class="card">
-        <div class="card-h"><span class="card-title">Avance promedio por salón</span></div>
-        <div class="card-p" style="padding-top:10px"><div style="height:190px"><canvas #dntC></canvas></div></div>
-      </div>
-    </div>
-
-    <div class="g2">
-      <div class="card" style="overflow:hidden">
-        <div class="card-h"><span class="card-title">Detalle por alumno</span></div>
-        <table class="tbl">
-          <thead>
-            <tr><th>Alumno</th><th>Progreso</th><th>Acts.</th><th>XP</th><th>Tend.</th><th>Estado</th></tr>
-          </thead>
-          <tbody>
-            @for (r of rows; track r.n) {
-              <tr>
-                <td>
-                  <div style="display:flex;align-items:center;gap:7px">
-                    <div class="av" style="width:27px;height:27px;font-size:.65rem">{{ r.av }}</div>
-                    {{ r.n.split(' ')[0] }}
-                  </div>
-                </td>
-                <td>
-                  <div style="display:flex;align-items:center;gap:6px">
-                    <div class="prog" style="height:5px;width:65px"><div class="prog-bar" [style.width]="r.prog+'%'" [style.background]="pc(r.prog)"></div></div>
-                    <span style="font-weight:800;font-size:.77rem" [style.color]="pc(r.prog)">{{ r.prog }}%</span>
-                  </div>
-                </td>
-                <td style="text-align:center">{{ r.mis }}</td>
-                <td style="color:var(--guinda);font-weight:700;font-size:.8rem">{{ r.xp }}</td>
-                <td style="text-align:center;font-weight:800;font-size:.9rem" [style.color]="tc(r.tr)">{{ r.tr }}</td>
-                <td><span class="tag" [class]="sc(r.st)">{{ r.st }}</span></td>
-              </tr>
+    @if (salones.length > 1) {
+      <div class="filtros-panel rp-salones">
+        <div class="filtro-fila">
+          <span class="filtro-lbl">Salón</span>
+          <div class="filtro-chips">
+            @for (s of salones; track s.id) {
+              <button class="filter-btn" [class.active]="salonId === s.id"
+                      [style.background]="salonId === s.id ? s.color : null"
+                      [style.border-color]="s.color"
+                      [style.color]="salonId === s.id ? null : s.color"
+                      (click)="elegirSalon(s.id)">{{ s.nombre }}</button>
             }
-            @empty {
-              <tr><td colspan="6" style="text-align:center;padding:24px;color:var(--tx3)">Sin datos para este período</td></tr>
+          </div>
+        </div>
+      </div>
+    }
+
+    @if (cargandoSalon) {
+      <div class="rp-cargando">Cargando {{ salon?.nombre }}…</div>
+    } @else {
+
+      <div class="g4 mb14">
+        <div class="kpi"><div class="kpi-ico">👨‍🎓</div><div><div class="kpi-val">{{ kpis.alumnos }}</div><div class="kpi-lbl">Alumnos del salón</div></div></div>
+        <div class="kpi gold"><div class="kpi-ico">📈</div><div><div class="kpi-val">{{ kpis.avance }}%</div><div class="kpi-lbl">Avance del temario</div><div class="kpi-dl">Promedio de {{ piezas }} actividades</div></div></div>
+        <div class="kpi green"><div class="kpi-ico">✅</div><div><div class="kpi-val">{{ kpis.actividades }}</div><div class="kpi-lbl">Actividades en {{ periodo }}</div></div></div>
+        <div class="kpi" [class.red]="kpis.atencion > 0" [class.green]="kpis.atencion === 0">
+          <div class="kpi-ico">{{ kpis.atencion ? '⚠️' : '✅' }}</div>
+          <div><div class="kpi-val">{{ kpis.atencion }}</div><div class="kpi-lbl">Necesitan atención</div></div>
+        </div>
+      </div>
+
+      <div class="g2 mb14">
+        <div class="card">
+          <div class="card-h"><span class="card-title">Avance por alumno</span></div>
+          <div class="card-p" style="padding-top:10px">
+            @if (filas.length) { <div class="rp-graf"><canvas #barC></canvas></div> }
+            @else { <p class="rp-nada">Este salón todavía no tiene alumnos.</p> }
+          </div>
+        </div>
+        <div class="card">
+          <div class="card-h"><span class="card-title">Actividad del salón por semana — {{ periodo }}</span></div>
+          <div class="card-p" style="padding-top:10px">
+            @if (filas.length) { <div class="rp-graf"><canvas #semC></canvas></div> }
+            @else { <p class="rp-nada">Sin actividad que mostrar.</p> }
+          </div>
+        </div>
+      </div>
+
+      <div class="g2">
+        <div class="card" style="overflow:hidden">
+          <div class="card-h"><span class="card-title">Detalle por alumno</span></div>
+          <div class="rp-tabla-wrap">
+            <table class="tbl">
+              <thead>
+                <tr><th>Alumno</th><th>Avance</th><th title="Actividades en el mes">En el mes</th><th>Promedio</th><th title="Contra el mes anterior">Tend.</th><th>Estado</th></tr>
+              </thead>
+              <tbody>
+                @for (f of filas; track f.id) {
+                  <tr>
+                    <td>
+                      <div class="rp-alumno">
+                        <app-avatar [bot]="f.avatarUrl" [iniciales]="f.iniciales" [px]="27"></app-avatar>
+                        <span>{{ f.nombre }}</span>
+                      </div>
+                    </td>
+                    <td>
+                      <div class="rp-avance">
+                        <div class="prog"><div class="prog-bar" [style.width]="f.progreso + '%'" [style.background]="salon?.color"></div></div>
+                        <span>{{ f.progreso }}%</span>
+                      </div>
+                    </td>
+                    <td class="rp-c">{{ f.enMes }}</td>
+                    <td class="rp-c">{{ f.promedio !== null ? sobreDiez(f.promedio) : '—' }}</td>
+                    <td class="rp-c rp-tend" [style.color]="tc(f.tendencia)"
+                        [title]="f.mesAnterior + ' el mes anterior'">{{ f.tendencia }}</td>
+                    <td><span class="tag" [class]="ESTADOS[f.estado].tag" [title]="f.razon">{{ ESTADOS[f.estado].icono }} {{ ESTADOS[f.estado].etiqueta }}</span></td>
+                  </tr>
+                }
+                @empty {
+                  <tr><td colspan="6" class="rp-nada">Este salón todavía no tiene alumnos.</td></tr>
+                }
+              </tbody>
+            </table>
+          </div>
+        </div>
+
+        <div class="card card-p">
+          <div class="card-title" style="margin-bottom:12px">Qué atender</div>
+          <div class="rp-alertas">
+            @for (a of alertas; track a.texto) {
+              <div class="alert" [class]="a.tipo">{{ a.icono }}<span>{{ a.texto }}</span></div>
             }
-          </tbody>
-        </table>
-      </div>
-
-      <div class="card card-p">
-        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px">
-          <span class="card-title">Alertas automáticas</span>
-          <a routerLink="/teacher/ai-assistant" class="btn btn-outline btn-sm">🤖 IA</a>
+          </div>
+          <a routerLink="/teacher/ai-assistant" class="btn btn-primary btn-block rp-no-papel">🤖 Generar reporte completo con IA</a>
         </div>
-        <div style="display:flex;flex-direction:column;gap:7px;margin-bottom:14px">
-          @for (a of alerts; track a.txt) {
-            <div class="alert" [class]="a.tp">{{ a.ico }}<span>{{ a.txt }}</span></div>
-          }
-        </div>
-        <a routerLink="/teacher/ai-assistant" class="btn btn-primary btn-block">🤖 Generar reporte completo con IA</a>
       </div>
-    </div>
-
+    }
   }
 </div>
