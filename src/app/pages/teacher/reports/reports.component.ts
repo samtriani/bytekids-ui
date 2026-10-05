@@ -1,355 +1,247 @@
 import { Component, OnInit, ViewChild, ElementRef } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
-import { ActivatedRoute, RouterLink } from '@angular/router';
+import { ActivatedRoute, Router, RouterLink } from '@angular/router';
 import { ShellComponent } from '../../../shared/shell/shell.component';
+import { AvatarComponent } from '../../../shared/avatar/avatar.component';
 import { TEACHER_NAV } from '../shared/teacher-nav';
+import { ESTADOS, EstadoAlumno, NECESITA_ATENCION, estadoValido } from '../shared/seguimiento';
 import { ClassroomApiService } from '../../../services/api/classroom-api.service';
-import { SubmissionApiService } from '../../../services/api/submission-api.service';
-import { ProgressApiService } from '../../../services/api/progress-api.service';
 import { AuthService } from '../../../services/auth.service';
+import { sobreDiez } from '../../../shared/calificacion';
 import { forkJoin, of } from 'rxjs';
-import { catchError, map } from 'rxjs/operators';
+import { catchError } from 'rxjs/operators';
 import { Chart, registerables } from 'chart.js';
 Chart.register(...registerables);
 
-const MONTHS = ['Enero','Febrero','Marzo','Abril','Mayo','Junio','Julio','Agosto','Septiembre','Octubre','Noviembre','Diciembre'];
+const MESES = ['Enero','Febrero','Marzo','Abril','Mayo','Junio','Julio','Agosto','Septiembre','Octubre','Noviembre','Diciembre'];
 
+interface SalonOpcion { id: string; nombre: string; color: string; }
+
+interface Fila {
+  id: string; nombre: string; iniciales: string; avatarUrl: string | null;
+  hechas: number; progreso: number; promedio: number | null;
+  enMes: number; mesAnterior: number; tendencia: '↑' | '↓' | '→';
+  estado: EstadoAlumno; razon: string;
+}
+
+interface Alerta { icono: string; texto: string; tipo: string; }
+
+/**
+ * El reporte de UN salón en UN mes. Antes mezclaba los cuatro salones en una
+ * sola tabla, juzgaba "Necesita apoyo" por porcentaje y sus botones de
+ * "Exportar PDF" y "Enviar al Director" solo mostraban un aviso: no hacían
+ * nada. Los datos salen del mismo seguimiento que el Panel.
+ */
 @Component({
   selector: 'app-teacher-reports',
   standalone: true,
-  imports: [CommonModule, FormsModule, RouterLink, ShellComponent],
+  imports: [CommonModule, FormsModule, RouterLink, ShellComponent, AvatarComponent],
   templateUrl: './reports.component.html',
   styleUrls: ['./reports.component.scss']
 })
 export class ReportsComponent implements OnInit {
-  @ViewChild('barC') barC!: ElementRef;
-  @ViewChild('dntC') dntC!: ElementRef;
+  @ViewChild('barC') barC?: ElementRef;
+  @ViewChild('semC') semC?: ElementRef;
   navItems = TEACHER_NAV;
 
+  readonly ESTADOS = ESTADOS;
+  readonly sobreDiez = sobreDiez;
+
   teacher: any = null;
-  private classrooms: any[] = [];
+  salones: SalonOpcion[] = [];
+  salonId = '';
   loading = true;
-  toast = '';
+  cargandoSalon = false;
 
-  period = '';
-  periods: string[] = [];
+  periodo = '';
+  periodos: string[] = [];
 
-  private students: any[] = [];
+  piezas = 0;
+  /** Lo que mandó la API para el salón elegido. */
+  private alumnos: any[] = [];
 
-  /** Avance real por alumno y por salon, sacado de las libretas. */
-  private avance = new Map<string, { hechas: number; totales: number }>();
-  porSalon: { nombre: string; promedio: number }[] = [];
+  filas: Fila[] = [];
+  alertas: Alerta[] = [];
+  kpis = { alumnos: 0, avance: 0, actividades: 0, atencion: 0 };
+  semanas: { etiqueta: string; n: number }[] = [];
+
   private barChart: Chart | null = null;
-  private dntChart: Chart | null = null;
+  private semChart: Chart | null = null;
 
   get teacherName(): string { return this.teacher?.displayName || 'Maestro'; }
   get teacherInitials(): string { return this.teacher?.initials || 'M'; }
-  get classroomName(): string {
-    if (this.classrooms.length === 1) return this.classrooms[0].name;
-    if (this.classrooms.length > 1) return `${this.classrooms.length} salones`;
-    return 'Mis Salones';
+  get salon(): SalonOpcion | null { return this.salones.find(s => s.id === this.salonId) ?? null; }
+  get fechaImpresion(): string {
+    return new Date().toLocaleDateString('es-MX', { day: 'numeric', month: 'long', year: 'numeric' });
   }
-
-  // --- computed for current period ---
-  rows: any[] = [];
-  alerts: any[] = [];
-  kpis = { total: 0, avg: '0%', missions: 0, needSupport: 0 };
 
   constructor(
     private route: ActivatedRoute,
+    private router: Router,
     private classroomApi: ClassroomApiService,
-    private submissionApi: SubmissionApiService,
-    private progressApi: ProgressApiService,
-    private auth: AuthService
+    private auth: AuthService,
   ) {}
 
   ngOnInit(): void {
     this.teacher = this.auth.getUser();
-    this.buildPeriods();
-    this.classroomApi.getMyClassrooms().subscribe({
-      next: classrooms => {
-        if (!classrooms.length) { this.loading = false; return; }
-        // Si el Panel mando un salon, el reporte habla de ese y no de todos.
+    this.armarPeriodos();
+    this.classroomApi.getMyClassrooms().pipe(catchError(() => of([]))).subscribe(salones => {
+      if (!salones?.length) { this.loading = false; return; }
+      forkJoin(salones.map((c: any) =>
+        this.classroomApi.getSubjects(c.id || c._id).pipe(catchError(() => of([])))
+      )).subscribe(materias => {
+        this.salones = salones.map((c: any, i: number) => ({
+          id: c.id || c._id,
+          nombre: c.name,
+          color: (materias as any[][])[i]?.[0]?.color || '#7A1535',
+        }));
+        // Si viene del Panel o de Mis Salones, abre ese salón.
         const pedido = this.route.snapshot.queryParamMap.get('salon');
-        const elegido = pedido
-          ? classrooms.filter((c: any) => (c.id || c._id) === pedido)
-          : [];
-        this.classrooms = elegido.length ? elegido : classrooms;
-        classrooms = this.classrooms;
-
-        forkJoin(classrooms.map(c =>
-          this.classroomApi.getStudents(c._id || c.id).pipe(catchError(() => of([])))
-        )).subscribe({
-          next: allArrays => {
-            const seen = new Set<string>();
-            const allStudents = (allArrays as any[][]).flat().filter(s => {
-              const id = s._id || s.id;
-              if (seen.has(id)) return false;
-              seen.add(id); return true;
-            });
-            if (!allStudents.length) { this.loading = false; return; }
-
-            forkJoin(allStudents.map(s => {
-              const sid = s._id || s.id;
-              return forkJoin({
-                student: of(s),
-                xp:       this.progressApi.getStudentXp(sid).pipe(catchError(() => of(0))),
-                subjects: this.progressApi.getStudentSubjects(sid).pipe(catchError(() => of([]))),
-                activity: this.progressApi.getStudentActivity(sid).pipe(catchError(() => of([]))),
-              });
-            })).subscribe({
-              next: results => {
-                this.students = results.map(r => this.buildStudent(r));
-                this.refresh();
-                this.loading = false;
-                setTimeout(() => this.renderCharts(), 80);
-                this.cargarAvanceReal();
-              },
-              error: () => { this.loading = false; }
-            });
-          },
-          error: () => { this.loading = false; }
-        });
-      },
-      error: () => { this.loading = false; }
+        this.loading = false;
+        this.elegirSalon(this.salones.find(s => s.id === pedido)?.id ?? this.salones[0].id);
+      });
     });
   }
 
-  private buildPeriods(): void {
-    const now = new Date();
-    this.periods = [];
+  elegirSalon(id: string): void {
+    this.salonId = id;
+    // El salón queda en la URL: al recargar o compartir, se abre el mismo.
+    this.router.navigate([], { queryParams: { salon: id }, replaceUrl: true });
+    this.cargandoSalon = true;
+    this.classroomApi.seguimiento(id).pipe(catchError(() => of(null))).subscribe(seg => {
+      if (this.salonId !== id) return;
+      this.piezas = seg?.piezas ?? 0;
+      this.alumnos = seg?.alumnos ?? [];
+      this.cargandoSalon = false;
+      this.recalcular();
+    });
+  }
+
+  private armarPeriodos(): void {
+    const hoy = new Date();
+    this.periodos = [];
     for (let i = 2; i >= 0; i--) {
-      const d = new Date(now.getFullYear(), now.getMonth() - i, 1);
-      this.periods.push(`${MONTHS[d.getMonth()]} ${d.getFullYear()}`);
+      const d = new Date(hoy.getFullYear(), hoy.getMonth() - i, 1);
+      this.periodos.push(`${MESES[d.getMonth()]} ${d.getFullYear()}`);
     }
-    this.period = this.periods[this.periods.length - 1];
+    this.periodo = this.periodos[this.periodos.length - 1];
   }
 
-  private buildStudent(r: any): any {
-    const s = r.student;
-    const prog = this.calcProg(r.subjects);
-    // StudentSubjectProgress trae la materia anidada en subject. Con
-    // subjectName y name --que no existen-- la lista quedaba vacia
-    // siempre, y por eso la grafica decia "Sin materias".
-    const subjects = r.subjects.map((sub: any) => ({
-      name: sub.subject?.name || sub.subjectName || sub.name || '',
-      xp:   sub.xpInSubject ?? 0,
-    })).filter((s: any) => s.name);
-    const av = s.initials || (s.displayName || '').split(' ').map((w: string) => w[0] || '').join('').slice(0, 2).toUpperCase();
-    return {
-      id: s._id || s.id,
-      n: s.displayName || s.username,
-      av,
-      prog,
-      xp: r.xp,
-      subjects,
-      activity: r.activity,
-      status: prog >= 80 ? 'Excelente' : prog >= 50 ? 'Regular' : 'Necesita apoyo',
-    };
+  private mesDe(periodo: string): { mes: number; anio: number } {
+    const [m, a] = periodo.split(' ');
+    return { mes: MESES.indexOf(m), anio: parseInt(a, 10) };
   }
 
-  /**
-   * El avance real sale de la libreta de cada salon: aprobadas +
-   * materiales leidos sobre las piezas asignadas. Lo que habia antes
-   * leia sub.progress y sub.totalMissions, que StudentSubjectProgress no
-   * tiene, asi que todos los alumnos aparecian en 0% y en "Necesita
-   * apoyo".
-   */
-  private cargarAvanceReal(): void {
-    if (!this.classrooms.length) return;
-    forkJoin(this.classrooms.map((c: any) =>
-      this.submissionApi.getGradebook(c.id).pipe(catchError(() => of(null)))
-    )).subscribe(libretas => {
-      this.porSalon = [];
-      (libretas as any[]).forEach((l, i) => {
-        const promedio = this.acumular(l);
-        if (l) this.porSalon.push({ nombre: this.classrooms[i].name, promedio });
-      });
-
-      this.students = this.students.map(a => {
-        const v = this.avance.get(a.id);
-        if (!v?.totales) return a;
-        const prog = Math.round((v.hechas / v.totales) * 100);
-        return { ...a, prog, hechas: v.hechas, totales: v.totales,
-                 status: prog >= 80 ? 'Excelente' : prog >= 50 ? 'Regular' : 'Necesita apoyo' };
-      });
-      this.refresh();
-      setTimeout(() => this.renderCharts(), 40);
-    });
+  private enMes(fechas: string[], mes: number, anio: number): Date[] {
+    return fechas.map(f => new Date(f)).filter(d => d.getMonth() === mes && d.getFullYear() === anio);
   }
 
-  /** Suma la libreta al avance de cada alumno y devuelve el promedio del salon. */
-  private acumular(libreta: any): number {
-    if (!libreta) return 0;
-    const contenidos: any[] = libreta.content   ?? [];
-    const materiales: any[] = libreta.materials ?? [];
-    const grades = libreta.grades ?? {};
-    const reads  = libreta.reads  ?? {};
-    const piezas = contenidos.length + materiales.length;
-    const alumnos: any[] = libreta.students ?? [];
-    if (!piezas || !alumnos.length) return 0;
+  /** Todo lo que depende del salón y del mes elegidos. */
+  recalcular(): void {
+    const { mes, anio } = this.mesDe(this.periodo);
+    const antes = new Date(anio, mes - 1, 1);
 
-    let suma = 0;
-    for (const alumno of alumnos) {
-      const suyas  = grades[alumno.id] ?? {};
-      const leidos = reads[alumno.id]  ?? {};
-      const hechas = contenidos.filter(c => suyas[c.id]?.status === 'aprobado').length
-                   + materiales.filter(m => leidos[m.id]).length;
-      suma += Math.round((hechas / piezas) * 100);
+    this.filas = this.alumnos.map((a: any) => {
+      const fechas: string[] = a.actividad ?? [];
+      const enMes = this.enMes(fechas, mes, anio).length;
+      const mesAnterior = this.enMes(fechas, antes.getMonth(), antes.getFullYear()).length;
+      return {
+        id: a.id, nombre: a.nombre, iniciales: a.iniciales || '?', avatarUrl: a.avatarUrl ?? null,
+        hechas: a.hechas,
+        progreso: this.piezas ? Math.min(100, Math.round((a.hechas / this.piezas) * 100)) : 0,
+        promedio: a.promedio ?? null,
+        enMes, mesAnterior,
+        tendencia: enMes > mesAnterior ? '↑' : enMes < mesAnterior ? '↓' : '→',
+        estado: estadoValido(a.estado),
+        razon: a.razon || '',
+      } as Fila;
+    }).sort((x, y) => y.progreso - x.progreso);
 
-      const previo = this.avance.get(alumno.id) ?? { hechas: 0, totales: 0 };
-      this.avance.set(alumno.id, {
-        hechas: previo.hechas + hechas,
-        totales: previo.totales + piezas,
-      });
+    // Actividad del salón por semana del mes.
+    const cortes = [7, 14, 21, 28, 31];
+    this.semanas = cortes.map((fin, i) => ({ etiqueta: `Semana ${i + 1}`, n: 0 }));
+    for (const a of this.alumnos) {
+      for (const d of this.enMes(a.actividad ?? [], mes, anio)) {
+        const i = cortes.findIndex(fin => d.getDate() <= fin);
+        this.semanas[i].n++;
+      }
     }
-    return Math.round(suma / alumnos.length);
-  }
+    if (!this.semanas[4].n && new Date(anio, mes + 1, 0).getDate() <= 28) this.semanas.pop();
 
-  private calcProg(subjects: any[]): number {
-    if (!subjects.length) return 0;
-    return Math.round(subjects.reduce((s: number, sub: any) => s + this.subjectProg(sub), 0) / subjects.length);
-  }
-
-  private subjectProg(sub: any): number {
-    const p = typeof sub.progress === 'number' ? sub.progress
-      : (sub.completedMissions != null && sub.totalMissions
-        ? Math.round((sub.completedMissions / sub.totalMissions) * 100) : 0);
-    return Math.min(100, Math.max(0, p));
-  }
-
-  private periodToMonthYear(period: string): { month: number; year: number } {
-    const [m, y] = period.split(' ');
-    return { month: MONTHS.indexOf(m), year: parseInt(y) };
-  }
-
-  private activitiesInPeriod(activity: any[], period: string): any[] {
-    const { month, year } = this.periodToMonthYear(period);
-    return activity.filter(a => {
-      // DailyActivity trae activityDate, no createdAt. Con el campo
-      // equivocado la fecha salia invalida, ningun periodo tenia
-      // actividades y la tendencia era siempre "igual".
-      const d = new Date(a.activityDate);
-      return d.getMonth() === month && d.getFullYear() === year;
-    });
-  }
-
-  private prevPeriod(period: string): string {
-    const { month, year } = this.periodToMonthYear(period);
-    const d = new Date(year, month - 1, 1);
-    return `${MONTHS[d.getMonth()]} ${d.getFullYear()}`;
-  }
-
-  // Recalculate everything for the selected period
-  refresh(): void {
-    const prev = this.prevPeriod(this.period);
-
-    this.rows = this.students.map(s => {
-      const curActs = this.activitiesInPeriod(s.activity, this.period).length;
-      const prevActs = this.activitiesInPeriod(s.activity, prev).length;
-      const tr = curActs > prevActs ? '↑' : curActs < prevActs ? '↓' : '→';
-      return { n: s.n, av: s.av, prog: s.prog, mis: curActs, xp: s.xp, tr, st: s.status };
-    }).sort((a, b) => b.prog - a.prog);
-
-    const totalMissions = this.rows.reduce((s, r) => s + r.mis, 0);
-    const avg = this.students.length
-      ? Math.round(this.students.reduce((s, r) => s + r.prog, 0) / this.students.length) : 0;
-
+    const atender = this.filas.filter(f => NECESITA_ATENCION.includes(f.estado));
     this.kpis = {
-      total: this.students.length,
-      avg: `${avg}%`,
-      missions: totalMissions,
-      needSupport: this.students.filter(s => s.status === 'Necesita apoyo').length,
+      alumnos: this.filas.length,
+      avance: this.filas.length ? Math.round(this.filas.reduce((s, f) => s + f.progreso, 0) / this.filas.length) : 0,
+      actividades: this.filas.reduce((s, f) => s + f.enMes, 0),
+      atencion: atender.length,
     };
 
-    this.buildAlerts();
+    this.alertas = [];
+    for (const f of [...atender].sort((x, y) => ESTADOS[x.estado].orden - ESTADOS[y.estado].orden).slice(0, 5)) {
+      this.alertas.push({ icono: ESTADOS[f.estado].icono, texto: `${f.nombre}: ${f.razon}`,
+                          tipo: f.estado === 'atorado' ? 'alert-warn' : 'alert-info' });
+    }
+    const subieron = this.filas.filter(f => f.tendencia === '↑' && f.mesAnterior > 0);
+    if (subieron.length) {
+      this.alertas.push({ icono: '📈', tipo: 'alert-ok',
+        texto: `${subieron.map(f => f.nombre.split(' ')[0]).join(', ')} ${subieron.length === 1 ? 'hizo' : 'hicieron'} más que el mes pasado.` });
+    }
+    const mejor = this.filas[0];
+    if (mejor && mejor.progreso >= 80) {
+      this.alertas.push({ icono: '🏅', tipo: 'alert-ok', texto: `${mejor.nombre} lleva ${mejor.progreso}% del temario.` });
+    }
+    if (!this.alertas.length) {
+      this.alertas.push({ icono: '✅', tipo: 'alert-ok', texto: 'Nadie necesita atención en este salón.' });
+    }
+
+    setTimeout(() => this.pintar(), 40);
   }
 
-  private buildAlerts(): void {
-    this.alerts = [];
-    const inactive = this.students.filter(s => this.activitiesInPeriod(s.activity, this.period).length === 0);
-    inactive.slice(0, 2).forEach(s =>
-      this.alerts.push({ ico: '⚠️', txt: `${s.n} sin actividad en ${this.period}`, tp: 'alert-warn' })
-    );
-    const top = [...this.students].sort((a, b) => b.prog - a.prog).find(s => s.prog >= 80);
-    if (top) this.alerts.push({ ico: '✅', txt: `${top.n} tiene el mejor progreso (${top.prog}%)`, tp: 'alert-ok' });
-    this.students.filter(s => s.status === 'Necesita apoyo').slice(0, 1).forEach(s =>
-      this.alerts.push({ ico: 'ℹ️', txt: `${s.n} requiere atención (${s.prog}%)`, tp: 'alert-info' })
-    );
-    if (!this.alerts.length)
-      this.alerts.push({ ico: 'ℹ️', txt: 'Sin alertas activas en este período', tp: 'alert-info' });
-  }
+  private pintar(): void {
+    this.barChart?.destroy();
+    this.semChart?.destroy();
+    const color = this.salon?.color || '#7A1535';
+    const ticks = { color: '#7A6878', font: { family: 'Nunito', size: 11 } };
 
-  onPeriodChange(): void {
-    this.refresh();
-    if (this.barChart) {
-      this.barChart.data.labels = this.rows.map(r => r.n.split(' ')[0]);
-      (this.barChart.data.datasets[0] as any).data = this.rows.map(r => r.prog);
-      (this.barChart.data.datasets[0] as any).backgroundColor = this.rows.map(r => this.pc(r.prog) + 'CC');
-      (this.barChart.data.datasets[0] as any).borderColor = this.rows.map(r => this.pc(r.prog));
-      this.barChart.update();
+    if (this.barC) {
+      const filas = this.filas;
+      this.barChart = new Chart(this.barC.nativeElement, {
+        type: 'bar',
+        data: {
+          labels: filas.map(f => f.nombre.split(' ')[0]),
+          datasets: [{ label: '% del temario', data: filas.map(f => f.progreso),
+            backgroundColor: color + 'CC', borderColor: color, borderWidth: 1.5, borderRadius: 5 }],
+        },
+        options: {
+          responsive: true, maintainAspectRatio: false,
+          plugins: { legend: { display: false }, tooltip: { callbacks: {
+            label: (ctx) => `${filas[ctx.dataIndex].progreso}% · ${filas[ctx.dataIndex].hechas} de ${this.piezas} actividades` } } },
+          scales: { x: { grid: { display: false }, ticks }, y: { grid: { color: '#EDEEF1' }, ticks: { ...ticks, callback: (v) => v + '%' }, max: 100, min: 0 } },
+        },
+      });
+    }
+
+    if (this.semC) {
+      this.semChart = new Chart(this.semC.nativeElement, {
+        type: 'bar',
+        data: {
+          labels: this.semanas.map(s => s.etiqueta),
+          datasets: [{ label: 'Actividades', data: this.semanas.map(s => s.n),
+            backgroundColor: '#C4992ACC', borderColor: '#C4992A', borderWidth: 1.5, borderRadius: 5 }],
+        },
+        options: {
+          responsive: true, maintainAspectRatio: false,
+          plugins: { legend: { display: false }, tooltip: { callbacks: {
+            label: (ctx) => { const n = ctx.parsed.y as number; return `${n} ${n === 1 ? 'actividad' : 'actividades'}`; } } } },
+          scales: { x: { grid: { display: false }, ticks }, y: { grid: { color: '#EDEEF1' }, ticks: { ...ticks, precision: 0 }, beginAtZero: true } },
+        },
+      });
     }
   }
 
-  private renderCharts(): void {
-    if (!this.barC || !this.dntC) return;
-    this.barChart?.destroy();
-    this.dntChart?.destroy();
+  /** Imprimir o "Guardar como PDF" del navegador: lo de antes no exportaba nada. */
+  imprimir(): void { window.print(); }
 
-    // Bar: progress per student
-    this.barChart = new Chart(this.barC.nativeElement, {
-      type: 'bar',
-      data: {
-        labels: this.rows.map(r => r.n.split(' ')[0]),
-        datasets: [{
-          label: '%',
-          data: this.rows.map(r => r.prog),
-          backgroundColor: this.rows.map(r => this.pc(r.prog) + 'CC'),
-          borderColor: this.rows.map(r => this.pc(r.prog)),
-          borderWidth: 1.5, borderRadius: 5,
-        }]
-      },
-      options: {
-        responsive: true, maintainAspectRatio: false,
-        plugins: { legend: { display: false } },
-        scales: {
-          x: { grid: { display: false }, ticks: { color: '#7A6878', font: { family: 'Nunito', size: 11 } } },
-          y: { grid: { color: '#EDEEF1' }, ticks: { color: '#7A6878', font: { family: 'Nunito', size: 11 } }, max: 100 }
-        }
-      }
-    });
-
-    // Avance promedio POR SALON. Antes era por materia, con un progreso
-    // que siempre valia 0 y un nombre que nunca se resolvia: la grafica
-    // salia vacia. El promedio por salon si es un dato que el maestro usa
-    // y sale de la libreta, que es la fuente correcta.
-    const subLabels = this.porSalon.map(s => s.nombre).slice(0, 6);
-    const subData   = this.porSalon.map(s => s.promedio).slice(0, 6);
-    const COLORS = ['#7A1535','#C4992A','#1A6B3C','#0A4D7A','#5C0F27','#3A7A1A'];
-
-    this.dntChart = new Chart(this.dntC.nativeElement, {
-      type: 'doughnut',
-      data: {
-        labels: subLabels.length ? subLabels : ['Sin materias'],
-        datasets: [{
-          data: subData.length ? subData : [100],
-          backgroundColor: COLORS.slice(0, Math.max(subLabels.length, 1)),
-          borderWidth: 0,
-        }]
-      },
-      options: {
-        responsive: true, maintainAspectRatio: false, cutout: '62%',
-        plugins: { legend: { position: 'bottom', labels: { color: '#3D2D3A', font: { family: 'Nunito', size: 11 }, padding: 8, boxWidth: 10 } } }
-      }
-    });
-  }
-
-  exportPDF(): void { this.showToast(`📄 Reporte exportado — ${this.classroomName} · ${this.period}`); }
-  sendToDirector(): void { this.showToast(`📨 Reporte enviado al Director · ${this.period}`); }
-  showToast(msg: string): void { this.toast = msg; setTimeout(() => this.toast = '', 3500); }
-
-  pc(p: number): string { return p >= 80 ? '#1A6B3C' : p < 60 ? '#9B1414' : '#7A1535'; }
-  sc(s: string): string { return s === 'Excelente' ? 'tag-oro' : s === 'Necesita apoyo' ? 'tag-red' : 'tag-guinda'; }
   tc(t: string): string { return t === '↑' ? 'var(--ok)' : t === '↓' ? 'var(--danger)' : 'var(--tx3)'; }
 }

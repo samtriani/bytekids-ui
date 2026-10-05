@@ -1,2 +1,25 @@
-.period-sel { background:var(--surface); border:1px solid var(--border); border-radius:var(--r2); padding:7px 12px; color:var(--tx1); font-family:inherit; font-size:.82rem; font-weight:600; outline:none; }
-.period-sel:focus { border-color:var(--guinda); }
+.rp-acciones { display: flex; gap: 8px; align-items: center; flex-wrap: wrap;
+  .select { width: auto; padding: 6px 10px; } }
+.rp-cargando { text-align: center; padding: 48px; color: var(--tx2); }
+.rp-salones { margin-bottom: 14px; }
+.rp-graf { height: 200px; }
+.rp-nada { text-align: center; padding: 24px; color: var(--tx3); font-size: .85rem; margin: 0; }
+.rp-tabla-wrap { overflow-x: auto; }
+.rp-alumno { display: flex; align-items: center; gap: 8px; font-weight: 700; white-space: nowrap; }
+.rp-avance { display: flex; align-items: center; gap: 6px;
+  .prog { height: 5px; width: 65px; }
+  span { font-weight: 800; font-size: .77rem; color: var(--tx2); } }
+.rp-c { text-align: center; }
+.rp-tend { font-weight: 800; font-size: .9rem; }
+.rp-alertas { display: flex; flex-direction: column; gap: 7px; margin-bottom: 14px; }
+.rp-solo-papel { display: none; }
+
+/* ── Imprimir / Guardar como PDF ──
+   Sin menú ni botones: solo el reporte, con quién y cuándo. */
+@media print {
+  app-shell, .rp-acciones, .rp-salones, .rp-no-papel { display: none !important; }
+  .page-wrap { margin: 0 !important; padding: 0 !important; min-height: 0 !important; animation: none !important; }
+  .rp-solo-papel { display: block; font-size: .8rem; color: #555; }
+  .card, .kpi { box-shadow: none !important; break-inside: avoid; }
+  .rp-tabla-wrap { overflow: visible; }
+}

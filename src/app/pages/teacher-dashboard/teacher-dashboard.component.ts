@@ -8,17 +8,11 @@ import { TEACHER_NAV } from '../teacher/shared/teacher-nav';
 import { ClassroomApiService } from '../../services/api/classroom-api.service';
 import { AuthService } from '../../services/auth.service';
 import { sobreDiez } from '../../shared/calificacion';
+import { ESTADOS, EstadoAlumno, NECESITA_ATENCION, estadoValido } from '../teacher/shared/seguimiento';
 import { forkJoin, of } from 'rxjs';
 import { catchError, map } from 'rxjs/operators';
 import { Chart, registerables } from 'chart.js';
 Chart.register(...registerables);
-
-/**
- * Lo decide la API (SeguimientoService.diagnosticar). Antes el panel marcaba
- * "Apoyo" a todo el que llevara menos de 40% del temario: al inicio de un
- * curso, todo el grupo en rojo, y el rojo dejaba de decir algo.
- */
-type EstadoAlumno = 'bien' | 'nuevo' | 'sin_empezar' | 'atorado' | 'sin_actividad' | 'calificaciones_bajas';
 
 /** Un alumno visto desde el salón que se está mirando. */
 interface AlumnoDelSalon {
@@ -55,20 +49,6 @@ interface Alerta {
   ruta?: string;        // a dónde lleva
   params?: Record<string, string>;
 }
-
-interface InfoEstado { etiqueta: string; icono: string; tag: string; color: string; orden: number; }
-
-/** Cómo se ve cada estado. `orden`: lo que el maestro atiende primero. */
-const ESTADOS: Record<EstadoAlumno, InfoEstado> = {
-  atorado:              { etiqueta: 'Atorado',               icono: '🧱', tag: 'tag-red',    color: '#9B1414', orden: 0 },
-  sin_empezar:          { etiqueta: 'Sin empezar',           icono: '🔕', tag: 'tag-gray',   color: '#9CA3AF', orden: 1 },
-  sin_actividad:        { etiqueta: 'Sin actividad',         icono: '😴', tag: 'tag-oro',    color: '#C4992A', orden: 2 },
-  calificaciones_bajas: { etiqueta: 'Calificaciones bajas',  icono: '📉', tag: 'tag-guinda', color: '#7A1535', orden: 3 },
-  nuevo:                { etiqueta: 'Recién llegado',        icono: '🌱', tag: 'tag-blue',   color: '#1A6B3C', orden: 4 },
-  bien:                 { etiqueta: 'Va bien',               icono: '✅', tag: 'tag-green',  color: '#1A6B3C', orden: 5 },
-};
-
-const NECESITA_ATENCION: EstadoAlumno[] = ['atorado', 'sin_empezar', 'sin_actividad', 'calificaciones_bajas'];
 
 @Component({
   selector: 'app-teacher-dashboard',
@@ -165,7 +145,7 @@ export class TeacherDashboardComponent implements OnInit {
       progreso: piezas ? Math.min(100, Math.round((a.hechas / piezas) * 100)) : 0,
       porCalificar: a.porCalificar,
       promedio: a.promedio ?? null,
-      estado: (a.estado in ESTADOS ? a.estado : 'bien') as EstadoAlumno,
+      estado: estadoValido(a.estado),
       razon: a.razon || '',
     }));
 
