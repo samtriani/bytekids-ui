@@ -127,14 +127,6 @@ export class CertificadoComponent implements OnInit {
     return f ? new Date(f).toLocaleDateString('es-MX', { day: 'numeric', month: 'long', year: 'numeric' }) : '';
   }
 
-  /** 210 min → "3.5" horas. Menos de una hora, en minutos. */
-  get horas(): { n: string; unidad: string } {
-    const m = this.cert?.minutos ?? 0;
-    if (m < 60) return { n: String(m), unidad: 'minutos de' };
-    const h = Math.round(m / 60 * 2) / 2;
-    return { n: String(h), unidad: h === 1 ? 'hora de' : 'horas de' };
-  }
-
   /** Espera las tipografías: si no, la primera impresión sale con letra genérica. */
   async descargar(): Promise<void> {
     try { await (document as any).fonts?.ready; } catch { /* imprime igual */ }

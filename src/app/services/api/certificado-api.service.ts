@@ -21,7 +21,7 @@ export interface FilaCertificado {
 
 export interface DetalleCertificado {
   id: string; folio: string; alumno: string; avatarUrl: string | null; iniciales: string | null;
-  materia: string; color: string | null; actividades: number; minutos: number; proyectos: number;
+  materia: string; color: string | null; actividades: number; minutos: number; proyectos: number; logros: number;
   solicitadoEn: string; entregadoEn: string | null; entregadoPor: string | null; valido: boolean;
 }
 
