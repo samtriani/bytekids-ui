@@ -1120,3 +1120,15 @@ input,select,textarea { font-family:inherit; }
 }
 
 @keyframes fadeIn { from { opacity: 0 } to { opacity: 1 } }
+
+/* ── Burbujas de chat: un texto sin espacios no rompe la pantalla ──
+   "fdsgfdsgsdgsd…" no tiene dónde partirse: estiraba la burbuja y sacaba
+   todo el chat de la pantalla. overflow-wrap:anywhere lo parte donde haga
+   falta y además deja que la burbuja se encoja dentro de su fila flex
+   (min-width:0). Aquí y no en cada componente: son ocho chats, y ningún
+   componente define overflow-wrap, así que esta regla no pierde. */
+.msg-bubble, .bubble, .bb-burbuja, .msg-texto,
+.aula-msg-bubble, .aula-room-text {
+  overflow-wrap: anywhere;
+  min-width: 0;
+}
