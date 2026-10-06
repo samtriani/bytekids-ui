@@ -71,8 +71,7 @@ export class AuthService {
       localStorage.setItem(USER_KEY, JSON.stringify(user));
       return { ok: true };
     } catch (error: any) {
-      const message = error?.error?.message || 'Usuario o contrasena incorrectos';
-      return { ok: false, error: message };
+      return { ok: false, error: mensajeDeLogin(error) };
     }
   }
 
@@ -115,4 +114,24 @@ export class AuthService {
   isLoggedIn(): boolean {
     return !!this.getToken() && !!this.getUser();
   }
+}
+
+/**
+ * Lo que ve quien no pudo entrar. Antes todo lo que no fuera exito decia
+ * "Usuario o contrasena incorrectos", aunque el problema fuera el internet o
+ * el servidor despertando: la persona revisaba su contrasena, que estaba bien.
+ */
+function mensajeDeLogin(error: any): string {
+  const status: number = error?.status ?? 0;
+  const delServidor: string | undefined = error?.error?.message;
+  if (status === 401 || status === 400 || status === 429) {
+    return delServidor || 'Usuario o contraseña incorrectos';
+  }
+  if (status === 0) {
+    return 'No pudimos conectar con ByteKids. Revisa tu internet y vuelve a intentarlo, por favor.';
+  }
+  if (status === 503 || status === 502 || status === 504) {
+    return 'El servidor se está despertando y no alcanzó a responder. Vuelve a intentarlo en unos segundos, por favor. 🙏';
+  }
+  return 'Algo falló de nuestro lado. Vuelve a intentarlo en unos segundos, por favor. 🙏';
 }
