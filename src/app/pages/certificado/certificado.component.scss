@@ -141,12 +141,13 @@ $oro: #C9962B;
 }
 
 /* ── Pie ── */
-.cert-firma, .cert-fecha {
+.cert-firma {
   position: absolute; display: flex; flex-direction: column; align-items: center; text-align: center;
 }
 .cert-firma { left: 16.5cqw; width: 21cqw; top: 54.2cqw; }
 .cert-firma-trazo {
-  font-family: 'Great Vibes', cursive; font-size: 3cqw; line-height: 1; color: #1A2340;
+  /* Si Great Vibes no cargó, otra manuscrita del sistema: una genérica es más ancha y se corta */
+  font-family: 'Great Vibes', 'Segoe Script', 'Brush Script MT', cursive; font-size: 3cqw; line-height: 1; color: #1A2340;
   white-space: nowrap; max-width: 21cqw; overflow: hidden; text-overflow: clip;
   padding-bottom: .3cqw; border-bottom: .12cqw solid #B79A55; width: 100%;
 }
@@ -157,12 +158,10 @@ $oro: #C9962B;
 .cm-texto { font-family: 'Fredoka', 'Nunito', sans-serif; font-weight: 700; font-size: 13.5px; fill: #5A3A08; letter-spacing: .04em; }
 .cm-iniciales { font-family: 'Fredoka', 'Nunito', sans-serif; font-weight: 700; font-size: 38px; fill: #fff; }
 
-.cert-fecha { left: 61.5cqw; width: 17cqw; top: 56.6cqw; }
-.cert-fecha-valor {
-  width: 100%; padding-bottom: .5cqw; border-bottom: .12cqw solid #B79A55;
-  font-size: 1.45cqw; font-weight: 800; color: $marino;
-}
-.cert-fecha .cert-firma-rol { margin-top: .5cqw; }
+/* La firma de la dirección, del otro lado de la medalla */
+.cert-firma--ceo { left: 60cqw; width: 20cqw; }
+.cert-firma--ceo .cert-firma-trazo { max-width: 20cqw; }
+.cert-firma--ceo .cert-firma-nombre { font-size: 1.15cqw; white-space: nowrap; }
 
 .cert-qr {
   position: absolute; right: 3.6cqw; top: 46.6cqw; width: 13cqw;
