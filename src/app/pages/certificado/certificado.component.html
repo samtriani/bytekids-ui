@@ -270,9 +270,11 @@
         <text x="110" y="134" text-anchor="middle" class="cm-texto">¡MISIÓN CUMPLIDA!</text>
       </svg>
 
-      <div class="cert-fecha">
-        <span class="cert-fecha-valor">{{ fecha }}</span>
-        <span class="cert-firma-rol">Fecha de entrega</span>
+      <!-- Dos firmas: el maestro que lo acompañó y la dirección de ByteKids -->
+      <div class="cert-firma cert-firma--ceo">
+        <span class="cert-firma-trazo">Samuel Partida</span>
+        <span class="cert-firma-nombre">Samuel Antonio Partida Contreras</span>
+        <span class="cert-firma-rol">CEO · ByteKids Academy</span>
       </div>
 
       <div class="cert-qr">
@@ -287,7 +289,7 @@
         <span class="cert-qr-url">{{ urlHost }}<br>/verificar/{{ cert.folio }}</span>
       </div>
 
-      <p class="cert-folio">Folio: {{ cert.folio }}</p>
+      <p class="cert-folio">Folio: {{ cert.folio }} · Entregado el {{ fecha }}</p>
 
       @if (!cert.valido) {
         <span class="cert-marca-agua" aria-hidden="true">VISTA PREVIA</span>
