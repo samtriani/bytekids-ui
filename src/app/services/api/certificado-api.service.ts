@@ -21,9 +21,12 @@ export interface FilaCertificado {
 
 export interface DetalleCertificado {
   id: string; folio: string; alumno: string; avatarUrl: string | null; iniciales: string | null;
-  materia: string; color: string | null; actividades: number; minutos: number;
+  materia: string; color: string | null; actividades: number; minutos: number; proyectos: number;
   solicitadoEn: string; entregadoEn: string | null; entregadoPor: string | null; valido: boolean;
 }
+
+/** Lo que muestra el QR a cualquiera: nombre con inicial, curso y fecha. */
+export interface VerificacionCertificado { folio: string; alumno: string; materia: string; entregadoEn: string; }
 
 @Injectable({ providedIn: 'root' })
 export class CertificadoApiService {
@@ -43,6 +46,11 @@ export class CertificadoApiService {
 
   entregar(id: string): Observable<FilaCertificado> {
     return this.http.post<any>(`${BASE}/${id}/entregar`, {}).pipe(map(r => r.data));
+  }
+
+  /** Publico: no pide sesion. Es lo que abre el QR del certificado. */
+  verificar(folio: string): Observable<VerificacionCertificado> {
+    return this.http.get<any>(`${BASE}/verificar/${encodeURIComponent(folio)}`).pipe(map(r => r.data));
   }
 
   detalle(id: string): Observable<DetalleCertificado> {

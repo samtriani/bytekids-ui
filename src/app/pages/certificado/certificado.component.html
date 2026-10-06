@@ -26,49 +26,367 @@
       En la ventana que se abre, escoge <b>"Guardar como PDF"</b>. En iPad: toca <b>Compartir</b> y luego <b>Guardar en Archivos</b>.
     </p>
 
-    <!-- ══ El certificado ══ -->
-    <article class="cert" [class.cert--preview]="!cert.valido" [style.--mat]="cert.color || '#7A1535'"
-             aria-label="Certificado de ByteKids Academy">
-      <div class="cert-marco">
-        <span class="cert-esquina cert-esquina--1" aria-hidden="true"></span>
-        <span class="cert-esquina cert-esquina--2" aria-hidden="true"></span>
-        <span class="cert-esquina cert-esquina--3" aria-hidden="true"></span>
-        <span class="cert-esquina cert-esquina--4" aria-hidden="true"></span>
+    <!-- ══════════════════════ El certificado ══════════════════════ -->
+    <article class="cert" [class.cert--preview]="!cert.valido" aria-label="Certificado de ByteKids Academy">
 
-        <header class="cert-top">
+      <!-- ── Fondo: papel, manchas de color, íconos, estrellas y marco dorado ── -->
+      <svg class="cert-fondo" viewBox="0 0 297 210" preserveAspectRatio="none" aria-hidden="true">
+        <defs>
+          <linearGradient id="cf-oro" x1="0" y1="0" x2="1" y2="1">
+            <stop offset="0" stop-color="#F4D67E"/><stop offset=".45" stop-color="#C9962B"/>
+            <stop offset=".75" stop-color="#E9C25E"/><stop offset="1" stop-color="#A9761A"/>
+          </linearGradient>
+          <linearGradient id="cf-azul" x1="0" y1="0" x2="1" y2="1">
+            <stop offset="0" stop-color="#DCEBFF"/><stop offset="1" stop-color="#7FB0F2"/>
+          </linearGradient>
+          <linearGradient id="cf-azul2" x1="1" y1="0" x2="0" y2="1">
+            <stop offset="0" stop-color="#E7F1FF"/><stop offset="1" stop-color="#9CC3F7"/>
+          </linearGradient>
+          <radialGradient id="cf-papel" cx=".55" cy=".45" r=".75">
+            <stop offset="0" stop-color="#FFFEFA"/><stop offset="1" stop-color="#FBF4E6"/>
+          </radialGradient>
+          <g id="cf-estrella"><path d="M0-5 1.3-1.3 5 0 1.3 1.3 0 5-1.3 1.3-5 0-1.3-1.3Z"/></g>
+          <g id="cf-esquina">
+            <path d="M0 22V6a6 6 0 0 1 6-6h16" fill="none" stroke="url(#cf-oro)" stroke-width="1.6"/>
+            <path d="M4 22V9a5 5 0 0 1 5-5h13" fill="none" stroke="url(#cf-oro)" stroke-width=".5"/>
+            <path d="M8 8l3-3 3 3-3 3z" fill="url(#cf-oro)"/>
+            <circle cx="22" cy="0" r="1.1" fill="#C9962B"/><circle cx="0" cy="22" r="1.1" fill="#C9962B"/>
+          </g>
+        </defs>
+
+        <rect width="297" height="210" fill="url(#cf-papel)"/>
+
+        <!-- mancha azul de la izquierda, detrás del robot -->
+        <path d="M0 34C24 22 54 30 68 54c12 22 6 44 12 64 5 18-6 34-26 38-20 4-38 2-54-2Z" fill="url(#cf-azul)" opacity=".55"/>
+        <path d="M0 64c14-4 30 4 36 18" fill="none" stroke="#fff" stroke-width=".6" opacity=".7"/>
+        <!-- manchas de la derecha -->
+        <path d="M297 170c-12-3-26 3-30 16-3 10 0 18 4 24h26Z" fill="url(#cf-azul2)" opacity=".55"/>
+        <circle cx="282" cy="40" r="20" fill="#F6DA8C" opacity=".22"/>
+        <circle cx="12" cy="200" r="16" fill="#F6DA8C" opacity=".25"/>
+
+        <!-- íconos de línea sobre la mancha azul: cerebro, foco, código, chip -->
+        <g fill="none" stroke="#fff" stroke-width=".9" stroke-linecap="round" stroke-linejoin="round" opacity=".95">
+          <g transform="translate(18 26)">
+            <path d="M6 1c-3 0-5 2-5 5-2 1-2 5 0 6 0 3 3 5 5 4 1 2 5 2 6 0 3 1 5-1 5-4 2-1 2-5 0-6 0-3-2-5-5-5-1-2-5-2-6 0Z"/>
+            <path d="M9 1v15M5 7c2 0 3 1 4 2M13 7c-2 0-3 1-4 2M5 12c2 0 3-1 4-2"/>
+          </g>
+          <g transform="translate(46 22)">
+            <path d="M5 13V11C2 9 1 7 1 5a5 5 0 0 1 10 0c0 2-1 4-4 6v2Z"/><path d="M4 15h4M4.5 17h3"/>
+            <path d="M6-3v1.5M-1 0l1 1M13 0l-1 1"/>
+          </g>
+          <g transform="translate(38 44)">
+            <rect x="0" y="0" width="16" height="12" rx="2"/><path d="M5 4 3 6l2 2M11 4l2 2-2 2M9 3 7 9"/>
+          </g>
+          <g transform="translate(62 40)">
+            <rect x="2" y="2" width="10" height="10" rx="1.5"/><rect x="5" y="5" width="4" height="4"/>
+            <path d="M5 0v2M9 0v2M5 12v2M9 12v2M0 5h2M0 9h2M12 5h2M12 9h2"/>
+          </g>
+          <path d="M30 34c4-2 8-4 14-6M52 36c1 3 3 5 6 6" stroke-dasharray="1 1.6" opacity=".8"/>
+        </g>
+
+        <!-- estrellas y puntos dorados -->
+        <g fill="#E8B93A">
+          <use href="#cf-estrella" transform="translate(40 30) scale(.9)"/>
+          <use href="#cf-estrella" transform="translate(62 48) scale(.55)"/>
+          <use href="#cf-estrella" transform="translate(12 120) scale(.6)"/>
+          <use href="#cf-estrella" transform="translate(70 150) scale(.7)"/>
+          <use href="#cf-estrella" transform="translate(262 22) scale(.8)"/>
+          <use href="#cf-estrella" transform="translate(272 92) scale(1.1)"/>
+          <use href="#cf-estrella" transform="translate(252 146) scale(.75)"/>
+          <use href="#cf-estrella" transform="translate(236 30) scale(.45)"/>
+        </g>
+        <g fill="#E8B93A" opacity=".75">
+          <circle cx="28" cy="24" r="1.4"/><circle cx="286" cy="64" r="1.6"/><circle cx="276" cy="116" r="1"/>
+          <circle cx="256" cy="112" r="1.2"/><circle cx="90" cy="186" r="1"/><circle cx="246" cy="176" r=".9"/>
+        </g>
+        <circle cx="269" cy="50" r="1.3" fill="#5C9BEF" opacity=".7"/>
+        <path d="M250 180l10-6" stroke="#E8B93A" stroke-width=".8" stroke-linecap="round" opacity=".8"/>
+
+        <!-- marco dorado doble, con esquinas -->
+        <rect x="5" y="5" width="287" height="200" rx="2.5" fill="none" stroke="url(#cf-oro)" stroke-width="1.5"/>
+        <rect x="9" y="9" width="279" height="192" rx="1.5" fill="none" stroke="url(#cf-oro)" stroke-width=".45"/>
+        <use href="#cf-esquina" transform="translate(11 11)"/>
+        <use href="#cf-esquina" transform="translate(286 11) scale(-1 1)"/>
+        <use href="#cf-esquina" transform="translate(11 199) scale(1 -1)"/>
+        <use href="#cf-esquina" transform="translate(286 199) scale(-1 -1)"/>
+      </svg>
+
+      <!-- ── ByteBot saludando ── -->
+      <svg class="cert-robot" viewBox="0 0 330 430" aria-hidden="true">
+        <defs>
+          <linearGradient id="cr-blanco" x1="0" y1="0" x2="1" y2="1">
+            <stop offset="0" stop-color="#FFFFFF"/><stop offset=".6" stop-color="#EEF2F8"/><stop offset="1" stop-color="#C9D3E3"/>
+          </linearGradient>
+          <linearGradient id="cr-visor" x1="0" y1="0" x2="0" y2="1">
+            <stop offset="0" stop-color="#1B2B57"/><stop offset="1" stop-color="#070E24"/>
+          </linearGradient>
+          <linearGradient id="cr-oro" x1="0" y1="0" x2="1" y2="1">
+            <stop offset="0" stop-color="#FBE29A"/><stop offset=".5" stop-color="#D9A637"/><stop offset="1" stop-color="#A9761A"/>
+          </linearGradient>
+          <linearGradient id="cr-marino" x1="0" y1="0" x2="1" y2="1">
+            <stop offset="0" stop-color="#2E4A93"/><stop offset="1" stop-color="#14234B"/>
+          </linearGradient>
+          <linearGradient id="cr-fuego" x1="0" y1="0" x2="0" y2="1">
+            <stop offset="0" stop-color="#FFE38A"/><stop offset="1" stop-color="#FF9D2E" stop-opacity="0"/>
+          </linearGradient>
+          <filter id="cr-brillo" x="-50%" y="-50%" width="200%" height="200%">
+            <feGaussianBlur stdDeviation="3.2" result="b"/>
+            <feMerge><feMergeNode in="b"/><feMergeNode in="SourceGraphic"/></feMerge>
+          </filter>
+          <filter id="cr-sombra" x="-20%" y="-20%" width="140%" height="140%">
+            <feDropShadow dx="0" dy="6" stdDeviation="7" flood-color="#14234B" flood-opacity=".22"/>
+          </filter>
+        </defs>
+
+        <g filter="url(#cr-sombra)">
+          <!-- propulsores -->
+          <path d="M118 372c-6 18 0 38 12 50 4-16 4-34-2-50Z" fill="url(#cr-fuego)" opacity=".9"/>
+          <path d="M170 372c-6 18 0 38 12 50 4-16 4-34-2-50Z" fill="url(#cr-fuego)" opacity=".9"/>
+          <!-- piernas -->
+          <rect x="104" y="318" width="38" height="58" rx="18" fill="url(#cr-blanco)" stroke="#BCC7DA" stroke-width="2"/>
+          <rect x="156" y="318" width="38" height="58" rx="18" fill="url(#cr-blanco)" stroke="#BCC7DA" stroke-width="2"/>
+          <rect x="102" y="356" width="42" height="18" rx="9" fill="url(#cr-marino)"/>
+          <rect x="154" y="356" width="42" height="18" rx="9" fill="url(#cr-marino)"/>
+
+          <!-- brazo izquierdo, abajo -->
+          <g transform="rotate(16 74 238)">
+            <rect x="56" y="228" width="36" height="92" rx="18" fill="url(#cr-blanco)" stroke="#BCC7DA" stroke-width="2"/>
+            <rect x="56" y="262" width="36" height="10" fill="url(#cr-oro)"/>
+            <circle cx="74" cy="326" r="20" fill="url(#cr-marino)"/>
+          </g>
+
+          <!-- cuerpo -->
+          <rect x="88" y="214" width="124" height="124" rx="52" fill="url(#cr-blanco)" stroke="#BCC7DA" stroke-width="2.4"/>
+          <path d="M96 252c18 10 90 10 108 0" fill="none" stroke="url(#cr-oro)" stroke-width="5" stroke-linecap="round"/>
+          <rect x="122" y="262" width="56" height="52" rx="14" fill="#2F6FE0"/>
+          <rect x="122" y="262" width="56" height="52" rx="14" fill="none" stroke="#9CC3F7" stroke-width="2"/>
+          <circle cx="150" cy="288" r="15" fill="none" stroke="#fff" stroke-width="3"/>
+          <circle cx="144" cy="285" r="2.6" fill="#fff"/><circle cx="156" cy="285" r="2.6" fill="#fff"/>
+          <path d="M143 292q7 6 14 0" fill="none" stroke="#fff" stroke-width="2.6" stroke-linecap="round"/>
+          <circle cx="150" cy="268" r="2.4" fill="#fff"/>
+
+          <!-- cuello -->
+          <rect x="128" y="200" width="44" height="20" rx="8" fill="url(#cr-marino)"/>
+
+          <!-- brazo derecho, saludando (el saludo se dibuja despues de la cabeza) -->
+          <path d="M204 252 266 186" stroke="#BCC7DA" stroke-width="40" stroke-linecap="round"/>
+          <path d="M204 252 266 186" stroke="url(#cr-blanco)" stroke-width="35" stroke-linecap="round"/>
+          <path d="M226 236 242 218" stroke="url(#cr-oro)" stroke-width="35"/>
+
+          <!-- antenas -->
+          <path d="M112 78 92 34" stroke="url(#cr-oro)" stroke-width="6" stroke-linecap="round"/>
+          <path d="M188 78 208 34" stroke="url(#cr-oro)" stroke-width="6" stroke-linecap="round"/>
+          <circle cx="90" cy="30" r="11" fill="url(#cr-oro)"/><circle cx="87" cy="27" r="3.5" fill="#FFF6D6"/>
+          <circle cx="210" cy="30" r="11" fill="url(#cr-oro)"/><circle cx="207" cy="27" r="3.5" fill="#FFF6D6"/>
+
+          <!-- audífonos -->
+          <rect x="34" y="112" width="40" height="68" rx="20" fill="url(#cr-marino)"/>
+          <rect x="226" y="112" width="40" height="68" rx="20" fill="url(#cr-marino)"/>
+          <rect x="40" y="128" width="28" height="36" rx="14" fill="url(#cr-oro)"/>
+          <rect x="232" y="128" width="28" height="36" rx="14" fill="url(#cr-oro)"/>
+
+          <!-- cabeza -->
+          <rect x="56" y="62" width="188" height="150" rx="72" fill="url(#cr-blanco)" stroke="#BCC7DA" stroke-width="2.4"/>
+          <path d="M84 84c20-14 70-18 96-8" fill="none" stroke="#fff" stroke-width="8" stroke-linecap="round" opacity=".9"/>
+
+          <!-- visor con cara -->
+          <rect x="78" y="92" width="144" height="98" rx="46" fill="url(#cr-visor)"/>
+          <path d="M96 112c10-10 30-14 46-12" fill="none" stroke="#fff" stroke-width="4" stroke-linecap="round" opacity=".18"/>
+          <g fill="none" stroke="#5EEBFF" stroke-linecap="round" filter="url(#cr-brillo)">
+            <path d="M104 148q15-22 30 0" stroke-width="9"/>
+            <path d="M166 148q15-22 30 0" stroke-width="9"/>
+            <path d="M136 162q14 12 28 0" stroke-width="6"/>
+          </g>
+          <ellipse cx="102" cy="166" rx="9" ry="5" fill="#5EEBFF" opacity=".25"/>
+          <ellipse cx="198" cy="166" rx="9" ry="5" fill="#5EEBFF" opacity=".25"/>
+
+          <!-- la mano que saluda -->
+          <circle cx="276" cy="174" r="22" fill="url(#cr-marino)"/>
+          <rect x="262" y="138" width="8" height="22" rx="4" fill="url(#cr-marino)" transform="rotate(-14 266 150)"/>
+          <rect x="273" y="132" width="8" height="24" rx="4" fill="url(#cr-marino)"/>
+          <rect x="284" y="136" width="8" height="22" rx="4" fill="url(#cr-marino)" transform="rotate(14 288 148)"/>
+          <circle cx="269" cy="167" r="4" fill="#5C7BC9" opacity=".6"/>
+        </g>
+        <g fill="none" stroke="#E8B93A" stroke-width="4" stroke-linecap="round">
+          <path d="M300 150q8 12 6 26"/><path d="M308 132q14 18 10 42"/>
+        </g>
+      </svg>
+
+      <!-- ── Centro ── -->
+      <div class="cert-centro">
+        <header class="cert-marca">
           <img src="assets/logo-bytekids.jpeg" alt="" class="cert-logo">
-          <span class="cert-marca">ByteKids Academy</span>
+          <div class="cert-marca-txt">
+            <span class="cert-marca-nombre">Byte<b>Kids</b><i> Academy</i></span>
+            <span class="cert-marca-lema">Imaginar · Programar · Soñar en grande</span>
+          </div>
         </header>
 
-        <p class="cert-eyebrow">Certificado de logro</p>
-        <p class="cert-otorga">Este certificado se otorga con orgullo a</p>
-        <h1 class="cert-nombre">{{ cert.alumno }}</h1>
-        <p class="cert-otorga">por completar con éxito el curso</p>
-        <h2 class="cert-materia">{{ cert.materia }}</h2>
-        <p class="cert-detalle">
-          Aprobó <b>{{ cert.actividades }} actividades</b> · {{ tiempo }} de aprendizaje ·
-          demostró curiosidad, constancia y creatividad
+        <h1 class="cert-titulo">Certificado de logro</h1>
+        <svg class="cert-divisor" viewBox="0 0 200 10" aria-hidden="true">
+          <path d="M0 5h86M114 5h86" stroke="#C9962B" stroke-width=".8"/>
+          <path d="M100 0l1.6 3.4 3.7.4-2.8 2.5.8 3.7-3.3-1.9-3.3 1.9.8-3.7-2.8-2.5 3.7-.4Z" fill="#C9962B"/>
+        </svg>
+
+        <p class="cert-intro">Con orgullo reconocemos a</p>
+
+        <div class="cert-nombre-wrap" [class.cert-nombre-wrap--largo]="tamNombre.includes('xs')">
+          <svg class="cert-laurel cert-laurel--i" viewBox="4 6 40 90" aria-hidden="true">
+            <path d="M35 88Q8 62 22 18" fill="none" stroke="#E2C77E" stroke-width="1.4"/>
+            @for (h of hojas; track $index) {
+              <ellipse [attr.cx]="h.x" [attr.cy]="h.y" rx="9" ry="3.8" fill="#E7CF8E"
+                       [attr.transform]="'rotate(' + h.giro + ' ' + h.x + ' ' + h.y + ')'"/>
+            }
+          </svg>
+          <h2 class="cert-nombre" [ngClass]="tamNombre">{{ cert.alumno }}</h2>
+          <svg class="cert-laurel cert-laurel--d" viewBox="4 6 40 90" aria-hidden="true">
+            <path d="M35 88Q8 62 22 18" fill="none" stroke="#E2C77E" stroke-width="1.4"/>
+            @for (h of hojas; track $index) {
+              <ellipse [attr.cx]="h.x" [attr.cy]="h.y" rx="9" ry="3.8" fill="#E7CF8E"
+                       [attr.transform]="'rotate(' + h.giro + ' ' + h.x + ' ' + h.y + ')'"/>
+            }
+          </svg>
+        </div>
+        <div class="cert-raya" aria-hidden="true"></div>
+
+        <p class="cert-intro">por completar con éxito el programa</p>
+        <p class="cert-curso" [ngClass]="tamCurso">
+          <svg class="cert-chispa" viewBox="0 0 20 24" aria-hidden="true">
+            <path d="M15 6 7 2M16 12H5M15 18l-8 4" stroke="#E8B93A" stroke-width="3" stroke-linecap="round"/>
+          </svg>
+          <span class="cert-curso-azul">{{ curso[0] }}</span>
+          @if (curso[1]) { <span class="cert-curso-oro">&nbsp;{{ curso[1] }}</span> }
+        </p>
+        <p class="cert-desc">
+          desarrollando sus primeras habilidades en <b>Inteligencia Artificial</b>,
+          <b>pensamiento crítico</b> y <b>creatividad digital</b>.
         </p>
 
-        <footer class="cert-pie">
-          <div class="cert-firma">
-            <span class="cert-firma-nombre">{{ cert.entregadoPor || '—' }}</span>
-            <span class="cert-firma-rol">Maestro(a) · ByteKids Academy</span>
+        <!-- Lo que hizo, en números -->
+        <div class="cert-datos">
+          <div class="cert-dato">
+            <svg viewBox="0 0 32 36" aria-hidden="true">
+              <rect x="3" y="5" width="26" height="29" rx="4" fill="none" stroke="#1E9E5A" stroke-width="2.6"/>
+              <rect x="10" y="1.5" width="12" height="7" rx="2.5" fill="#1E9E5A"/>
+              <path d="M9 20l5 5 9-10" fill="none" stroke="#1E9E5A" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/>
+            </svg>
+            <span><b>{{ cert.actividades }}</b><small>actividades<br>completadas</small></span>
           </div>
-
-          <div class="cert-sello" aria-hidden="true">
-            <app-avatar [bot]="cert.avatarUrl" [iniciales]="cert.iniciales || '★'" [px]="92" color="#7A1535"></app-avatar>
-            <span class="cert-sello-cinta">¡Creador de IA!</span>
+          <i class="cert-sep"></i>
+          <div class="cert-dato">
+            <svg viewBox="0 0 34 34" aria-hidden="true">
+              <circle cx="17" cy="17" r="14" fill="none" stroke="#6D3FD8" stroke-width="2.8"/>
+              <path d="M17 9v8l6 4" fill="none" stroke="#6D3FD8" stroke-width="2.8" stroke-linecap="round" stroke-linejoin="round"/>
+            </svg>
+            <span><b>{{ horas.n }} {{ horas.unidad === 'minutos de' ? 'min' : 'horas' }}</b><small>de<br>aprendizaje</small></span>
           </div>
-
-          <div class="cert-firma">
-            <span class="cert-firma-nombre">{{ fecha }}</span>
-            <span class="cert-firma-rol">Fecha de entrega</span>
+          <i class="cert-sep"></i>
+          <div class="cert-dato">
+            <svg viewBox="0 0 36 36" aria-hidden="true">
+              <path d="M22 4c6-2 10-2 10-2s0 4-2 10L19 23l-6-6Z" fill="#F2B632"/>
+              <circle cx="23.5" cy="12.5" r="3" fill="#fff"/>
+              <path d="M13 17l-7 1-3 5 7 1M19 23l-1 7-5 3-1-7" fill="#E59A1C"/>
+              <path d="M10 26c-3 1-5 4-6 7 3-1 6-3 7-6" fill="#FF8A2E"/>
+            </svg>
+            <span><b>{{ cert.proyectos }}</b><small>{{ cert.proyectos === 1 ? 'proyecto' : 'proyectos' }}<br>{{ cert.proyectos === 1 ? 'realizado' : 'realizados' }}</small></span>
           </div>
-        </footer>
+        </div>
 
-        <p class="cert-folio">Folio {{ cert.folio }}</p>
+        <div class="cert-valores">
+          <span>
+            <svg viewBox="0 0 20 20" aria-hidden="true"><path d="M10 2a6 6 0 0 0-3.5 10.9V15h7v-2.1A6 6 0 0 0 10 2Z" fill="#F2B632"/><path d="M7.5 17h5M8.5 19h3" stroke="#C9962B" stroke-width="1.4" stroke-linecap="round"/></svg>
+            Curiosidad
+          </span>
+          <span>
+            <svg viewBox="0 0 20 20" aria-hidden="true"><path d="M10 6.5a3.5 3.5 0 1 0 0 7 3.5 3.5 0 0 0 0-7Zm7 4.6v-2.2l-2.1-.4-.6-1.4 1.2-1.8-1.6-1.6-1.8 1.2-1.4-.6L10.3 2H8.1l-.4 2.1-1.4.6-1.8-1.2L2.9 5.1l1.2 1.8-.6 1.4-2.1.4v2.2l2.1.4.6 1.4-1.2 1.8 1.6 1.6 1.8-1.2 1.4.6.4 2.1h2.2l.4-2.1 1.4-.6 1.8 1.2 1.6-1.6-1.2-1.8.6-1.4Z" fill="#6D3FD8"/></svg>
+            Creatividad
+          </span>
+          <span>
+            <svg viewBox="0 0 20 20" aria-hidden="true"><path d="m10 1.5 2.6 5.4 5.9.8-4.3 4.1 1 5.8L10 14.8l-5.2 2.8 1-5.8L1.5 7.7l5.9-.8Z" fill="#F2B632"/></svg>
+            Constancia
+          </span>
+        </div>
       </div>
+
+      <!-- ── Pie: firma, medalla, fecha y QR ── -->
+      <div class="cert-firma">
+        <span class="cert-firma-trazo">{{ cert.entregadoPor || 'ByteKids Academy' }}</span>
+        <span class="cert-firma-nombre">{{ cert.entregadoPor || 'Coordinación' }}</span>
+        <span class="cert-firma-rol">Mentor · ByteKids Academy</span>
+      </div>
+
+      <svg class="cert-medalla" viewBox="0 0 220 170" aria-hidden="true">
+        <defs>
+          <linearGradient id="cm-oro" x1="0" y1="0" x2="1" y2="1">
+            <stop offset="0" stop-color="#FCE7A4"/><stop offset=".45" stop-color="#D9A637"/>
+            <stop offset=".7" stop-color="#F3CF6B"/><stop offset="1" stop-color="#A9761A"/>
+          </linearGradient>
+          <radialGradient id="cm-rojo" cx=".4" cy=".35" r=".75">
+            <stop offset="0" stop-color="#E05A4E"/><stop offset=".6" stop-color="#A11F2E"/><stop offset="1" stop-color="#6E1020"/>
+          </radialGradient>
+          <linearGradient id="cm-cinta" x1="0" y1="0" x2="0" y2="1">
+            <stop offset="0" stop-color="#F8D978"/><stop offset="1" stop-color="#D19B2E"/>
+          </linearGradient>
+          <clipPath id="cm-circulo"><circle cx="110" cy="70" r="40"/></clipPath>
+        </defs>
+        <!-- laureles -->
+        <g transform="translate(14 10) scale(1.05)">
+          @for (h of hojas; track $index) {
+            <ellipse [attr.cx]="h.x" [attr.cy]="h.y" rx="8" ry="3.4" fill="url(#cm-oro)"
+                     [attr.transform]="'rotate(' + h.giro + ' ' + h.x + ' ' + h.y + ')'"/>
+          }
+        </g>
+        <g transform="translate(206 10) scale(-1.05 1.05)">
+          @for (h of hojas; track $index) {
+            <ellipse [attr.cx]="h.x" [attr.cy]="h.y" rx="8" ry="3.4" fill="url(#cm-oro)"
+                     [attr.transform]="'rotate(' + h.giro + ' ' + h.x + ' ' + h.y + ')'"/>
+          }
+        </g>
+        <!-- chispas -->
+        <g fill="#E8B93A">
+          <path d="M20 54l1.6 4 4 1.6-4 1.6L20 65l-1.6-3.8-4-1.6 4-1.6Z"/>
+          <path d="M200 54l1.6 4 4 1.6-4 1.6L200 65l-1.6-3.8-4-1.6 4-1.6Z"/>
+          <path d="M40 18l1 2.5 2.5 1-2.5 1-1 2.5-1-2.5-2.5-1 2.5-1Z"/>
+          <path d="M180 18l1 2.5 2.5 1-2.5 1-1 2.5-1-2.5-2.5-1 2.5-1Z"/>
+        </g>
+        <!-- medalla con el robot del niño -->
+        <circle cx="110" cy="70" r="52" fill="url(#cm-oro)"/>
+        <circle cx="110" cy="70" r="46" fill="url(#cm-rojo)"/>
+        <circle cx="110" cy="70" r="46" fill="none" stroke="#FCE7A4" stroke-width="1.4" opacity=".7"/>
+        @if (robotImg) {
+          <image [attr.href]="robotImg" x="70" y="30" width="80" height="80" clip-path="url(#cm-circulo)"/>
+        } @else {
+          <text x="110" y="84" text-anchor="middle" class="cm-iniciales">{{ cert.iniciales || '★' }}</text>
+        }
+        <!-- cinta -->
+        <path d="M28 118l14-6v34l-14 6 7-17Z" fill="#C08A22"/>
+        <path d="M192 118l-14-6v34l14 6-7-17Z" fill="#C08A22"/>
+        <path d="M40 110q70 16 140 0v34q-70 16-140 0Z" fill="url(#cm-cinta)" stroke="#B07A18" stroke-width="1.2"/>
+        <text x="110" y="134" text-anchor="middle" class="cm-texto">¡MISIÓN CUMPLIDA!</text>
+      </svg>
+
+      <div class="cert-fecha">
+        <span class="cert-fecha-valor">{{ fecha }}</span>
+        <span class="cert-firma-rol">Fecha de entrega</span>
+      </div>
+
+      <div class="cert-qr">
+        <div class="cert-qr-caja">
+          <svg [attr.viewBox]="'-1 -1 ' + (qrModulos + 2) + ' ' + (qrModulos + 2)" shape-rendering="crispEdges"
+               role="img" [attr.aria-label]="'Código QR para verificar el certificado ' + cert.folio">
+            <rect x="-1" y="-1" [attr.width]="qrModulos + 2" [attr.height]="qrModulos + 2" fill="#fff"/>
+            <path [attr.d]="qrPath" fill="#14234B"/>
+          </svg>
+        </div>
+        <span class="cert-qr-txt">Verificar certificado</span>
+        <span class="cert-qr-url">{{ urlHost }}<br>/verificar/{{ cert.folio }}</span>
+      </div>
+
+      <p class="cert-folio">Folio: {{ cert.folio }}</p>
+
+      @if (!cert.valido) {
+        <span class="cert-marca-agua" aria-hidden="true">VISTA PREVIA</span>
+      }
     </article>
   }
 </div>
