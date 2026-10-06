@@ -31,6 +31,7 @@ import { CalendarComponent as TCalendar } from './pages/teacher/calendar/calenda
 import { MessagesComponent as TMessages } from './pages/teacher/messages/messages.component';
 import { TeacherCommunityComponent } from './pages/teacher/community/community.component';
 import { CertificadoComponent } from './pages/certificado/certificado.component';
+import { VerificarComponent } from './pages/verificar/verificar.component';
 
 import { ParentDashboardComponent } from './pages/parent-dashboard/parent-dashboard.component';
 import { ChildrenComponent } from './pages/parent/children/children.component';
@@ -72,6 +73,8 @@ export const routes: Routes = [
   { path: 'portal', component: PortalComponent, canActivate: AUTH },
   // Lo abren alumno, familia y maestro: el permiso lo decide la API.
   { path: 'certificado/:id', component: CertificadoComponent, canActivate: AUTH },
+  // Publica: lo abre el QR del certificado, sin sesion.
+  { path: 'verificar/:folio', component: VerificarComponent },
   { path: 'landing', component: LandingComponent, canActivate: AUTH },
 
   { path: 'student', component: StudentDashboardComponent, canActivate: STUDENT },

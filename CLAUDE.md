@@ -134,6 +134,12 @@ Lo que sí se puede hacer sin navegador, y conviene:
   `window.print()`. Las medidas van en `cqw` para que se vea igual en
   teléfono, laptop y papel. `<app-certificado-avance>` es el camino del
   alumno hacia su certificado (dashboard y Mis Actividades).
+  El arte (robot, marco, laureles, medalla, íconos) es SVG en la plantilla.
+  El QR se arma con `qrcode-generator` como un trazo SVG y lleva a
+  `/verificar/:folio`, página pública. Al imprimir, el texto con degradado
+  va en color sólido: en el PDF de Chrome sale con un recuadro. Para
+  revisarlo sin navegador: `chrome --headless --screenshot` y
+  `--print-to-pdf` sobre una ruta de prueba local (no la subas).
 - **Actividades en orden:** el feed trae `bloqueada` y `requiere`. La lista
   pinta el candado, el workspace tiene una pantalla `bloqueada` si se entra
   directo por la URL, y al entregar ofrece "Siguiente →". El workspace
