@@ -30,3 +30,18 @@
   background: var(--guinda-a10); border-radius: 12px;
   font-size: 13px; line-height: 1.6; color: var(--tx3); text-align: center;
 }
+
+/* ── Explorador a la izquierda, salón a la derecha (igual que Asignaciones) ── */
+.sl-layout { display: grid; grid-template-columns: 300px minmax(0, 1fr); gap: 16px; align-items: start; }
+.sl-explorador {
+  position: sticky; top: calc(var(--th, 64px) + 16px);
+  height: calc(100vh - var(--th, 64px) - 32px); min-height: 360px;
+  display: flex; flex-direction: column;
+  app-explorador-salones { flex: 1; min-height: 0; }
+}
+.sl-detalle { min-width: 0; scroll-margin-top: calc(var(--th, 64px) + 12px); }
+.sl-sin { color: #B45309; }
+@media (max-width: 1100px) {
+  .sl-layout { grid-template-columns: 1fr; }
+  .sl-explorador { position: static; height: auto; max-height: 420px; }
+}

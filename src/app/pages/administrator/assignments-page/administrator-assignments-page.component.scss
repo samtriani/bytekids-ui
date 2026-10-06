@@ -253,7 +253,8 @@
   width: 100%;
   max-width: 560px;
   box-shadow: 0 24px 64px rgba(0,0,0,.3);
-  overflow: hidden;
+  /* visible: la lista del buscador de maestro se sale del modal */
+  overflow: visible;
   animation: popIn .2s cubic-bezier(.34,1.56,.64,1);
 }
 .edit-sched-header {
@@ -488,3 +489,25 @@
 /* Lo que falta para agregar la clase, en rojo (ver addSchedule) */
 .hf-campo .select.hf-falta, .hf-campo .input.hf-falta { border-color: var(--danger); box-shadow: 0 0 0 3px var(--danger-lt); }
 .hf-nota { display: block; margin-top: 6px; font-size: 12px; font-weight: 700; color: var(--danger); }
+
+/* ── Explorador a la izquierda, detalle a la derecha ──
+   El explorador se queda fijo y tiene su propio scroll: con 50 salones el
+   detalle ya no queda varias pantallas abajo. */
+.asg-layout {
+  display: grid; grid-template-columns: 300px minmax(0, 1fr); gap: 16px; align-items: start;
+}
+.asg-explorador {
+  position: sticky; top: calc(var(--th, 64px) + 16px);
+  height: calc(100vh - var(--th, 64px) - 32px); min-height: 360px;
+  display: flex; flex-direction: column;
+  app-explorador-salones { flex: 1; min-height: 0; }
+}
+.asg-detalle { min-width: 0; scroll-margin-top: calc(var(--th, 64px) + 12px); }
+.asg-sub { display: inline-flex; align-items: center; gap: 6px; font-size: .78rem; color: var(--tx3); font-weight: 700; }
+.asg-filtro { width: 100%; max-width: none; margin-top: 10px; }
+.cont-alta .asg-crece { flex: 1; min-width: 200px; }
+
+@media (max-width: 1100px) {
+  .asg-layout { grid-template-columns: 1fr; }
+  .asg-explorador { position: static; height: auto; max-height: 420px; }
+}

@@ -13,42 +13,32 @@
     <div [class]="'bk-toast bk-toast-' + toastType">{{ toast }}</div>
   }
 
-  <div class="layout">
+  @if (loading) {
+    <div class="card card-p sin-salones">Cargando salones…</div>
+  } @else if (!classrooms.length) {
     <div class="card card-p">
-      <div class="section-head">
-        <h3>Detalle y edicion</h3>
-        <span class="tag tag-blue">{{ classrooms.length }} salones</span>
-      </div>
+      <p class="sin-salones">
+        Todavía no hay salones. Crea el primero con <strong>+ Nuevo salón</strong>
+        y aquí podrás asignarle grado, sección y profesor titular.
+      </p>
+    </div>
+  } @else {
+  <!-- Explorador a la izquierda (fijo, con su scroll) y el salón a la derecha -->
+  <div class="sl-layout">
+    <aside class="card card-p sl-explorador">
+      <app-explorador-salones [salones]="classrooms" [seleccionadoId]="selected?.id"
+                              (elegir)="select($event)"></app-explorador-salones>
+    </aside>
 
-      <div class="fg">
-        <label class="label">Buscar</label>
-        <input class="input" [(ngModel)]="search" placeholder="Busca por salon, seccion o profesor">
-      </div>
-
-      @if (!classrooms.length) {
-        <p class="sin-salones">
-          Todavía no hay salones. Crea el primero con <strong>+ Nuevo salón</strong>
-          y aquí podrás asignarle grado, sección y profesor titular.
-        </p>
-      }
-
-      <div class="detail-layout" [class.detail-layout--vacio]="!classrooms.length">
-        <div class="detail-menu">
-          @for (row of filteredClassrooms; track row.id) {
-            <div class="detail-menu-item-wrap">
-              <button class="detail-menu-item" [class.selected]="selected?.id === row.id" (click)="select(row)">
-                <strong>{{ row.name }}</strong>
-                <small>{{ row.schoolYear }}</small>
-              </button>
-              <button class="btn-baja" title="Dar de baja salón" (click)="deactivate(row)" [disabled]="saving">✕</button>
-            </div>
-          }
-        </div>
-
+    <div class="card card-p sl-detalle" id="sl-detalle">
         <div class="detail-panel">
           @if (selected) {
+            <div class="section-head" style="margin-bottom:14px">
+              <h3>{{ selected.name }}</h3>
+              <span class="tag tag-blue">{{ selected.schoolYear }}</span>
+            </div>
             <div class="entity-grid">
-              <div class="entity-card"><span>Profesor</span><strong>{{ selected.teacherName || 'Sin asignar' }}</strong></div>
+              <div class="entity-card"><span>Profesor</span><strong [class.sl-sin]="!selected.teacherName">{{ selected.teacherName || '⚠ Sin asignar' }}</strong></div>
               <div class="entity-card"><span>Grado</span><strong>{{ selected.gradeLevel }}</strong></div>
               <div class="entity-card"><span>Seccion</span><strong>{{ selected.section }}</strong></div>
               <div class="entity-card"><span>Ciclo</span><strong>{{ selected.schoolYear }}</strong></div>
@@ -64,12 +54,8 @@
               </div>
               <div class="fg">
                 <label class="label">Profesor titular</label>
-                <select class="select" [(ngModel)]="editForm.teacherId">
-                  <option value="">Sin asignar</option>
-                  @for (teacher of teachers; track teacher.id) {
-                    <option [value]="teacher.id">{{ teacher.displayName }}</option>
-                  }
-                </select>
+                <app-buscador [opciones]="opProfesores" [(valor)]="editForm.teacherId"
+                              placeholder="🔎 Busca un maestro…" vacio="Sin asignar"></app-buscador>
               </div>
               <div class="fg"><label class="label">Descripcion</label><textarea class="textarea" rows="3" [(ngModel)]="editForm.description"></textarea></div>
               <button class="btn btn-primary btn-block" (click)="update()" [disabled]="saving">Guardar cambios</button>
@@ -77,12 +63,12 @@
               </div><!-- /editor-card-body -->
             </div><!-- /editor-card -->
           } @else {
-            <div class="empty-box">Selecciona un salon para editarlo.</div>
+            <div class="empty-box">Selecciona un salón para editarlo.</div>
           }
         </div>
-      </div>
     </div>
   </div>
+  }
 </div>
 
 <!-- Alta en modal: la columna fija se comia un tercio de la pantalla -->
@@ -99,12 +85,8 @@
       </div>
       <div class="fg">
         <label class="label">Profesor titular</label>
-        <select class="select" [(ngModel)]="createForm.teacherId">
-          <option value="">Sin asignar</option>
-          @for (teacher of teachers; track teacher.id) {
-            <option [value]="teacher.id">{{ teacher.displayName }}</option>
-          }
-        </select>
+        <app-buscador [opciones]="opProfesores" [(valor)]="createForm.teacherId"
+                      placeholder="🔎 Busca un maestro…" vacio="Sin asignar"></app-buscador>
       </div>
       <div class="fg"><label class="label">Descripcion</label><textarea class="textarea" rows="3" [(ngModel)]="createForm.description"></textarea></div>
       <div class="mm-acciones">

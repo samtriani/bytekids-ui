@@ -8,11 +8,13 @@ import { ClassroomApiService } from '../../../services/api/classroom-api.service
 import { UserApiService } from '../../../services/api/user-api.service';
 import { AdministratorApiService } from '../../../services/api/administrator-api.service';
 import { ADMINISTRATOR_NAV_ITEMS } from '../shared/administrator-nav';
+import { BuscadorComponent, OpcionBuscador } from '../../../shared/buscador/buscador.component';
+import { ExploradorSalonesComponent } from '../../../shared/explorador-salones/explorador-salones.component';
 
 @Component({
   selector: 'app-administrator-classrooms-page',
   standalone: true,
-  imports: [CommonModule, FormsModule, ShellComponent],
+  imports: [CommonModule, FormsModule, ShellComponent, BuscadorComponent, ExploradorSalonesComponent],
   templateUrl: './administrator-classrooms-page.component.html',
   styleUrls: ['./administrator-classrooms-page.component.scss']
 })
@@ -29,10 +31,11 @@ export class AdministratorClassroomsPageComponent implements OnInit {
   abrirAlta()  { this.mostrarAlta = true; }
   cerrarAlta() { this.mostrarAlta = false; }
   loading = true;
-  search = '';
 
   classrooms: any[] = [];
   teachers: any[] = [];
+  /** Para el buscador: fijo, se arma al cargar. */
+  opProfesores: OpcionBuscador[] = [];
   selected: any = null;
 
   createForm = { name: '', gradeLevel: 1, section: 'A', description: '', teacherId: '', schoolYear: '2025-2026' };
@@ -64,7 +67,9 @@ export class AdministratorClassroomsPageComponent implements OnInit {
       next: ({ classrooms, teachers }) => {
         this.classrooms = classrooms;
         this.teachers = teachers;
-        this.selected = this.classrooms[0] ?? null;
+        this.opProfesores = teachers.map((t: any) => ({ id: t.id, etiqueta: t.displayName || t.username, detalle: t.username }));
+        // Despues de guardar se queda en el mismo salon, no salta al primero.
+        this.selected = this.classrooms.find((c: any) => c.id === this.selected?.id) ?? this.classrooms[0] ?? null;
         this.syncEditForm();
         this.loading = false;
       },
@@ -75,17 +80,14 @@ export class AdministratorClassroomsPageComponent implements OnInit {
     });
   }
 
-  get filteredClassrooms() {
-    const term = this.search.trim().toLowerCase();
-    if (!term) return this.classrooms;
-    return this.classrooms.filter((row) =>
-      `${row.name} ${row.section} ${row.schoolYear} ${row.teacherName ?? ''}`.toLowerCase().includes(term)
-    );
-  }
-
   select(row: any) {
+    const otro = this.selected?.id !== row.id;
     this.selected = row;
     this.syncEditForm();
+    // En pantallas angostas el explorador queda arriba: baja al detalle.
+    if (otro && window.innerWidth < 1100) {
+      setTimeout(() => document.getElementById('sl-detalle')?.scrollIntoView({ behavior: 'smooth', block: 'start' }));
+    }
   }
 
   create() {

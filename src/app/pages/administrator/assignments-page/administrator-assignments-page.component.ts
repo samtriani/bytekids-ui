@@ -12,11 +12,13 @@ import { ContentApiService } from '../../../services/api/content-api.service';
 import { ScheduleApiService } from '../../../services/api/schedule-api.service';
 import { ADMINISTRATOR_NAV_ITEMS } from '../shared/administrator-nav';
 import { escaparHtml } from '../../../shared/formato-chat';
+import { BuscadorComponent, OpcionBuscador, normalizar } from '../../../shared/buscador/buscador.component';
+import { ExploradorSalonesComponent } from '../../../shared/explorador-salones/explorador-salones.component';
 
 @Component({
   selector: 'app-administrator-assignments-page',
   standalone: true,
-  imports: [CommonModule, FormsModule, ShellComponent, TitleCasePipe],
+  imports: [CommonModule, FormsModule, ShellComponent, TitleCasePipe, BuscadorComponent, ExploradorSalonesComponent],
   templateUrl: './administrator-assignments-page.component.html',
   styleUrls: ['./administrator-assignments-page.component.scss']
 })
@@ -50,7 +52,6 @@ export class AdministratorAssignmentsPageComponent implements OnInit {
   teacherAssignment = { classroomId: '', teacherId: '' };
   studentAssignment = { classroomId: '', studentId: '' };
   subjectIdToAdd    = '';
-  classroomSearch   = '';
 
   // Horario
   schedules: any[] = [];
@@ -127,6 +128,10 @@ export class AdministratorAssignmentsPageComponent implements OnInit {
 
   ngOnInit() { this.load(); this.cargarCatalogo(); }
 
+  /** Se eligio un salon desde el explorador (no la carga inicial). */
+  private explorado = false;
+  elegirDesdeExplorador(classroom: any) { this.explorado = true; this.selectClassroom(classroom); }
+
   load() {
     forkJoin({
       teachers:   this.userApi.getTeachers(),
@@ -138,8 +143,8 @@ export class AdministratorAssignmentsPageComponent implements OnInit {
         this.teachers   = teachers;
         this.students   = students;
         this.classrooms = classrooms;
-        this.ajustarCicloPorDefecto();
         this.subjects   = subjects;
+        this.armarOpciones();
         // refresca salón seleccionado si ya había uno
         if (this.selectedClassroom) {
           const refreshed = classrooms.find((c: any) => c.id === this.selectedClassroom.id);
@@ -151,73 +156,41 @@ export class AdministratorAssignmentsPageComponent implements OnInit {
     });
   }
 
-  // ── Navegacion de salones ───────────────────────────────────────────────
-  // Con muchos salones una lista plana obliga a scrollear o a recordar el
-  // nombre exacto. Se filtra por ciclo escolar (arranca en el mas reciente) y
-  // se agrupa por grado, que es como el coordinador los tiene en la cabeza.
+  // ── Opciones de los buscadores ──────────────────────────────────────────
+  // Arreglos fijos, recalculados solo cuando cambian los datos: si fueran
+  // getters, cada ciclo de deteccion entregaria uno nuevo y el buscador se
+  // reordenaria a cada tecla.
+  opProfesores:      OpcionBuscador[] = [];
+  opAlumnos:         OpcionBuscador[] = [];
+  opMateriasCatalogo: OpcionBuscador[] = [];
+  opMateriasSalon:   OpcionBuscador[] = [];
 
-  cicloFiltro = '';
-  gradosCerrados = new Set<string>();
-
-  /** Ciclos existentes, del mas reciente al mas viejo. */
-  get ciclos(): string[] {
-    return [...new Set(this.classrooms.map(c => c.schoolYear).filter(Boolean))]
-      .sort().reverse();
+  private armarOpciones() {
+    const persona = (u: any): OpcionBuscador => ({ id: u.id, etiqueta: u.displayName || u.username, detalle: u.username });
+    const materia = (m: any): OpcionBuscador => ({ id: m.id, etiqueta: m.name, icono: m.icon ?? '📚' });
+    this.opProfesores = this.teachers.map(persona);
+    this.opAlumnos = this.availableStudents.map(persona);
+    this.opMateriasCatalogo = this.availableSubjects.map(materia);
+    this.opMateriasSalon = (this.selectedClassroomSubjects ?? []).map(materia);
   }
 
-  /** Deja seleccionado el ciclo mas reciente la primera vez que hay datos. */
-  private ajustarCicloPorDefecto() {
-    if (!this.cicloFiltro && this.ciclos.length) {
-      this.cicloFiltro = this.ciclos[0];
-    }
+  // ── Alumnos inscritos: en orden y con filtro ────────────────────────────
+  filtroInscritos = '';
+  get inscritos(): any[] {
+    const t = normalizar(this.filtroInscritos);
+    return [...this.selectedClassroomStudents]
+      .filter(s => !t || normalizar(`${s.displayName} ${s.username}`).includes(t))
+      .sort((a, b) => (a.displayName ?? '').localeCompare(b.displayName ?? '', 'es', { sensitivity: 'base' }));
   }
-
-  get filteredClassrooms() {
-    const term = this.classroomSearch.trim().toLowerCase();
-    return this.classrooms.filter(c =>
-      // Al buscar se ignora el filtro de ciclo: si escribes un nombre, lo quieres
-      // encontrar aunque sea de otro año.
-      (term || !this.cicloFiltro || c.schoolYear === this.cicloFiltro) &&
-      (!term || `${c.name} ${c.section} ${c.schoolYear}`.toLowerCase().includes(term))
-    );
-  }
-
-  /** Salones agrupados por grado, ordenados. */
-  get gruposDeSalones(): { grado: string; etiqueta: string; salones: any[] }[] {
-    const mapa = new Map<string, any[]>();
-    for (const c of this.filteredClassrooms) {
-      const grado = c.gradeLevel != null ? String(c.gradeLevel) : 'sin-grado';
-      if (!mapa.has(grado)) mapa.set(grado, []);
-      mapa.get(grado)!.push(c);
-    }
-    return [...mapa.entries()]
-      .sort((a, b) => {
-        if (a[0] === 'sin-grado') return 1;
-        if (b[0] === 'sin-grado') return -1;
-        return Number(a[0]) - Number(b[0]);
-      })
-      .map(([grado, salones]) => ({
-        grado,
-        etiqueta: grado === 'sin-grado' ? 'Sin grado' : `${grado}° grado`,
-        salones: salones.sort((a, b) => (a.section ?? '').localeCompare(b.section ?? '')),
-      }));
-  }
-
-  /** Al buscar se abren todos, para no esconder resultados. */
-  grupoAbierto(grado: string): boolean {
-    if (this.classroomSearch.trim()) return true;
-    return !this.gradosCerrados.has(grado);
-  }
-
-  alternarGrupo(grado: string) {
-    if (this.gradosCerrados.has(grado)) this.gradosCerrados.delete(grado);
-    else this.gradosCerrados.add(grado);
-  }
-
-  limpiarBusqueda() { this.classroomSearch = ''; }
 
   selectClassroom(classroom: any) {
+    const otro = this.selectedClassroom?.id !== classroom.id;
     this.selectedClassroom = classroom;
+    if (otro) this.filtroInscritos = '';
+    // En pantallas angostas el explorador queda arriba: al elegir, baja al detalle.
+    if (otro && this.explorado && window.innerWidth < 1100) {
+      setTimeout(() => document.getElementById('asg-detalle')?.scrollIntoView({ behavior: 'smooth', block: 'start' }));
+    }
     this.teacherAssignment.classroomId = classroom.id;
     this.studentAssignment.classroomId = classroom.id;
     this.subjectIdToAdd = '';
@@ -238,6 +211,7 @@ export class AdministratorAssignmentsPageComponent implements OnInit {
       next: ({ students, subjects, schedules }) => {
         this.selectedClassroomStudents = students;
         this.selectedClassroomSubjects = subjects;
+        this.armarOpciones();
         this.schedules = schedules;
         this.precargarDesdeHorarioExistente();
       }

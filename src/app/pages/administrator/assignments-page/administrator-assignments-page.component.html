@@ -12,76 +12,16 @@
     <div [class]="'bk-toast bk-toast-' + toastType">{{ toast }}</div>
   }
 
-  <div class="layout">
+  <div class="asg-layout">
 
-    <!-- ── Columna izquierda: lista de salones ── -->
-    <div class="card card-p">
-      <div class="section-head">
-        <h3>Salones</h3>
-        <span class="tag tag-green">{{ filteredClassrooms.length }} de {{ classrooms.length }}</span>
-      </div>
-
-      @if (ciclos.length > 1) {
-        <div class="fg">
-          <label class="label">Ciclo escolar</label>
-          <select class="input" [(ngModel)]="cicloFiltro">
-            @for (c of ciclos; track c) { <option [value]="c">{{ c }}</option> }
-            <option value="">Todos los ciclos</option>
-          </select>
-        </div>
-      }
-
-      <div class="fg">
-        <label class="label">Buscar salón</label>
-        <input class="input" [(ngModel)]="classroomSearch" placeholder="Nombre o sección…">
-        @if (classroomSearch.trim()) {
-          <small class="sal-aviso">
-            Buscando en todos los ciclos ·
-            <button class="sal-limpiar" (click)="limpiarBusqueda()">limpiar</button>
-          </small>
-        }
-      </div>
-
-      <div class="detail-menu">
-        @if (!filteredClassrooms.length) {
-          <p class="sal-vacio">
-            {{ classroomSearch.trim()
-               ? 'Ningún salón coincide con esa búsqueda.'
-               : 'No hay salones en este ciclo escolar.' }}
-          </p>
-        }
-
-        @for (g of gruposDeSalones; track g.grado) {
-          <div class="sal-grupo">
-            <button class="sal-grupo-head" (click)="alternarGrupo(g.grado)"
-                    [attr.aria-expanded]="grupoAbierto(g.grado)">
-              <span class="sal-caret" [class.abierto]="grupoAbierto(g.grado)">▸</span>
-              <span class="sal-grupo-nombre">{{ g.etiqueta }}</span>
-              <span class="sal-grupo-conteo">{{ g.salones.length }}</span>
-            </button>
-
-            @if (grupoAbierto(g.grado)) {
-              @for (classroom of g.salones; track classroom.id) {
-                <div class="detail-menu-item-wrap">
-                  <button class="detail-menu-item"
-                          [class.selected]="selectedClassroom?.id === classroom.id"
-                          (click)="selectClassroom(classroom)">
-                    <strong>{{ classroom.name }}</strong>
-                    <small>
-                      @if (classroom.section) { Sección {{ classroom.section }} · }
-                      {{ classroom.schoolYear }}
-                    </small>
-                  </button>
-                </div>
-              }
-            }
-          </div>
-        }
-      </div>
-    </div>
+    <!-- ── Izquierda: el explorador, fijo y con su propio scroll ── -->
+    <aside class="card card-p asg-explorador">
+      <app-explorador-salones [salones]="classrooms" [seleccionadoId]="selectedClassroom?.id"
+                              (elegir)="elegirDesdeExplorador($event)"></app-explorador-salones>
+    </aside>
 
     <!-- ── Panel derecho: gestión del salón seleccionado ── -->
-    <div class="card card-p">
+    <div class="card card-p asg-detalle" id="asg-detalle">
       @if (!selectedClassroom) {
         <div class="empty-box" style="padding:48px;text-align:center">Selecciona un salón para comenzar.</div>
       } @else {
@@ -89,7 +29,11 @@
         <!-- Cabecera del salón -->
         <div class="section-head" style="margin-bottom:20px">
           <h3>{{ selectedClassroom.name }}</h3>
-          <span class="tag tag-blue">{{ selectedClassroom.schoolYear }}</span>
+          <span class="asg-sub">
+            @if (selectedClassroom.gradeLevel) { {{ selectedClassroom.gradeLevel }}° grado · }
+            @if (selectedClassroom.section) { Sección {{ selectedClassroom.section }} · }
+            <span class="tag tag-blue">{{ selectedClassroom.schoolYear }}</span>
+          </span>
         </div>
 
         <!-- 3 columnas: Profesor | Alumnos | Materias -->
@@ -99,12 +43,8 @@
           <div class="assign-col">
             <div class="assign-col-head">👩‍🏫 Profesor <span class="assign-count">{{ selectedClassroom.teacherId ? 1 : 0 }}</span></div>
 
-            <select class="select" [(ngModel)]="teacherAssignment.teacherId">
-              <option value="">-- Selecciona profesor --</option>
-              @for (t of teachers; track t.id) {
-                <option [value]="t.id">{{ t.displayName }}</option>
-              }
-            </select>
+            <app-buscador [opciones]="opProfesores" [(valor)]="teacherAssignment.teacherId"
+                          placeholder="🔎 Busca un maestro…" sinOpciones="No hay maestros dados de alta."></app-buscador>
             <button class="btn btn-primary btn-block mt8"
                     (click)="assignTeacher()"
                     [disabled]="saving || !teacherAssignment.teacherId">
@@ -130,20 +70,21 @@
           <div class="assign-col">
             <div class="assign-col-head">👨‍🎓 Alumnos <span class="assign-count">{{ selectedClassroomStudents.length }}</span></div>
 
-            <select class="select" [(ngModel)]="studentAssignment.studentId">
-              <option value="">-- Selecciona alumno --</option>
-              @for (s of availableStudents; track s.id) {
-                <option [value]="s.id">{{ s.displayName }}</option>
-              }
-            </select>
+            <app-buscador [opciones]="opAlumnos" [(valor)]="studentAssignment.studentId"
+                          placeholder="🔎 Busca un alumno por nombre o usuario…"
+                          sinOpciones="Todos los alumnos ya están en este salón."></app-buscador>
             <button class="btn btn-primary btn-block mt8"
                     (click)="assignStudent()"
                     [disabled]="saving || !studentAssignment.studentId">
               Inscribir
             </button>
 
+            @if (selectedClassroomStudents.length > 6) {
+              <input class="input asg-filtro" type="search" [(ngModel)]="filtroInscritos"
+                     placeholder="Filtrar inscritos…" aria-label="Filtrar alumnos inscritos">
+            }
             <div class="assign-list">
-              @for (s of selectedClassroomStudents; track s.id) {
+              @for (s of inscritos; track s.id) {
                 <div class="assign-item">
                   <div>
                     <div class="assign-name">{{ s.displayName }}</div>
@@ -154,6 +95,8 @@
               }
               @if (!selectedClassroomStudents.length) {
                 <div class="assign-empty">Sin alumnos inscritos</div>
+              } @else if (!inscritos.length) {
+                <div class="assign-empty">Ningún inscrito coincide.</div>
               }
             </div>
           </div>
@@ -162,12 +105,8 @@
           <div class="assign-col">
             <div class="assign-col-head">📚 Materias <span class="assign-count">{{ selectedClassroomSubjects.length }}</span></div>
 
-            <select class="select" [(ngModel)]="subjectIdToAdd">
-              <option value="">-- Selecciona materia --</option>
-              @for (s of availableSubjects; track s.id) {
-                <option [value]="s.id">{{ s.icon ?? '📚' }} {{ s.name }}</option>
-              }
-            </select>
+            <app-buscador [opciones]="opMateriasCatalogo" [(valor)]="subjectIdToAdd"
+                          placeholder="🔎 Busca una materia…" sinOpciones="El salón ya tiene todas las materias."></app-buscador>
             <button class="btn btn-primary btn-block mt8"
                     (click)="addSubject()"
                     [disabled]="saving || !subjectIdToAdd">
@@ -211,12 +150,8 @@
             </p>
           } @else {
             <div class="cont-alta">
-              <select class="select" [(ngModel)]="materiaAAsignar">
-                <option value="">-- Materia del plan base --</option>
-                @for (m of materiasAsignables; track m.id) {
-                  <option [value]="m.id">{{ m.icon ?? '📚' }} {{ m.name }}</option>
-                }
-              </select>
+              <app-buscador class="asg-crece" [opciones]="opMateriasSalon" [(valor)]="materiaAAsignar"
+                            placeholder="🔎 Materia del plan base…"></app-buscador>
               <button class="btn btn-primary"
                       (click)="asignarMateriaCompleta()"
                       [disabled]="saving || !materiaAAsignar">
@@ -315,26 +250,17 @@
             <div class="hf-fila">
               <label class="hf-campo">
                 <span class="hf-label">Materia</span>
-                <select class="select" [(ngModel)]="scheduleForm.subjectId"
-                        [class.hf-falta]="faltaHorario && !scheduleForm.subjectId">
-                  <option value="">Selecciona…</option>
-                  @for (s of selectedClassroomSubjects; track s.id) {
-                    <option [value]="s.id">{{ s.icon ?? '📚' }} {{ s.name }}</option>
-                  }
-                </select>
+                <app-buscador [opciones]="opMateriasSalon" [(valor)]="scheduleForm.subjectId"
+                              [error]="faltaHorario && !scheduleForm.subjectId" placeholder="🔎 Materia…"
+                              sinOpciones="Este salón no tiene materias."></app-buscador>
                 @if (!selectedClassroomSubjects.length) {
                   <span class="hf-nota">Este salón no tiene materias. Asígnale una arriba, en la columna 📚 Materias.</span>
                 }
               </label>
               <label class="hf-campo">
                 <span class="hf-label">Maestro</span>
-                <select class="select" [(ngModel)]="scheduleForm.teacherId"
-                        [class.hf-falta]="faltaHorario && !scheduleForm.teacherId">
-                  <option value="">Selecciona…</option>
-                  @for (t of teachers; track t.id) {
-                    <option [value]="t.id">{{ t.displayName }}</option>
-                  }
-                </select>
+                <app-buscador [opciones]="opProfesores" [(valor)]="scheduleForm.teacherId"
+                              [error]="faltaHorario && !scheduleForm.teacherId" placeholder="🔎 Maestro…"></app-buscador>
               </label>
             </div>
 
@@ -456,11 +382,8 @@
           </div>
           <div class="fg">
             <label class="label">Maestro</label>
-            <select class="select" [(ngModel)]="editScheduleForm.teacherId">
-              @for (t of teachers; track t.id) {
-                <option [value]="t.id">{{ t.displayName }}</option>
-              }
-            </select>
+            <app-buscador [opciones]="opProfesores" [(valor)]="editScheduleForm.teacherId"
+                          placeholder="🔎 Maestro…"></app-buscador>
           </div>
         </div>
 
