@@ -93,6 +93,15 @@ Lo que sí se puede hacer sin navegador, y conviene:
   la API revisa que sea su hijo; se pide al elegir al hijo, no con el panel.
 - **Menús:** `TEACHER_NAV`, `STUDENT_NAV` y `PARENT_NAV` son compartidos. Estaban copiados
   en nueve pantallas y ya se habían separado (a una le faltaba "Calendario").
+- **Buscador con autocompletado:** `<app-buscador [opciones] [(valor)]>`
+  (`shared/buscador/`) en vez de un `<select>` cuando la lista crece
+  (maestros, alumnos, materias): ordena en español, busca sin acentos y se
+  maneja con teclado. Pásale un arreglo FIJO, armado al cargar: un getter
+  que devuelve uno nuevo lo reordena en cada ciclo. Si va dentro de un modal,
+  el modal no puede tener `overflow: hidden` o recorta la lista.
+- **Explorador de salones:** `<app-explorador-salones>` (Asignaciones y
+  Salones): columna fija con su scroll, filtro por ciclo y grado, búsqueda
+  por salón o maestro. Con 50 salones la lista ya no empuja el detalle.
 - **Filtros:** `.filtros-panel`, `.filter-btn`, `.filter-n` viven en
   `styles.scss` justo para que alcancen a todas las pantallas.
 - **Interceptor de resiliencia:** reintenta lo transitorio porque la máquina de
