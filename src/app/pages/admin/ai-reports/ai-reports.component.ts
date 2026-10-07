@@ -1,6 +1,7 @@
 import { Component, ViewChild, ElementRef, AfterViewChecked, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
+import { ContadorLetrasComponent, MAX_PREGUNTA_ALUMNO, MAX_PREGUNTA_OTROS } from '../../../shared/contador-letras/contador-letras.component';
 import { RouterLink } from '@angular/router';
 import { ShellComponent, NavItem } from '../../../shared/shell/shell.component';
 import { AiTutorService, ChatMessage } from '../../../services/ai-tutor.service';
@@ -11,10 +12,12 @@ import { formatearMensaje } from '../../../shared/formato-chat';
 import { AuthService } from '../../../services/auth.service';
 
 @Component({ selector: 'app-ai-reports', standalone: true,
-  imports: [CommonModule, FormsModule, RouterLink, ShellComponent],
+  imports: [CommonModule, FormsModule, RouterLink, ShellComponent, ContadorLetrasComponent],
   templateUrl: './ai-reports.component.html', styleUrls: ['./ai-reports.component.scss']
 })
 export class AiReportsComponent implements OnInit, AfterViewChecked {
+  readonly MAX_PREGUNTA = MAX_PREGUNTA_OTROS;
+
   @ViewChild('chatEnd') chatEnd!: ElementRef;
 
   navItems: NavItem[] = [

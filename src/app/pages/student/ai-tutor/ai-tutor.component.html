@@ -68,9 +68,11 @@
       </div>
 
       <!-- Input -->
+      <app-contador-letras [actual]="userInput.length" [max]="MAX_PREGUNTA"></app-contador-letras>
       <div class="chat-input-wrap">
         <textarea
           #inputRef
+          [attr.maxlength]="MAX_PREGUNTA"
           class="chat-input"
           [(ngModel)]="userInput"
           (keydown)="onKeydown($event)"
