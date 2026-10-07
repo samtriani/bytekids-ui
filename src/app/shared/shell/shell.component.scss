@@ -105,13 +105,19 @@
 /* ── NOTIFICATION PANEL ── */
 .notif-panel {
   position: absolute; top: calc(100% + 12px); right: -8px;
-  width: 340px; max-height: 460px;
+  width: 340px; max-height: min(460px, calc(100vh - 90px));
   background: var(--bk-bg-card);
   border: 1px solid var(--bk-border);
   border-radius: 14px;
   box-shadow: 0 8px 32px rgba(0,0,0,0.4);
   display: flex; flex-direction: column;
   overflow: hidden; z-index: 200;
+}
+
+/* Antes los items colgaban directo del panel (overflow:hidden) y los de
+   más se cortaban sin poder bajar. */
+.notif-lista {
+  flex: 1; min-height: 0; overflow-y: auto; overscroll-behavior: contain;
 }
 
 .notif-head {
