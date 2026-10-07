@@ -34,8 +34,9 @@
         }
         <div #chatEnd></div>
       </div>
+      <app-contador-letras [actual]="userInput.length" [max]="MAX_PREGUNTA"></app-contador-letras>
       <div class="input-wrap">
-        <textarea class="chat-input" [(ngModel)]="userInput" (keydown)="onKeydown($event)" placeholder="Solicita un análisis, reporte o estrategia..." rows="2" [disabled]="isLoading"></textarea>
+        <textarea class="chat-input" [attr.maxlength]="MAX_PREGUNTA" [(ngModel)]="userInput" (keydown)="onKeydown($event)" placeholder="Solicita un análisis, reporte o estrategia..." rows="2" [disabled]="isLoading"></textarea>
         <button class="send-btn" (click)="send()" [disabled]="!userInput.trim()||isLoading" [class.active]="userInput.trim()">{{ isLoading ? '⟳' : '↑' }}</button>
       </div>
     </div>

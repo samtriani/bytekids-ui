@@ -7,13 +7,14 @@ import { AiTutorService, ChatMessage } from '../../../services/ai-tutor.service'
 import { MissionStateService } from '../../../services/mission-state.service';
 import { AuthService } from '../../../services/auth.service';
 import { AvatarComponent } from '../../../shared/avatar/avatar.component';
+import { ContadorLetrasComponent, MAX_PREGUNTA_ALUMNO, MAX_PREGUNTA_OTROS } from '../../../shared/contador-letras/contador-letras.component';
 import { STUDENT_NAV } from '../shared/student-nav';
 import { formatearMensaje } from '../../../shared/formato-chat';
 
 @Component({
   selector: 'app-ai-tutor',
   standalone: true,
-  imports: [CommonModule, FormsModule, RouterLink, ShellComponent, AvatarComponent],
+  imports: [CommonModule, FormsModule, RouterLink, ShellComponent, AvatarComponent, ContadorLetrasComponent],
   templateUrl: './ai-tutor.component.html',
   styleUrls: ['./ai-tutor.component.scss']
 })
@@ -136,6 +137,7 @@ export class AiTutorComponent implements AfterViewChecked, OnInit {
 
   get studentName(): string     { return this.auth.getUser()?.displayName || 'Alumno'; }
   get studentInitials(): string { return this.auth.getUser()?.initials || 'A'; }
+  readonly MAX_PREGUNTA = MAX_PREGUNTA_ALUMNO;
   get studentBot(): string | null { return this.auth.getUser()?.avatarUrl ?? null; }
 
   constructor(

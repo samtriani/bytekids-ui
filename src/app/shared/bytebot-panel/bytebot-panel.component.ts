@@ -4,6 +4,7 @@ import {
 } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
+import { ContadorLetrasComponent, MAX_PREGUNTA_ALUMNO, MAX_PREGUNTA_OTROS } from '../contador-letras/contador-letras.component';
 import { AiTutorService, ChatMessage } from '../../services/ai-tutor.service';
 import { formatearMensaje } from '../formato-chat';
 
@@ -38,11 +39,13 @@ interface Mensaje {
 @Component({
   selector: 'app-bytebot-panel',
   standalone: true,
-  imports: [CommonModule, FormsModule],
+  imports: [CommonModule, FormsModule, ContadorLetrasComponent],
   templateUrl: './bytebot-panel.component.html',
   styleUrls: ['./bytebot-panel.component.scss'],
 })
 export class ByteBotPanelComponent implements OnChanges, AfterViewChecked {
+  readonly MAX_PREGUNTA = MAX_PREGUNTA_ALUMNO;
+
   @Input() abierto = false;
   /** Identifica la conversacion: alumno + actividad. */
   @Input() clave = '';

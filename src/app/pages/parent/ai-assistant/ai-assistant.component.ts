@@ -1,6 +1,7 @@
 import { Component, ViewChild, ElementRef, AfterViewChecked } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
+import { ContadorLetrasComponent, MAX_PREGUNTA_ALUMNO, MAX_PREGUNTA_OTROS } from '../../../shared/contador-letras/contador-letras.component';
 import { RouterLink } from '@angular/router';
 import { ShellComponent } from '../../../shared/shell/shell.component';
 import { PARENT_NAV } from '../shared/parent-nav';
@@ -9,10 +10,12 @@ import { AuthService } from '../../../services/auth.service';
 import { formatearMensaje } from '../../../shared/formato-chat';
 
 @Component({ selector: 'app-ai-assistant-parent', standalone: true,
-  imports: [CommonModule, FormsModule, RouterLink, ShellComponent],
+  imports: [CommonModule, FormsModule, RouterLink, ShellComponent, ContadorLetrasComponent],
   templateUrl: './ai-assistant.component.html', styleUrls: ['./ai-assistant.component.scss']
 })
 export class AiAssistantComponent implements AfterViewChecked {
+  readonly MAX_PREGUNTA = MAX_PREGUNTA_OTROS;
+
   @ViewChild('chatEnd') chatEnd!: ElementRef;
 
   navItems = PARENT_NAV;

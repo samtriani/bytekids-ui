@@ -39,9 +39,10 @@
       </div>
     }
 
+    <app-contador-letras class="bb-contador" [actual]="texto.length" [max]="MAX_PREGUNTA"></app-contador-letras>
     <form class="bb-form" (submit)="$event.preventDefault(); enviar()">
       <textarea #entrada id="bb-entrada" class="bb-entrada" rows="2" [(ngModel)]="texto" name="texto"
-                placeholder="Escríbele a ByteBot…" maxlength="1500"
+                placeholder="Escríbele a ByteBot…" [attr.maxlength]="MAX_PREGUNTA"
                 (keydown)="alTeclear($event)" [disabled]="pensando"></textarea>
       <button type="submit" class="bb-enviar" [disabled]="!texto.trim() || pensando" aria-label="Enviar">➤</button>
     </form>
