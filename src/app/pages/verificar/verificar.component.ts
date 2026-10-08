@@ -1,6 +1,6 @@
 import { Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { ActivatedRoute } from '@angular/router';
+import { ActivatedRoute, RouterLink } from '@angular/router';
 import { CertificadoApiService, VerificacionCertificado } from '../../services/api/certificado-api.service';
 
 /**
@@ -11,7 +11,7 @@ import { CertificadoApiService, VerificacionCertificado } from '../../services/a
 @Component({
   selector: 'app-verificar',
   standalone: true,
-  imports: [CommonModule],
+  imports: [CommonModule, RouterLink],
   template: `
     <main class="vf">
       <section class="vf-card" [class.vf-card--ok]="dato" [class.vf-card--no]="noExiste">
@@ -45,6 +45,7 @@ import { CertificadoApiService, VerificacionCertificado } from '../../services/a
           <p class="vf-sub">Vuelve a intentarlo en unos segundos, por favor.</p>
         }
       </section>
+      <a routerLink="/privacidad" class="vf-privacidad">Aviso de privacidad</a>
     </main>
   `,
   styles: [`
@@ -71,6 +72,7 @@ import { CertificadoApiService, VerificacionCertificado } from '../../services/a
     dt { font-size: 13px; font-weight: 700; color: #6A6F8C; }
     dd { margin: 0; font-size: 14px; font-weight: 800; color: #14234B; text-align: right; }
     .vf-folio { letter-spacing: .08em; }
+    .vf-privacidad { margin-top: 14px; font-size: 13px; font-weight: 700; color: #6A6F8C; }
   `],
 })
 export class VerificarComponent implements OnInit {

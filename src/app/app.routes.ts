@@ -32,6 +32,7 @@ import { MessagesComponent as TMessages } from './pages/teacher/messages/message
 import { TeacherCommunityComponent } from './pages/teacher/community/community.component';
 import { CertificadoComponent } from './pages/certificado/certificado.component';
 import { VerificarComponent } from './pages/verificar/verificar.component';
+import { PrivacidadComponent } from './pages/privacidad/privacidad.component';
 
 import { ParentDashboardComponent } from './pages/parent-dashboard/parent-dashboard.component';
 import { ChildrenComponent } from './pages/parent/children/children.component';
@@ -75,6 +76,8 @@ export const routes: Routes = [
   { path: 'certificado/:id', component: CertificadoComponent, canActivate: AUTH },
   // Publica: lo abre el QR del certificado, sin sesion.
   { path: 'verificar/:folio', component: VerificarComponent },
+  // Publica: el aviso de privacidad se lee sin iniciar sesion.
+  { path: 'privacidad', component: PrivacidadComponent },
   { path: 'landing', component: LandingComponent, canActivate: AUTH },
 
   { path: 'student', component: StudentDashboardComponent, canActivate: STUDENT },

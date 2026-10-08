@@ -576,3 +576,7 @@
   .bia-texto strong { font-size: .92rem; }
   .bia-texto em { font-size: .72rem; }
 }
+
+/* Enlace al aviso de privacidad: visible antes de entrar, como pide la ley */
+.form-privacidad { color: inherit; font-weight: 800; text-decoration: underline; text-underline-offset: 2px; }
+.form-privacidad:hover { opacity: .8; }
